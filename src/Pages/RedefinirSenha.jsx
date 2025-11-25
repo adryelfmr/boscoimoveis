@@ -52,9 +52,8 @@ export default function RedefinirSenha() {
             "Content-Type": "application/json",
             "X-Appwrite-Project": import.meta.env.VITE_APPWRITE_PROJECT_ID,
           },
-          body: JSON.stringify({
-            data: JSON.stringify(payload), // OBRIGATÓRIO
-          }),
+          body: JSON.stringify(payload)
+
         }
       );
 
