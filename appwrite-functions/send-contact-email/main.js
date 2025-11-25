@@ -6,8 +6,8 @@ module.exports = async ({ req, res, log, error }) => {
     log('=== INÍCIO DA EXECUÇÃO ===');
     log('Body type:', typeof req.body);
     log('Body:', JSON.stringify(req.body));
-    
-    // ✅ O APPWRITE JÁ FAZ O PARSE! Apenas use req.body diretamente
+
+    // ✅ Usar req.body diretamente (Appwrite já faz o parse)
     const payload = req.body;
     
     log('Payload recebido:', JSON.stringify(payload));
@@ -20,15 +20,24 @@ module.exports = async ({ req, res, log, error }) => {
 
     log('✅ Dados extraídos:', JSON.stringify({ nome, email, telefone }));
 
-    // Configurar transporter do Nodemailer com Brevo
+    // ✅ Usar variáveis de ambiente
+    const SMTP_USER = process.env.BREVO_SMTP_USER;
+    const SMTP_PASS = process.env.BREVO_SMTP_PASS;
+    const FROM_EMAIL = process.env.BREVO_FROM_EMAIL;
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+
+    if (!SMTP_USER || !SMTP_PASS || !FROM_EMAIL || !ADMIN_EMAIL) {
+      throw new Error('Variáveis de ambiente SMTP não configuradas');
+    }
+
     log('Configurando transporter...');
     const transporter = nodemailer.createTransport({
       host: 'smtp-relay.brevo.com',
       port: 587,
       secure: false,
       auth: {
-        user: 'adryelrocha71@gmail.com',
-        pass: 'Adryel195030!',
+        user: SMTP_USER,
+        pass: SMTP_PASS,
       },
     });
 
@@ -36,8 +45,8 @@ module.exports = async ({ req, res, log, error }) => {
 
     // Email para o ADMIN
     const mailOptionsAdmin = {
-      from: '"Bosco Imóveis" <9c6f2b001@smtp-brevo.com>',
-      to: 'bosco.mr@hotmail.com',
+      from: `"Bosco Imóveis" <${FROM_EMAIL}>`,
+      to: ADMIN_EMAIL,
       replyTo: email,
       subject: `🏠 Nova mensagem de contato - ${nome}`,
       html: `
@@ -94,11 +103,11 @@ module.exports = async ({ req, res, log, error }) => {
     const infoAdmin = await transporter.sendMail(mailOptionsAdmin);
     log('✅ Email admin enviado! MessageId:', infoAdmin.messageId);
 
-    // ✅ Email de confirmação para o CLIENTE
+    // Email de confirmação para o CLIENTE
     const mailOptionsCliente = {
-      from: '"Bosco Imóveis" <9c6f2b001@smtp-brevo.com>',
+      from: `"Bosco Imóveis" <${FROM_EMAIL}>`,
       to: email,
-      replyTo: 'bosco.mr@hotmail.com',
+      replyTo: ADMIN_EMAIL,
       subject: '✅ Recebemos sua mensagem - Bosco Imóveis',
       html: `
         <!DOCTYPE html>
@@ -139,7 +148,7 @@ module.exports = async ({ req, res, log, error }) => {
               <div style="background: #e0f2fe; padding: 15px; border-radius: 8px; margin-top: 20px;">
                 <p style="margin: 0;"><strong>📞 Contatos:</strong></p>
                 <p style="margin: 5px 0;">Telefone: (62) 99404-5111</p>
-                <p style="margin: 5px 0;">Email: bosco.mr@hotmail.com</p>
+                <p style="margin: 5px 0;">Email: ${ADMIN_EMAIL}</p>
               </div>
             </div>
             <div class="footer">

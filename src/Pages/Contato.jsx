@@ -31,39 +31,60 @@ export default function Contato() {
         origem: 'formulario',
       });
 
-      console.log('Contato salvo:', contato);
+      console.log('✅ Contato salvo:', contato);
 
       // 2. Enviar email via Appwrite Function
       try {
-        const functionUrl = `${import.meta.env.VITE_APPWRITE_ENDPOINT}/functions/${import.meta.env.VITE_APPWRITE_FUNCTION_EMAIL}/executions`;
+        const functionId = import.meta.env.VITE_APPWRITE_FUNCTION_EMAIL;
+        const functionUrl = `${import.meta.env.VITE_APPWRITE_ENDPOINT}/functions/${functionId}/executions`;
         
-        console.log('Enviando para:', functionUrl);
+        console.log('🔧 Configuração:');
+        console.log('Function ID:', functionId);
+        console.log('Function URL:', functionUrl);
+        console.log('Project ID:', import.meta.env.VITE_APPWRITE_PROJECT_ID);
 
-        // ✅ ENVIAR COMO STRING JSON
+        const bodyData = {
+          nome: formData.nome,
+          email: formData.email,
+          telefone: formData.telefone || '',
+          mensagem: formData.mensagem,
+        };
+
+        console.log('📤 Enviando dados:', bodyData);
+        console.log('📤 Body stringified:', JSON.stringify(bodyData));
+
         const functionResponse = await fetch(functionUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'X-Appwrite-Project': import.meta.env.VITE_APPWRITE_PROJECT_ID,
           },
-          body: JSON.stringify({
-            nome: formData.nome,
-            email: formData.email,
-            telefone: formData.telefone || '',
-            mensagem: formData.mensagem,
-          }),
+          body: JSON.stringify(bodyData),
         });
 
-        const result = await functionResponse.json();
-        console.log('Resposta da função:', result);
+        console.log('📥 Status da resposta:', functionResponse.status);
+        console.log('📥 Status text:', functionResponse.statusText);
+        
+        const responseText = await functionResponse.text();
+        console.log('📥 Resposta raw:', responseText);
+
+        let result;
+        try {
+          result = JSON.parse(responseText);
+          console.log('📥 Resposta parseada:', result);
+        } catch (e) {
+          console.error('❌ Erro ao parsear resposta:', e);
+          result = { error: 'Resposta inválida', raw: responseText };
+        }
 
         if (!functionResponse.ok) {
-          console.error('Erro ao enviar email via função:', result);
+          console.error('❌ Erro ao enviar email via função:', result);
         } else {
-          console.log('Email enviado com sucesso!');
+          console.log('✅ Email enviado com sucesso!');
         }
       } catch (emailError) {
-        console.error('Erro ao executar função de email:', emailError);
+        console.error('❌ Erro ao executar função de email:', emailError);
+        console.error('Stack:', emailError.stack);
       }
 
       toast.success('Mensagem enviada com sucesso! 🎉', {
@@ -72,7 +93,7 @@ export default function Contato() {
       
       setFormData({ nome: '', email: '', telefone: '', mensagem: '' });
     } catch (error) {
-      console.error('Erro ao enviar mensagem:', error);
+      console.error('❌ Erro ao enviar mensagem:', error);
       toast.error('Erro ao enviar mensagem', {
         description: 'Por favor, tente novamente ou entre em contato via WhatsApp.',
       });

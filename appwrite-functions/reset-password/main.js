@@ -20,6 +20,16 @@ module.exports = async ({ req, res, log, error }) => {
 
     log('✅ Dados extraídos:', JSON.stringify({ email, resetUrl }));
 
+    // ✅ Usar variáveis de ambiente
+    const SMTP_USER = process.env.BREVO_SMTP_USER;
+    const SMTP_PASS = process.env.BREVO_SMTP_PASS;
+    const FROM_EMAIL = process.env.BREVO_FROM_EMAIL;
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+
+    if (!SMTP_USER || !SMTP_PASS || !FROM_EMAIL || !ADMIN_EMAIL) {
+      throw new Error('Variáveis de ambiente SMTP não configuradas');
+    }
+
     // Configurar transporter do Nodemailer com Brevo
     log('Configurando transporter...');
     const transporter = nodemailer.createTransport({
@@ -27,8 +37,8 @@ module.exports = async ({ req, res, log, error }) => {
       port: 587,
       secure: false,
       auth: {
-        user: 'adryelrocha71@gmail.com',
-        pass: 'Adryel195030!',
+        user: SMTP_USER,
+        pass: SMTP_PASS,
       },
     });
 
@@ -36,9 +46,9 @@ module.exports = async ({ req, res, log, error }) => {
 
     // Email de redefinição de senha
     const mailOptions = {
-      from: '"Bosco Imóveis" <9c6f2b001@smtp-brevo.com>',
+      from: `"Bosco Imóveis" <${FROM_EMAIL}>`,
       to: email,
-      replyTo: 'bosco.mr@hotmail.com',
+      replyTo: ADMIN_EMAIL,
       subject: '🔐 Redefinir sua senha - Bosco Imóveis',
       html: `
         <!DOCTYPE html>
@@ -202,7 +212,7 @@ module.exports = async ({ req, res, log, error }) => {
               
               <div style="background: #e0f2fe; padding: 15px; border-radius: 8px; margin-top: 20px;">
                 <p style="margin: 0;"><strong>📞 Suporte:</strong></p>
-                <p style="margin: 5px 0;">Email: bosco.mr@hotmail.com</p>
+                <p style="margin: 5px 0;">Email: ${ADMIN_EMAIL}</p>
                 <p style="margin: 5px 0;">Telefone: (62) 99404-5111</p>
               </div>
             </div>
