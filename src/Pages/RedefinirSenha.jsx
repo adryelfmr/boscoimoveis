@@ -40,8 +40,15 @@ export default function RedefinirSenha() {
       // Criar token de recuperação no Appwrite
       await account.createRecovery(email, resetUrl);
 
-      // ✅ ENVIAR DADOS CORRETAMENTE
+      // ✅ CORREÇÃO: Enviar dados como string JSON no body
       try {
+        const payload = JSON.stringify({
+          email: email,
+          resetUrl: `${resetUrl}?email=${encodeURIComponent(email)}`,
+        });
+
+        console.log('Payload a enviar:', payload);
+
         const response = await fetch(
           `${import.meta.env.VITE_APPWRITE_ENDPOINT}/functions/${import.meta.env.VITE_APPWRITE_FUNCTION_RESET_PASSWORD}/executions`,
           {
@@ -50,11 +57,7 @@ export default function RedefinirSenha() {
               'Content-Type': 'application/json',
               'X-Appwrite-Project': import.meta.env.VITE_APPWRITE_PROJECT_ID,
             },
-            // ✅ ENVIAR COMO STRING JSON
-            body: JSON.stringify({
-              email: email,
-              resetUrl: `${resetUrl}?email=${encodeURIComponent(email)}`,
-            }),
+            body: payload, // ✅ Enviar a string diretamente
           }
         );
 
