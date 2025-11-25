@@ -3,12 +3,45 @@ const nodemailer = require('nodemailer');
 
 module.exports = async ({ req, res, log, error }) => {
   try {
-    const payload = JSON.parse(req.body || req.payload);
+    log('=== INÍCIO DA EXECUÇÃO - RESET PASSWORD ===');
+    log('req.body:', req.body);
+    log('req.bodyRaw:', req.bodyRaw);
+    log('req.payload:', req.payload);
+
+    // ✅ CORRIGIR: Tentar diferentes formas de obter o payload
+    let payload;
+    
+    if (req.body) {
+      // Se body já é um objeto
+      if (typeof req.body === 'string') {
+        payload = JSON.parse(req.body);
+      } else {
+        payload = req.body;
+      }
+    } else if (req.bodyRaw) {
+      // Tentar bodyRaw
+      payload = JSON.parse(req.bodyRaw);
+    } else if (req.payload) {
+      // Tentar payload
+      if (typeof req.payload === 'string') {
+        payload = JSON.parse(req.payload);
+      } else {
+        payload = req.payload;
+      }
+    } else {
+      throw new Error('Nenhum payload recebido');
+    }
+
     const { email, resetUrl } = payload;
 
-    log('Enviando email de redefinição de senha para:', email);
+    log('Dados extraídos:', JSON.stringify({ email, resetUrl }));
+
+    if (!email || !resetUrl) {
+      throw new Error('Email e resetUrl são obrigatórios');
+    }
 
     // Configurar transporter do Nodemailer com Brevo
+    log('Configurando transporter...');
     const transporter = nodemailer.createTransport({
       host: 'smtp-relay.brevo.com',
       port: 587,
@@ -18,6 +51,8 @@ module.exports = async ({ req, res, log, error }) => {
         pass: 'Adryel195030!',
       },
     });
+
+    log('Transporter configurado');
 
     // Email de redefinição de senha
     const mailOptions = {
@@ -94,7 +129,6 @@ module.exports = async ({ req, res, log, error }) => {
               font-weight: 600;
               font-size: 16px;
               margin: 20px 0;
-              box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
             }
             .button:hover {
               background: #2563eb;
@@ -173,7 +207,7 @@ module.exports = async ({ req, res, log, error }) => {
               
               <div class="warning-box">
                 <strong>⚠️ Atenção!</strong>
-                <p>Se você não solicitou esta redefinição, ignore este email. Sua senha permanecerá inalterada e sua conta estará segura.</p>
+                <p>Se você não solicitou esta redefinição, ignore este email.</p>
               </div>
 
               <p>Para criar uma nova senha, clique no botão abaixo:</p>
@@ -184,42 +218,17 @@ module.exports = async ({ req, res, log, error }) => {
                 </a>
               </div>
 
-              <div class="security-notice">
-                <p><strong>🔒 Dica de Segurança:</strong> Este link expira em 1 hora por motivos de segurança.</p>
-              </div>
-
-              <div class="alternative-link">
-                <p><strong>O botão não está funcionando?</strong></p>
-                <p>Copie e cole o link abaixo no seu navegador:</p>
-                <code>${resetUrl}</code>
-              </div>
-
-              <div class="info-list">
-                <p><strong>📋 Informações importantes:</strong></p>
-                <ul>
-                  <li>Este link é válido por apenas <strong>1 hora</strong></li>
-                  <li>Após redefinir, você precisará fazer login novamente</li>
-                  <li>Escolha uma senha forte com pelo menos 8 caracteres</li>
-                  <li>Não compartilhe sua senha com ninguém</li>
-                </ul>
-              </div>
-
-              <p style="margin-top: 30px;">Se você tiver alguma dúvida ou problema, entre em contato conosco:</p>
+              <p style="margin-top: 30px;">Se você tiver alguma dúvida, entre em contato:</p>
               
               <div style="background: #e0f2fe; padding: 15px; border-radius: 8px; margin-top: 20px;">
                 <p style="margin: 0;"><strong>📞 Suporte:</strong></p>
-                <p style="margin: 5px 0; color: #0c4a6e;">Email: bosco.mr@hotmail.com</p>
-                <p style="margin: 5px 0; color: #0c4a6e;">Telefone: (62) 99404-5111</p>
-                <p style="margin: 5px 0; color: #0c4a6e;">WhatsApp: <a href="https://wa.me/5562994045111" style="color: #0c4a6e;">Clique aqui</a></p>
+                <p style="margin: 5px 0;">Email: bosco.mr@hotmail.com</p>
+                <p style="margin: 5px 0;">Telefone: (62) 99404-5111</p>
               </div>
             </div>
             <div class="footer">
               <p><strong>Bosco Imóveis</strong></p>
-              <p>Realizando o sonho da casa própria</p>
               <p>Goiânia, GO</p>
-              <p style="margin-top: 15px; font-size: 11px; color: #94a3b8;">
-                Este é um email automático, por favor não responda.
-              </p>
             </div>
           </div>
         </body>
@@ -229,19 +238,25 @@ module.exports = async ({ req, res, log, error }) => {
 
     // Enviar email
     log('Enviando email de redefinição...');
-    await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
+    log('Email enviado com sucesso! MessageId:', info.messageId);
 
-    log('Email enviado com sucesso!');
+    log('=== EMAIL ENVIADO COM SUCESSO ===');
 
     return res.json({
       success: true,
       message: 'Email de redefinição enviado com sucesso',
+      messageId: info.messageId,
     });
   } catch (err) {
-    error('Erro ao enviar email:', err.message);
+    error('=== ERRO NA EXECUÇÃO ===');
+    error('Mensagem:', err.message);
+    error('Stack:', err.stack);
+    
     return res.json({
       success: false,
       error: err.message,
+      stack: err.stack,
     }, 500);
   }
 };

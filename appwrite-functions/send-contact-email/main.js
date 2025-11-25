@@ -3,12 +3,45 @@ const nodemailer = require('nodemailer');
 
 module.exports = async ({ req, res, log, error }) => {
   try {
-    const payload = JSON.parse(req.body || req.payload);
-    const { nome, email, telefone, mensagem } = payload;
+    log('=== INÍCIO DA EXECUÇÃO ===');
+    log('req.body:', req.body);
+    log('req.bodyRaw:', req.bodyRaw);
+    log('req.payload:', req.payload);
 
-    log('Recebendo dados de contato:', { nome, email });
+    // ✅ CORRIGIR: Tentar diferentes formas de obter o payload
+    let payload;
+    
+    if (req.body) {
+      // Se body já é um objeto
+      if (typeof req.body === 'string') {
+        payload = JSON.parse(req.body);
+      } else {
+        payload = req.body;
+      }
+    } else if (req.bodyRaw) {
+      // Tentar bodyRaw
+      payload = JSON.parse(req.bodyRaw);
+    } else if (req.payload) {
+      // Tentar payload
+      if (typeof req.payload === 'string') {
+        payload = JSON.parse(req.payload);
+      } else {
+        payload = req.payload;
+      }
+    } else {
+      throw new Error('Nenhum payload recebido');
+    }
+
+    const { nome, email, telefone, mensagem } = payload;
+    
+    log('Dados extraídos:', JSON.stringify({ nome, email, telefone }));
+
+    if (!nome || !email || !mensagem) {
+      throw new Error('Dados obrigatórios faltando: nome, email ou mensagem');
+    }
 
     // Configurar transporter do Nodemailer com Brevo
+    log('Configurando transporter...');
     const transporter = nodemailer.createTransport({
       host: 'smtp-relay.brevo.com',
       port: 587,
@@ -18,6 +51,8 @@ module.exports = async ({ req, res, log, error }) => {
         pass: 'Adryel195030!',
       },
     });
+
+    log('Transporter configurado');
 
     // ✅ Email para o ADMIN (seu email pessoal)
     const mailOptionsAdmin = {
@@ -137,22 +172,30 @@ module.exports = async ({ req, res, log, error }) => {
 
     // Enviar emails
     log('Enviando email para admin...');
-    await transporter.sendMail(mailOptionsAdmin);
+    const infoAdmin = await transporter.sendMail(mailOptionsAdmin);
+    log('Email admin enviado! MessageId:', infoAdmin.messageId);
     
     log('Enviando email de confirmação para cliente...');
-    await transporter.sendMail(mailOptionsCliente);
+    const infoCliente = await transporter.sendMail(mailOptionsCliente);
+    log('Email cliente enviado! MessageId:', infoCliente.messageId);
 
-    log('Emails enviados com sucesso!');
+    log('=== EMAILS ENVIADOS COM SUCESSO ===');
 
     return res.json({
       success: true,
       message: 'Emails enviados com sucesso',
+      adminMessageId: infoAdmin.messageId,
+      clienteMessageId: infoCliente.messageId,
     });
   } catch (err) {
-    error('Erro ao enviar email:', err.message);
+    error('=== ERRO NA EXECUÇÃO ===');
+    error('Mensagem:', err.message);
+    error('Stack:', err.stack);
+    
     return res.json({
       success: false,
       error: err.message,
+      stack: err.stack,
     }, 500);
   }
 };
