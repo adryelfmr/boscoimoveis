@@ -22,8 +22,8 @@ module.exports = async ({ req, res, log, error }) => {
     // ✅ Email para o ADMIN (seu email pessoal)
     const mailOptionsAdmin = {
       from: '"Bosco Imóveis" <9c6f2b001@smtp-brevo.com>',
-      to: 'bosco.mr@hotmail.com', // ✅ SEU EMAIL PESSOAL
-      replyTo: email, // ✅ Quando você responder, vai para o email do cliente
+      to: 'bosco.mr@hotmail.com',
+      replyTo: email,
       subject: `🏠 Nova mensagem de contato - ${nome}`,
       html: `
         <!DOCTYPE html>
@@ -80,8 +80,8 @@ module.exports = async ({ req, res, log, error }) => {
     // ✅ Email de confirmação para o CLIENTE
     const mailOptionsCliente = {
       from: '"Bosco Imóveis" <9c6f2b001@smtp-brevo.com>',
-      to: email, // ✅ Email do cliente
-      replyTo: 'bosco.mr@hotmail.com', // ✅ Quando o cliente responder, vai para você
+      to: email,
+      replyTo: 'bosco.mr@hotmail.com',
       subject: '✅ Recebemos sua mensagem - Bosco Imóveis',
       html: `
         <!DOCTYPE html>
