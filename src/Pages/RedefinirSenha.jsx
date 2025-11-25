@@ -40,12 +40,12 @@ export default function RedefinirSenha() {
       // Criar token de recuperação no Appwrite
       await account.createRecovery(email, resetUrl);
 
-      // ✅ CORREÇÃO: Enviar dados como string JSON no body
+      // ✅ CORREÇÃO: Enviar como objeto direto, não como string
       try {
-        const payload = JSON.stringify({
+        const payload = {
           email: email,
           resetUrl: `${resetUrl}?email=${encodeURIComponent(email)}`,
-        });
+        };
 
         console.log('Payload a enviar:', payload);
 
@@ -57,7 +57,7 @@ export default function RedefinirSenha() {
               'Content-Type': 'application/json',
               'X-Appwrite-Project': import.meta.env.VITE_APPWRITE_PROJECT_ID,
             },
-            body: payload, // ✅ Enviar a string diretamente
+            body: JSON.stringify(payload), // ✅ Stringify aqui
           }
         );
 

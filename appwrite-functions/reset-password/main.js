@@ -4,13 +4,30 @@ const nodemailer = require('nodemailer');
 module.exports = async ({ req, res, log, error }) => {
   try {
     log('=== INÍCIO DA EXECUÇÃO - RESET PASSWORD ===');
-    log('Body type:', typeof req.body);
-    log('Body:', JSON.stringify(req.body));
-
-    // ✅ O APPWRITE JÁ FAZ O PARSE! Apenas use req.body diretamente
-    const payload = req.body;
+    log('req.body type:', typeof req.body);
+    log('req.body:', req.body);
+    log('req.body JSON:', JSON.stringify(req.body));
+    log('req.bodyRaw:', req.bodyRaw);
+    log('req.headers:', JSON.stringify(req.headers));
     
-    log('Payload recebido:', JSON.stringify(payload));
+    // ✅ TENTAR PARSEAR DE DIFERENTES FORMAS
+    let payload;
+    
+    if (typeof req.body === 'string' && req.body.trim() !== '') {
+      log('Tentando parsear body como string...');
+      payload = JSON.parse(req.body);
+    } else if (typeof req.body === 'object' && req.body !== null) {
+      log('Body já é objeto');
+      payload = req.body;
+    } else if (req.bodyRaw) {
+      log('Tentando usar bodyRaw...');
+      payload = JSON.parse(req.bodyRaw);
+    } else {
+      log('❌ Nenhum body válido encontrado');
+      throw new Error(`Body vazio ou inválido. Type: ${typeof req.body}, Value: ${JSON.stringify(req.body)}`);
+    }
+    
+    log('✅ Payload parseado:', JSON.stringify(payload));
 
     const { email, resetUrl } = payload;
 
