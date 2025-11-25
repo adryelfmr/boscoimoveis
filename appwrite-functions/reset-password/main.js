@@ -4,41 +4,21 @@ const nodemailer = require('nodemailer');
 module.exports = async ({ req, res, log, error }) => {
   try {
     log('=== INÍCIO DA EXECUÇÃO - RESET PASSWORD ===');
-    log('req.body:', req.body);
-    log('req.bodyRaw:', req.bodyRaw);
-    log('req.payload:', req.payload);
+    log('Body type:', typeof req.body);
+    log('Body:', JSON.stringify(req.body));
 
-    // ✅ CORRIGIR: Tentar diferentes formas de obter o payload
-    let payload;
+    // ✅ O APPWRITE JÁ FAZ O PARSE! Apenas use req.body diretamente
+    const payload = req.body;
     
-    if (req.body) {
-      // Se body já é um objeto
-      if (typeof req.body === 'string') {
-        payload = JSON.parse(req.body);
-      } else {
-        payload = req.body;
-      }
-    } else if (req.bodyRaw) {
-      // Tentar bodyRaw
-      payload = JSON.parse(req.bodyRaw);
-    } else if (req.payload) {
-      // Tentar payload
-      if (typeof req.payload === 'string') {
-        payload = JSON.parse(req.payload);
-      } else {
-        payload = req.payload;
-      }
-    } else {
-      throw new Error('Nenhum payload recebido');
-    }
+    log('Payload recebido:', JSON.stringify(payload));
 
     const { email, resetUrl } = payload;
 
-    log('Dados extraídos:', JSON.stringify({ email, resetUrl }));
-
     if (!email || !resetUrl) {
-      throw new Error('Email e resetUrl são obrigatórios');
+      throw new Error(`Email e resetUrl são obrigatórios. Recebido: ${JSON.stringify(payload)}`);
     }
+
+    log('✅ Dados extraídos:', JSON.stringify({ email, resetUrl }));
 
     // Configurar transporter do Nodemailer com Brevo
     log('Configurando transporter...');
@@ -52,7 +32,7 @@ module.exports = async ({ req, res, log, error }) => {
       },
     });
 
-    log('Transporter configurado');
+    log('✅ Transporter configurado');
 
     // Email de redefinição de senha
     const mailOptions = {
@@ -207,7 +187,7 @@ module.exports = async ({ req, res, log, error }) => {
               
               <div class="warning-box">
                 <strong>⚠️ Atenção!</strong>
-                <p>Se você não solicitou esta redefinição, ignore este email.</p>
+                <p style="margin: 8px 0 0 0;">Se você não solicitou esta redefinição, ignore este email.</p>
               </div>
 
               <p>Para criar uma nova senha, clique no botão abaixo:</p>
@@ -236,12 +216,11 @@ module.exports = async ({ req, res, log, error }) => {
       `,
     };
 
-    // Enviar email
-    log('Enviando email de redefinição...');
+    log('📧 Enviando email de redefinição...');
     const info = await transporter.sendMail(mailOptions);
-    log('Email enviado com sucesso! MessageId:', info.messageId);
+    log('✅ Email enviado com sucesso! MessageId:', info.messageId);
 
-    log('=== EMAIL ENVIADO COM SUCESSO ===');
+    log('=== ✅ EMAIL ENVIADO COM SUCESSO ===');
 
     return res.json({
       success: true,
@@ -249,7 +228,7 @@ module.exports = async ({ req, res, log, error }) => {
       messageId: info.messageId,
     });
   } catch (err) {
-    error('=== ERRO NA EXECUÇÃO ===');
+    error('=== ❌ ERRO NA EXECUÇÃO ===');
     error('Mensagem:', err.message);
     error('Stack:', err.stack);
     
