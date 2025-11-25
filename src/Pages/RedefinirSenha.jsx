@@ -22,7 +22,6 @@ export default function RedefinirSenha() {
     e.preventDefault();
     setError('');
 
-    // Validar email
     if (!email.trim()) {
       setError('Email é obrigatório');
       return;
@@ -36,15 +35,14 @@ export default function RedefinirSenha() {
     setLoading(true);
 
     try {
-      // URL de redefinição (ajuste conforme sua configuração)
       const resetUrl = `${window.location.origin}/nova-senha`;
 
       // Criar token de recuperação no Appwrite
       await account.createRecovery(email, resetUrl);
 
-      // Chamar função para enviar email customizado
+      // ✅ ENVIAR DADOS CORRETAMENTE
       try {
-        await fetch(
+        const response = await fetch(
           `${import.meta.env.VITE_APPWRITE_ENDPOINT}/functions/${import.meta.env.VITE_APPWRITE_FUNCTION_RESET_PASSWORD}/executions`,
           {
             method: 'POST',
@@ -52,12 +50,20 @@ export default function RedefinirSenha() {
               'Content-Type': 'application/json',
               'X-Appwrite-Project': import.meta.env.VITE_APPWRITE_PROJECT_ID,
             },
+            // ✅ ENVIAR COMO STRING JSON
             body: JSON.stringify({
               email: email,
               resetUrl: `${resetUrl}?email=${encodeURIComponent(email)}`,
             }),
           }
         );
+
+        const result = await response.json();
+        console.log('Resposta da função:', result);
+
+        if (!response.ok) {
+          console.error('Erro na função:', result);
+        }
       } catch (emailError) {
         console.error('Erro ao enviar email customizado:', emailError);
       }

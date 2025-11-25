@@ -35,17 +35,16 @@ export default function Contato() {
 
       // 2. Enviar email via Appwrite Function
       try {
-        // ✅ USAR O ENDPOINT DE EXECUÇÃO SÍNCRONA
         const functionUrl = `${import.meta.env.VITE_APPWRITE_ENDPOINT}/functions/${import.meta.env.VITE_APPWRITE_FUNCTION_EMAIL}/executions`;
         
         console.log('Enviando para:', functionUrl);
 
+        // ✅ ENVIAR COMO STRING JSON
         const functionResponse = await fetch(functionUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'X-Appwrite-Project': import.meta.env.VITE_APPWRITE_PROJECT_ID,
-            // ✅ Não incluir Authorization se a função aceita "any"
           },
           body: JSON.stringify({
             nome: formData.nome,
@@ -60,13 +59,11 @@ export default function Contato() {
 
         if (!functionResponse.ok) {
           console.error('Erro ao enviar email via função:', result);
-          // Não falhar, apenas logar
         } else {
           console.log('Email enviado com sucesso!');
         }
       } catch (emailError) {
         console.error('Erro ao executar função de email:', emailError);
-        // Não falhar a operação se o email não for enviado
       }
 
       toast.success('Mensagem enviada com sucesso! 🎉', {
