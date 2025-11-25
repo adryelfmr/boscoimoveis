@@ -1,0 +1,35 @@
+{
+  "name": "Visualizacao",
+  "type": "object",
+  "properties": {
+    "imovelId": {
+      "type": "string",
+      "description": "ID do imóvel visualizado"
+    },
+    "userEmail": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Email do usuário (se autenticado)"
+    },
+    "sessionId": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "ID da sessão do navegador"
+    },
+    "tempoVisualizacao": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Tempo de visualização em segundos"
+    },
+    "origem": {
+      "type": "string",
+      "enum": ["direto", "catalogo", "home", "busca", "promocao"],
+      "default": "direto",
+      "description": "De onde veio (catalogo, home, busca, promocao, direto)"
+    }
+  },
+  "required": [
+    "imovelId"
+  ]
+}

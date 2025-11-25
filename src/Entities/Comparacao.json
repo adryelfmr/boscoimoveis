@@ -1,0 +1,25 @@
+{
+  "name": "Comparacao",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string",
+      "description": "ID do usuário (ou sessionId se não autenticado)"
+    },
+    "imovelId": {
+      "type": "string",
+      "description": "ID do imóvel na comparação"
+    },
+    "ordem": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10,
+      "default": 0,
+      "description": "Ordem na lista de comparação"
+    }
+  },
+  "required": [
+    "userId",
+    "imovelId"
+  ]
+}

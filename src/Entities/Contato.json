@@ -1,0 +1,52 @@
+{
+  "name": "Contato",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Nome completo do contato"
+    },
+    "email": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Email do contato"
+    },
+    "telefone": {
+      "type": "string",
+      "maxLength": 20,
+      "description": "Telefone do contato"
+    },
+    "mensagem": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Mensagem enviada"
+    },
+    "origem": {
+      "type": "string",
+      "enum": ["formulario", "whatsapp", "telefone", "imovel"],
+      "default": "formulario",
+      "description": "Origem do contato"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["novo", "em_andamento", "respondido", "finalizado"],
+      "default": "novo",
+      "description": "Status do atendimento"
+    },
+    "lido": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se foi lido pelo admin"
+    },
+    "imovelId": {
+      "type": "string",
+      "description": "ID do imóvel relacionado (se aplicável)"
+    }
+  },
+  "required": [
+    "nome",
+    "email",
+    "mensagem"
+  ]
+}

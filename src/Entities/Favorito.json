@@ -1,0 +1,28 @@
+{
+  "name": "Favorito",
+  "type": "object",
+  "properties": {
+    "imovelId": {
+      "type": "string",
+      "description": "ID do imóvel favoritado"
+    },
+    "userId": {
+      "type": "string",
+      "description": "ID do usuário"
+    },
+    "notas": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Notas pessoais sobre o imóvel"
+    },
+    "alertaPreco": {
+      "type": "boolean",
+      "default": true,
+      "description": "Alertar quando preço mudar"
+    }
+  },
+  "required": [
+    "imovelId",
+    "userId"
+  ]
+}

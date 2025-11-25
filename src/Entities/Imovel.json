@@ -1,0 +1,203 @@
+{
+  "name": "Imovel",
+  "type": "object",
+  "properties": {
+    "titulo": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Título do anúncio do imóvel"
+    },
+    "descricao": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Descrição completa do imóvel"
+    },
+    "tipoImovel": {
+      "type": "string",
+      "enum": ["house", "apartment", "land", "commercial"],
+      "description": "Tipo do imóvel (house, apartment, land, commercial)"
+    },
+    "finalidade": {
+      "type": "string",
+      "enum": ["Residencial", "Comercial", "Industrial"],
+      "description": "Finalidade/Uso do imóvel"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["Disponível", "Reservado", "Vendido", "Alugado"],
+      "description": "Status do imóvel (opcional)"
+    },
+    "preco": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Preço do imóvel"
+    },
+    "endereco": {
+      "type": "string",
+      "maxLength": 512,
+      "description": "Endereço completo"
+    },
+    "bairro": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Bairro"
+    },
+    "cidade": {
+      "type": "string",
+      "maxLength": 128,
+      "description": "Cidade"
+    },
+    "estado": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "Estado (UF)"
+    },
+    "area": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 10000,
+      "description": "Área em m²"
+    },
+    "areaTerreno": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Área do terreno em m²"
+    },
+    "numeroQuartos": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 20,
+      "description": "Número de quartos"
+    },
+    "numeroBanheiros": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 20,
+      "description": "Número de banheiros"
+    },
+    "vagas": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 20,
+      "description": "Número de vagas de garagem"
+    },
+    "anoConstrucao": {
+      "type": "integer",
+      "minimum": 1000,
+      "maximum": 9999,
+      "description": "Ano de construção"
+    },
+    "anoRenovacao": {
+      "type": "integer",
+      "minimum": 1900,
+      "maximum": 2100,
+      "description": "Ano da última renovação"
+    },
+    "andarImovel": {
+      "type": "string",
+      "maxLength": 32,
+      "description": "Andar do imóvel (ex: 3º andar, Térreo)"
+    },
+    "imagens": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "URLs das imagens separadas por vírgula"
+    },
+    "imagemPrincipal": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "URL da imagem principal"
+    },
+    "disponibilidade": {
+      "type": "string",
+      "enum": ["disponivel", "indisponivel", "reservado"],
+      "description": "Disponibilidade do imóvel"
+    },
+    "destaque": {
+      "type": "boolean",
+      "default": false,
+      "description": "Imóvel em destaque"
+    },
+    "promocao": {
+      "type": "boolean",
+      "default": false,
+      "description": "Imóvel em promoção"
+    },
+    "isNovo": {
+      "type": "boolean",
+      "description": "Indica se é um imóvel novo"
+    },
+    "condominio": {
+      "type": "boolean",
+      "description": "Está em condomínio"
+    },
+    "valorCondominio": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Valor mensal do condomínio"
+    },
+    "valorIptu": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Valor anual do IPTU"
+    },
+    "garagemDisponivel": {
+      "type": "boolean",
+      "description": "Possui garagem disponível"
+    },
+    "documentacaoRegular": {
+      "type": "boolean",
+      "default": true,
+      "description": "Documentação está regular"
+    },
+    "acessibilidade": {
+      "type": "boolean",
+      "default": true,
+      "description": "Possui recursos de acessibilidade"
+    },
+    "latitude": {
+      "type": "number",
+      "description": "Coordenada de latitude"
+    },
+    "longitude": {
+      "type": "number",
+      "description": "Coordenada de longitude"
+    },
+    "distanciaCentro": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Distância do centro em km"
+    },
+    "dataDisponivel": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data em que ficou disponível"
+    },
+    "dataConstrucao": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data de construção"
+    },
+    "ultimaVisualizacao": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data da última visualização"
+    },
+    "notaMedia": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Nota média de avaliação"
+    }
+  },
+  "required": [
+    "titulo",
+    "tipoImovel",
+    "finalidade",
+    "preco",
+    "endereco",
+    "cidade",
+    "estado",
+    "disponibilidade"
+  ]
+}

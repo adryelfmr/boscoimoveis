@@ -1,0 +1,76 @@
+{
+  "name": "Alerta",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string",
+      "description": "ID do usuário"
+    },
+    "tipoImovel": {
+      "type": "string",
+      "enum": ["house", "apartment", "land", "commercial"],
+      "description": "Tipo do imóvel desejado"
+    },
+    "finalidade": {
+      "type": "string",
+      "enum": ["Residencial", "Comercial", "Industrial"],
+      "description": "Finalidade do imóvel"
+    },
+    "tipoNegocio": {
+      "type": "string",
+      "enum": ["Venda", "Aluguel", "Venda/Aluguel"],
+      "description": "Tipo de negócio (Venda, Aluguel)"
+    },
+    "precoMin": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Preço mínimo desejado"
+    },
+    "precoMax": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Preço máximo desejado"
+    },
+    "cidade": {
+      "type": "string",
+      "maxLength": 128,
+      "description": "Cidade desejada"
+    },
+    "bairro": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Bairro desejado"
+    },
+    "quartosMin": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 20,
+      "description": "Número mínimo de quartos"
+    },
+    "areaMin": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Área mínima em m²"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true,
+      "description": "Alerta está ativo"
+    },
+    "frequencia": {
+      "type": "string",
+      "enum": ["imediato", "diario", "semanal"],
+      "default": "diario",
+      "description": "Frequência de notificação"
+    },
+    "ultimaNotificacao": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data da última notificação enviada"
+    }
+  },
+  "required": [
+    "userId",
+    "tipoImovel"
+  ]
+}
