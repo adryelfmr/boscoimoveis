@@ -193,6 +193,13 @@ export default function Login() {
               </Button>
             </form>
 
+            {/* ✅ ADICIONAR LINK DE ESQUECI A SENHA */}
+            <div className="mt-4 text-center">
+              <Link to="/redefinir-senha" className="text-sm text-blue-900 hover:text-blue-800 font-semibold">
+                Esqueceu sua senha?
+              </Link>
+            </div>
+
             <div className="mt-6 text-center space-y-2">
               <p className="text-sm text-slate-600">
                 Não tem uma conta?{' '}

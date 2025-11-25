@@ -12,18 +12,18 @@ module.exports = async ({ req, res, log, error }) => {
     const transporter = nodemailer.createTransport({
       host: 'smtp-relay.brevo.com',
       port: 587,
-      secure: false, // true para 465, false para outras portas
+      secure: false,
       auth: {
         user: 'adryelrocha71@gmail.com',
         pass: 'Adryel195030!',
       },
     });
 
-    // Email para o admin
+    // ✅ Email para o ADMIN (seu email pessoal)
     const mailOptionsAdmin = {
       from: '"Bosco Imóveis" <9c6f2b001@smtp-brevo.com>',
-      to: 'adryelrocha71@gmail.com', // Email do admin
-      replyTo: email, // Email do cliente para responder
+      to: 'bosco.mr@hotmail.com', // ✅ SEU EMAIL PESSOAL
+      replyTo: email, // ✅ Quando você responder, vai para o email do cliente
       subject: `🏠 Nova mensagem de contato - ${nome}`,
       html: `
         <!DOCTYPE html>
@@ -77,11 +77,11 @@ module.exports = async ({ req, res, log, error }) => {
       `,
     };
 
-    // Email de confirmação para o cliente
+    // ✅ Email de confirmação para o CLIENTE
     const mailOptionsCliente = {
       from: '"Bosco Imóveis" <9c6f2b001@smtp-brevo.com>',
-      to: email,
-      replyTo: 'adryelrocha71@gmail.com',
+      to: email, // ✅ Email do cliente
+      replyTo: 'bosco.mr@hotmail.com', // ✅ Quando o cliente responder, vai para você
       subject: '✅ Recebemos sua mensagem - Bosco Imóveis',
       html: `
         <!DOCTYPE html>

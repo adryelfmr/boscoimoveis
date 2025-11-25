@@ -15,6 +15,8 @@ import GerenciarContatos from './Pages/GerenciarContatos';
 import Login from './Pages/Login';
 import Registro from './Pages/Registro';
 import Perfil from './Pages/Perfil';
+import RedefinirSenha from './Pages/RedefinirSenha'; // ✅ NOVO
+import NovaSenha from './Pages/NovaSenha'; // ✅ NOVO
 
 export const router = createBrowserRouter([
   {
@@ -92,6 +94,15 @@ export const router = createBrowserRouter([
   {
     path: '/registro',
     element: <Registro />,
+  },
+  // ✅ NOVAS ROTAS
+  {
+    path: '/redefinir-senha',
+    element: <RedefinirSenha />,
+  },
+  {
+    path: '/nova-senha',
+    element: <NovaSenha />,
   },
   {
     path: '/perfil',

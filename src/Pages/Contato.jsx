@@ -31,31 +31,42 @@ export default function Contato() {
         origem: 'formulario',
       });
 
+      console.log('Contato salvo:', contato);
+
       // 2. Enviar email via Appwrite Function
       try {
-        const functionResponse = await fetch(
-          `${import.meta.env.VITE_APPWRITE_ENDPOINT}/functions/${import.meta.env.VITE_APPWRITE_FUNCTION_EMAIL}/executions`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Appwrite-Project': import.meta.env.VITE_APPWRITE_PROJECT_ID,
-            },
-            body: JSON.stringify({
-              nome: formData.nome,
-              email: formData.email,
-              telefone: formData.telefone,
-              mensagem: formData.mensagem,
-            }),
-          }
-        );
+        // ✅ USAR O ENDPOINT DE EXECUÇÃO SÍNCRONA
+        const functionUrl = `${import.meta.env.VITE_APPWRITE_ENDPOINT}/functions/${import.meta.env.VITE_APPWRITE_FUNCTION_EMAIL}/executions`;
+        
+        console.log('Enviando para:', functionUrl);
+
+        const functionResponse = await fetch(functionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Appwrite-Project': import.meta.env.VITE_APPWRITE_PROJECT_ID,
+            // ✅ Não incluir Authorization se a função aceita "any"
+          },
+          body: JSON.stringify({
+            nome: formData.nome,
+            email: formData.email,
+            telefone: formData.telefone || '',
+            mensagem: formData.mensagem,
+          }),
+        });
+
+        const result = await functionResponse.json();
+        console.log('Resposta da função:', result);
 
         if (!functionResponse.ok) {
-          console.error('Erro ao enviar email via função');
+          console.error('Erro ao enviar email via função:', result);
+          // Não falhar, apenas logar
+        } else {
+          console.log('Email enviado com sucesso!');
         }
       } catch (emailError) {
         console.error('Erro ao executar função de email:', emailError);
-        // Não falha a operação se o email não for enviado
+        // Não falhar a operação se o email não for enviado
       }
 
       toast.success('Mensagem enviada com sucesso! 🎉', {
