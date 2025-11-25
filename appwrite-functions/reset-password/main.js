@@ -1,56 +1,52 @@
-const sdk = require('node-appwrite');
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 
 module.exports = async ({ req, res, log, error }) => {
   try {
-    log('=== INÍCIO DA EXECUÇÃO - RESET PASSWORD ===');
-    log('req.body type:', typeof req.body);
-    log('req.body:', req.body);
-    log('req.body JSON:', JSON.stringify(req.body));
-    log('req.bodyRaw:', req.bodyRaw);
-    log('req.headers:', JSON.stringify(req.headers));
-    
-    // ✅ TENTAR PARSEAR DE DIFERENTES FORMAS
+    log("=== INÍCIO DA EXECUÇÃO - RESET PASSWORD ===");
+
+    // 🟦 1. Capturar payload corretamente no Appwrite
     let payload;
-    
-    if (typeof req.body === 'string' && req.body.trim() !== '') {
-      log('Tentando parsear body como string...');
-      payload = JSON.parse(req.body);
-    } else if (typeof req.body === 'object' && req.body !== null) {
-      log('Body já é objeto');
-      payload = req.body;
+
+    if (req.variables && req.variables.APPWRITE_FUNCTION_DATA) {
+      log("➡ Dados vieram de APPWRITE_FUNCTION_DATA");
+      payload = JSON.parse(req.variables.APPWRITE_FUNCTION_DATA);
     } else if (req.bodyRaw) {
-      log('Tentando usar bodyRaw...');
+      log("➡ Dados vieram de req.bodyRaw");
       payload = JSON.parse(req.bodyRaw);
+    } else if (typeof req.body === "object" && req.body !== null) {
+      log("➡ Dados vieram de req.body (objeto)");
+      payload = req.body;
     } else {
-      log('❌ Nenhum body válido encontrado');
-      throw new Error(`Body vazio ou inválido. Type: ${typeof req.body}, Value: ${JSON.stringify(req.body)}`);
+      throw new Error("Nenhum body válido encontrado");
     }
-    
-    log('✅ Payload parseado:', JSON.stringify(payload));
+
+    log("📦 Payload recebido:", JSON.stringify(payload));
 
     const { email, resetUrl } = payload;
 
     if (!email || !resetUrl) {
-      throw new Error(`Email e resetUrl são obrigatórios. Recebido: ${JSON.stringify(payload)}`);
+      throw new Error(
+        `Email e resetUrl são obrigatórios. Recebido: ${JSON.stringify(payload)}`
+      );
     }
 
-    log('✅ Dados extraídos:', JSON.stringify({ email, resetUrl }));
-
-    // ✅ Usar variáveis de ambiente
+    // 🟦 2. Variáveis de ambiente (Brevo)
     const SMTP_USER = process.env.BREVO_SMTP_USER;
     const SMTP_PASS = process.env.BREVO_SMTP_PASS;
     const FROM_EMAIL = process.env.BREVO_FROM_EMAIL;
     const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
     if (!SMTP_USER || !SMTP_PASS || !FROM_EMAIL || !ADMIN_EMAIL) {
-      throw new Error('Variáveis de ambiente SMTP não configuradas');
+      throw new Error(
+        "Variáveis de ambiente SMTP faltando. Necessárias: BREVO_SMTP_USER, BREVO_SMTP_PASS, BREVO_FROM_EMAIL, ADMIN_EMAIL"
+      );
     }
 
-    // Configurar transporter do Nodemailer com Brevo
-    log('Configurando transporter...');
+    log("🔐 Variáveis de ambiente carregadas com sucesso");
+
+    // 🟦 3. Configurar transporter da Brevo (Nodemailer)
     const transporter = nodemailer.createTransport({
-      host: 'smtp-relay.brevo.com',
+      host: "smtp-relay.brevo.com",
       port: 587,
       secure: false,
       auth: {
@@ -59,210 +55,57 @@ module.exports = async ({ req, res, log, error }) => {
       },
     });
 
-    log('✅ Transporter configurado');
+    log("📡 Transporter configurado com sucesso");
 
-    // Email de redefinição de senha
+    // 🟦 4. Conteúdo do e-mail
     const mailOptions = {
       from: `"Bosco Imóveis" <${FROM_EMAIL}>`,
       to: email,
       replyTo: ADMIN_EMAIL,
-      subject: '🔐 Redefinir sua senha - Bosco Imóveis',
+      subject: "🔐 Redefinir sua senha - Bosco Imóveis",
       html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <style>
-            body { 
-              font-family: Arial, sans-serif; 
-              line-height: 1.6; 
-              color: #333; 
-              margin: 0;
-              padding: 0;
-              background-color: #f5f5f5;
-            }
-            .container { 
-              max-width: 600px; 
-              margin: 40px auto; 
-              background: white;
-              border-radius: 12px;
-              overflow: hidden;
-              box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            }
-            .header { 
-              background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); 
-              color: white; 
-              padding: 40px 30px; 
-              text-align: center; 
-            }
-            .header h1 {
-              margin: 0 0 10px 0;
-              font-size: 28px;
-            }
-            .header p {
-              margin: 0;
-              opacity: 0.9;
-            }
-            .content { 
-              padding: 40px 30px; 
-            }
-            .content p {
-              margin: 0 0 20px 0;
-              color: #475569;
-            }
-            .warning-box {
-              background: #fef3c7;
-              border-left: 4px solid #f59e0b;
-              padding: 20px;
-              margin: 25px 0;
-              border-radius: 8px;
-            }
-            .warning-box strong {
-              color: #92400e;
-              display: block;
-              margin-bottom: 8px;
-            }
-            .warning-box p {
-              margin: 0;
-              color: #78350f;
-              font-size: 14px;
-            }
-            .button { 
-              display: inline-block; 
-              padding: 16px 40px; 
-              background: #3b82f6; 
-              color: white !important; 
-              text-decoration: none; 
-              border-radius: 8px; 
-              font-weight: 600;
-              font-size: 16px;
-              margin: 20px 0;
-            }
-            .button:hover {
-              background: #2563eb;
-            }
-            .button-container {
-              text-align: center;
-              margin: 30px 0;
-            }
-            .alternative-link {
-              background: #f1f5f9;
-              padding: 20px;
-              border-radius: 8px;
-              margin: 25px 0;
-            }
-            .alternative-link p {
-              margin: 0 0 10px 0;
-              font-size: 14px;
-              color: #64748b;
-            }
-            .alternative-link code {
-              display: block;
-              background: white;
-              padding: 12px;
-              border-radius: 6px;
-              border: 1px solid #e2e8f0;
-              word-break: break-all;
-              font-size: 12px;
-              color: #1e293b;
-              margin-top: 8px;
-            }
-            .info-list {
-              background: #f8fafc;
-              padding: 20px;
-              border-radius: 8px;
-              margin: 25px 0;
-            }
-            .info-list li {
-              color: #475569;
-              margin: 8px 0;
-              padding-left: 8px;
-            }
-            .footer { 
-              text-align: center; 
-              padding: 30px; 
-              background: #f8fafc;
-              border-top: 1px solid #e2e8f0;
-            }
-            .footer p {
-              margin: 5px 0;
-              color: #64748b;
-              font-size: 13px;
-            }
-            .security-notice {
-              background: #dbeafe;
-              border-left: 4px solid #3b82f6;
-              padding: 15px;
-              margin: 20px 0;
-              border-radius: 8px;
-            }
-            .security-notice p {
-              margin: 0;
-              color: #1e40af;
-              font-size: 13px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>🔐 Redefinir Senha</h1>
-              <p>Solicitação de redefinição de senha</p>
-            </div>
-            <div class="content">
-              <p>Olá,</p>
-              <p>Recebemos uma solicitação para redefinir a senha da sua conta no <strong>Bosco Imóveis</strong>.</p>
-              
-              <div class="warning-box">
-                <strong>⚠️ Atenção!</strong>
-                <p style="margin: 8px 0 0 0;">Se você não solicitou esta redefinição, ignore este email.</p>
-              </div>
+        <h2>Olá!</h2>
+        <p>Recebemos uma solicitação para redefinir sua senha.</p>
+        <p>Para continuar, clique no botão abaixo:</p>
 
-              <p>Para criar uma nova senha, clique no botão abaixo:</p>
+        <p>
+          <a href="${resetUrl}" 
+          style="display:inline-block;padding:12px 24px;background:#1e40af;color:white;text-decoration:none;border-radius:8px;">
+            Redefinir Senha
+          </a>
+        </p>
 
-              <div class="button-container">
-                <a href="${resetUrl}" class="button">
-                  Redefinir Minha Senha
-                </a>
-              </div>
+        <p>Se você não solicitou isso, ignore este e-mail.</p>
 
-              <p style="margin-top: 30px;">Se você tiver alguma dúvida, entre em contato:</p>
-              
-              <div style="background: #e0f2fe; padding: 15px; border-radius: 8px; margin-top: 20px;">
-                <p style="margin: 0;"><strong>📞 Suporte:</strong></p>
-                <p style="margin: 5px 0;">Email: ${ADMIN_EMAIL}</p>
-                <p style="margin: 5px 0;">Telefone: (62) 99404-5111</p>
-              </div>
-            </div>
-            <div class="footer">
-              <p><strong>Bosco Imóveis</strong></p>
-              <p>Goiânia, GO</p>
-            </div>
-          </div>
-        </body>
-        </html>
+        <p style="margin-top:30px;font-size:12px;color:#555;">
+          Atenciosamente,<br>
+          <strong>Bosco Imóveis</strong>
+        </p>
       `,
     };
 
-    log('📧 Enviando email de redefinição...');
+    // 🟦 5. Enviar email
+    log("📧 Enviando email de redefinição...");
     const info = await transporter.sendMail(mailOptions);
-    log('✅ Email enviado com sucesso! MessageId:', info.messageId);
 
-    log('=== ✅ EMAIL ENVIADO COM SUCESSO ===');
+    log("✅ Email enviado! MessageId:", info.messageId);
 
     return res.json({
       success: true,
-      message: 'Email de redefinição enviado com sucesso',
+      message: "Email enviado com sucesso.",
       messageId: info.messageId,
     });
   } catch (err) {
-    error('=== ❌ ERRO NA EXECUÇÃO ===');
-    error('Mensagem:', err.message);
-    error('Stack:', err.stack);
-    
-    return res.json({
-      success: false,
-      error: err.message,
-      stack: err.stack,
-    }, 500);
+    error("❌ ERRO:", err.message);
+    error(err.stack);
+
+    return res.json(
+      {
+        success: false,
+        error: err.message,
+        stack: err.stack,
+      },
+      500
+    );
   }
 };
