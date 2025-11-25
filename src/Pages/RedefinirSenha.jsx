@@ -14,9 +14,7 @@ export default function RedefinirSenha() {
   const [emailEnviado, setEmailEnviado] = useState(false);
   const [error, setError] = useState('');
 
-  const validateEmail = (email) => {
-    return /\S+@\S+\.\S+/.test(email);
-  };
+  const validateEmail = (email) => /\S+@\S+\.\S+/.test(email);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,105 +35,61 @@ export default function RedefinirSenha() {
     try {
       const resetUrl = `${window.location.origin}/nova-senha`;
 
-      // Criar token de recuperação no Appwrite
+      // 1️⃣ Criar token de recuperação do Appwrite
       await account.createRecovery(email, resetUrl);
 
-      // ✅ CORREÇÃO: Enviar como objeto direto, não como string
-      try {
-        const payload = {
-          email: email,
-          resetUrl: `${resetUrl}?email=${encodeURIComponent(email)}`,
-        };
+      // 2️⃣ Enviar email customizado
+      const payload = {
+        email: email,
+        resetUrl: `${resetUrl}?email=${encodeURIComponent(email)}`,
+      };
 
-        console.log('Payload a enviar:', payload);
-
-        const response = await fetch(
-          `${import.meta.env.VITE_APPWRITE_ENDPOINT}/functions/${import.meta.env.VITE_APPWRITE_FUNCTION_RESET_PASSWORD}/executions`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Appwrite-Project': import.meta.env.VITE_APPWRITE_PROJECT_ID,
-            },
-            body: JSON.stringify(payload), // ✅ Stringify aqui
-          }
-        );
-
-        const result = await response.json();
-        console.log('Resposta da função:', result);
-
-        if (!response.ok) {
-          console.error('Erro na função:', result);
+      const response = await fetch(
+        `${import.meta.env.VITE_APPWRITE_ENDPOINT}/functions/${import.meta.env.VITE_APPWRITE_FUNCTION_RESET_PASSWORD}/executions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Appwrite-Project": import.meta.env.VITE_APPWRITE_PROJECT_ID,
+          },
+          body: JSON.stringify({
+            data: JSON.stringify(payload), // OBRIGATÓRIO
+          }),
         }
-      } catch (emailError) {
-        console.error('Erro ao enviar email customizado:', emailError);
-      }
+      );
+
+      const result = await response.json();
+      console.log("RESPOSTA FUNÇÃO:", result);
 
       setEmailEnviado(true);
-      toast.success('Email enviado com sucesso!', {
-        description: 'Verifique sua caixa de entrada.',
+      toast.success("Email enviado com sucesso!", {
+        description: "Verifique sua caixa de entrada.",
       });
-    } catch (error) {
-      console.error('Erro ao solicitar redefinição:', error);
-      
-      if (error.message?.includes('user-not-found')) {
-        toast.error('Usuário não encontrado', {
-          description: 'Não encontramos uma conta com este email.',
-        });
-        setError('Email não cadastrado');
-      } else if (error.message?.includes('rate-limit')) {
-        toast.error('Muitas tentativas', {
-          description: 'Aguarde alguns minutos antes de tentar novamente.',
-        });
-        setError('Tente novamente em alguns minutos');
-      } else {
-        toast.error('Erro ao enviar email', {
-          description: 'Tente novamente mais tarde.',
-        });
-        setError('Erro ao processar solicitação');
-      }
-    } finally {
-      setLoading(false);
+
+    } catch (err) {
+      console.error("ERRO AO REDEFINIR SENHA:", err);
+      toast.error("Erro ao processar solicitação");
+      setError("Não foi possível enviar o email.");
     }
+
+    setLoading(false);
   };
 
   if (emailEnviado) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
-        >
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }} className="w-full max-w-md">
           <Card className="border-0 shadow-2xl">
             <CardContent className="pt-6 text-center">
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 className="w-10 h-10 text-green-600" />
               </div>
-              
-              <h2 className="text-2xl font-bold text-slate-900 mb-3">
-                Email Enviado!
-              </h2>
-              
-              <p className="text-slate-600 mb-6">
-                Enviamos instruções para redefinir sua senha para:
-              </p>
-              
+
+              <h2 className="text-2xl font-bold text-slate-900 mb-3">Email Enviado!</h2>
+              <p className="text-slate-600 mb-6">Enviamos instruções para redefinir sua senha para:</p>
+
               <div className="bg-blue-50 p-4 rounded-lg mb-6">
                 <p className="text-blue-900 font-semibold">{email}</p>
-              </div>
-
-              <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 text-left">
-                <p className="text-sm text-amber-800">
-                  <strong>⏰ Importante:</strong> O link de redefinição expira em 1 hora.
-                </p>
-              </div>
-
-              <div className="space-y-3 text-sm text-slate-600 text-left mb-6">
-                <p>📧 Verifique sua caixa de entrada</p>
-                <p>📂 Não esqueça de verificar a pasta de spam</p>
-                <p>🔄 Não recebeu? Tente novamente em alguns minutos</p>
               </div>
 
               <div className="space-y-3">
@@ -145,23 +99,13 @@ export default function RedefinirSenha() {
                     Voltar para Login
                   </Button>
                 </Link>
-                
+
                 <Link to="/">
                   <Button variant="outline" className="w-full">
                     <Home className="w-4 h-4 mr-2" />
                     Ir para Home
                   </Button>
                 </Link>
-
-                <button
-                  onClick={() => {
-                    setEmailEnviado(false);
-                    setEmail('');
-                  }}
-                  className="w-full text-sm text-blue-900 hover:text-blue-700 py-2"
-                >
-                  Reenviar email
-                </button>
               </div>
             </CardContent>
           </Card>
@@ -172,36 +116,18 @@ export default function RedefinirSenha() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
-      >
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 text-white hover:text-blue-200 transition-colors mb-6">
-            <Home className="w-5 h-5" />
-            Voltar para o site
-          </Link>
-          <h1 className="text-4xl font-bold text-white mb-2">Bosco Imóveis</h1>
-          <p className="text-blue-200">Redefinir senha</p>
-        </div>
-
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md">
         <Card className="border-0 shadow-2xl">
-          <CardHeader className="space-y-1 pb-6">
-            <CardTitle className="text-2xl text-center">Esqueceu sua senha?</CardTitle>
-            <p className="text-center text-slate-600 text-sm">
-              Digite seu email e enviaremos instruções para redefinir sua senha
-            </p>
+          <CardHeader>
+            <CardTitle className="text-center text-2xl">Redefinir Senha</CardTitle>
           </CardHeader>
+
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-2 block">
-                  Email
-                </label>
+                <label className="text-sm font-medium text-slate-700">Email</label>
                 <div className="relative">
-                  <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${error ? 'text-red-400' : 'text-slate-400'}`} />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <Input
                     type="email"
                     value={email}
@@ -210,41 +136,29 @@ export default function RedefinirSenha() {
                       setError('');
                     }}
                     placeholder="seu@email.com"
-                    className={`pl-10 h-12 ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                    className="pl-10 h-12"
                   />
                 </div>
                 {error && (
-                  <div className="flex items-center gap-1 mt-2 text-red-600 text-sm">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{error}</span>
-                  </div>
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" /> {error}
+                  </p>
                 )}
               </div>
 
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full h-12 bg-blue-900 hover:bg-blue-800 text-white font-semibold"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Enviando...
-                  </>
-                ) : (
-                  'Enviar Email de Redefinição'
-                )}
+              <Button disabled={loading} className="w-full h-12 bg-blue-900 hover:bg-blue-800 text-white font-semibold">
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Enviar Email"}
               </Button>
             </form>
-
-            <div className="mt-6 text-center">
-              <Link to="/login" className="text-sm text-blue-900 hover:text-blue-800 font-semibold">
-                <ArrowLeft className="w-4 h-4 inline mr-1" />
-                Voltar para Login
-              </Link>
-            </div>
           </CardContent>
         </Card>
+
+        <p className="text-center text-white mt-6">
+          <Link to="/" className="hover:underline">
+            <ArrowLeft className="inline w-4 h-4 mr-1" />
+            Voltar para o site
+          </Link>
+        </p>
       </motion.div>
     </div>
   );
