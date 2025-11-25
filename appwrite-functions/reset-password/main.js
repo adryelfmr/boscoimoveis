@@ -6,10 +6,26 @@ module.exports = async ({ req, res, log, error }) => {
     log("req.body type:", typeof req.body);
     log("req.body:", JSON.stringify(req.body));
     log("req.bodyRaw:", req.bodyRaw);
-    log("req.bodyJson:", req.bodyJson);
+    // ❌ REMOVIDO: log("req.bodyJson:", req.bodyJson);
     
-    // ✅ CORREÇÃO: Usar req.body diretamente (Appwrite já parseia o JSON)
-    const payload = req.body;
+    // ✅ Tentar parsear de diferentes formas
+    let payload;
+    
+    if (typeof req.body === 'object' && req.body !== null && Object.keys(req.body).length > 0) {
+      log("✅ req.body já é objeto válido");
+      payload = req.body;
+    } else if (typeof req.bodyRaw === 'string' && req.bodyRaw.trim() !== '') {
+      log("✅ Parseando req.bodyRaw");
+      payload = JSON.parse(req.bodyRaw);
+    } else if (typeof req.body === 'string' && req.body.trim() !== '') {
+      log("✅ Parseando req.body como string");
+      payload = JSON.parse(req.body);
+    } else {
+      log("❌ Nenhum body válido encontrado");
+      log("req.body:", req.body);
+      log("req.bodyRaw:", req.bodyRaw);
+      throw new Error("Nenhum payload válido recebido");
+    }
     
     log("✅ Payload recebido:", JSON.stringify(payload));
 
