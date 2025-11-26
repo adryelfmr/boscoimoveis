@@ -1,13 +1,12 @@
 import { account, databases, storage, DATABASE_ID, BUCKET_ID, ID, Query } from '@/lib/appwrite';
 
-// ✅ IMPORTAR COLLECTIONS do lib/appwrite.js ao invés de redeclarar
 export const COLLECTIONS = {
   IMOVEIS: import.meta.env.VITE_APPWRITE_COLLECTION_IMOVEIS,
   FAVORITOS: import.meta.env.VITE_APPWRITE_COLLECTION_FAVORITOS,
   VISUALIZACOES: import.meta.env.VITE_APPWRITE_COLLECTION_VISUALIZACOES,
   COMPARACOES: import.meta.env.VITE_APPWRITE_COLLECTION_COMPARACOES,
   ALERTAS: import.meta.env.VITE_APPWRITE_COLLECTION_ALERTAS,
-  CONTATOS: import.meta.env.VITE_APPWRITE_COLLECTION_CONTATOS, // ✅ NOVO
+  CONTATOS: import.meta.env.VITE_APPWRITE_COLLECTION_CONTATOS,
 };
 
 export const appwrite = {
@@ -16,7 +15,10 @@ export const appwrite = {
       try {
         return await account.get();
       } catch (error) {
-        console.error('Erro ao buscar usuário:', error);
+        // ✅ CORRIGIDO: Não logar erro se for apenas "não autenticado"
+        if (error.code !== 401) {
+          console.error('Erro ao buscar usuário:', error);
+        }
         throw new Error('Not authenticated');
       }
     },
@@ -71,6 +73,30 @@ export const appwrite = {
     redirectToLogin: (returnUrl) => {
       localStorage.setItem('return_url', returnUrl || window.location.href);
       window.location.href = '/login';
+    },
+  },
+
+  storage: {
+    createFile: async (bucketId, fileId, file) => {
+      try {
+        return await storage.createFile(bucketId, fileId, file);
+      } catch (error) {
+        console.error('Erro ao fazer upload:', error);
+        throw error;
+      }
+    },
+    
+    getFileView: (bucketId, fileId) => {
+      return storage.getFileView(bucketId, fileId);
+    },
+    
+    deleteFile: async (bucketId, fileId) => {
+      try {
+        return await storage.deleteFile(bucketId, fileId);
+      } catch (error) {
+        console.error('Erro ao deletar arquivo:', error);
+        throw error;
+      }
     },
   },
 
@@ -337,20 +363,6 @@ export const appwrite = {
           data
         );
       },
-    },
-  },
-
-  storage: {
-    uploadFile: async (file) => {
-      return await storage.createFile(BUCKET_ID, ID.unique(), file);
-    },
-
-    getFileUrl: (fileId) => {
-      return storage.getFileView(BUCKET_ID, fileId);
-    },
-
-    deleteFile: async (fileId) => {
-      return await storage.deleteFile(BUCKET_ID, fileId);
     },
   },
 

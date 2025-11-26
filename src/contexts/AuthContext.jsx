@@ -38,7 +38,8 @@ export function AuthProvider({ children }) {
           isAdmin = userTeams.teams.some(team => team.$id === ADMIN_TEAM_ID);
           
         } catch (error) {
-          console.error('Erro ao verificar equipes:', error);
+          // ✅ CORRIGIDO: Apenas log silencioso, não é um erro crítico
+          console.log('Erro ao verificar equipes:', error);
           isAdmin = false;
         }
       }
@@ -48,7 +49,10 @@ export function AuthProvider({ children }) {
         isAdmin,
       });
     } catch (error) {
-      console.error('Erro ao verificar usuário:', error);
+      // ✅ CORRIGIDO: Não logar erro se o usuário simplesmente não está autenticado
+      if (error.message !== 'Not authenticated') {
+        console.error('Erro ao verificar usuário:', error);
+      }
       setUser(null);
     } finally {
       setLoading(false);

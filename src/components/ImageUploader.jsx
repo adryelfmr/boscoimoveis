@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { ID } from 'appwrite';
 
 export default function ImageUploader({ images = [], onImagesChange, maxImages = 10 }) {
   const [uploading, setUploading] = useState(false);
@@ -21,13 +22,11 @@ export default function ImageUploader({ images = [], onImagesChange, maxImages =
     const newImages = [...images];
 
     for (const file of files) {
-      // Validar tipo de arquivo
       if (!file.type.startsWith('image/')) {
         toast.error(`${file.name} não é uma imagem válida`);
         continue;
       }
 
-      // Validar tamanho (máx 5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast.error(`${file.name} é muito grande (máx 5MB)`);
         continue;
@@ -36,12 +35,20 @@ export default function ImageUploader({ images = [], onImagesChange, maxImages =
       try {
         setUploadProgress(prev => ({ ...prev, [file.name]: 0 }));
         
-        // Upload para o Appwrite
-        const result = await appwrite.storage.uploadFile(file);
-        const url = appwrite.storage.getFileUrl(result.$id);
+        // ✅ Upload correto para Appwrite Storage
+        const result = await appwrite.storage.createFile(
+          import.meta.env.VITE_APPWRITE_BUCKET_ID,
+          ID.unique(),
+          file
+        );
+        
+        const url = appwrite.storage.getFileView(
+          import.meta.env.VITE_APPWRITE_BUCKET_ID,
+          result.$id
+        );
         
         newImages.push({
-          url,
+          url: url.href || url.toString(),
           fileId: result.$id,
           name: file.name
         });
@@ -50,7 +57,7 @@ export default function ImageUploader({ images = [], onImagesChange, maxImages =
         toast.success(`${file.name} enviado com sucesso!`);
       } catch (error) {
         console.error('Erro ao fazer upload:', error);
-        toast.error(`Erro ao enviar ${file.name}`);
+        toast.error(`Erro ao enviar ${file.name}: ${error.message}`);
       }
     }
 
@@ -63,9 +70,11 @@ export default function ImageUploader({ images = [], onImagesChange, maxImages =
     const imageToRemove = images[index];
     
     try {
-      // Deletar do Appwrite Storage se tiver fileId
       if (imageToRemove.fileId) {
-        await appwrite.storage.deleteFile(imageToRemove.fileId);
+        await appwrite.storage.deleteFile(
+          import.meta.env.VITE_APPWRITE_BUCKET_ID,
+          imageToRemove.fileId
+        );
       }
       
       const newImages = images.filter((_, i) => i !== index);
@@ -157,6 +166,9 @@ export default function ImageUploader({ images = [], onImagesChange, maxImages =
                   src={image.url}
                   alt={`Imagem ${index + 1}`}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/400?text=Erro';
+                  }}
                 />
               </div>
 
