@@ -3,7 +3,7 @@ import { appwrite } from '@/api/appwriteClient';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   MapPin,
   Maximize,
@@ -17,22 +17,22 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
-  Heart,
+  Phone,
+  FileText,
+  CheckCircle,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import { motion } from 'framer-motion';
-import FavoritoButton from '@/components/imoveis/FavoritoButton'; // ✅ CORRIGIDO
-import ComparadorButton from '@/components/imoveis/ComparadorButton'; // ✅ CORRIGIDO
-import CalculadoraFinanciamento from '@/components/imoveis/CalculadoraFinanciamento'; // ✅ CORRIGIDO
+import FavoritoButton from '@/components/imoveis/FavoritoButton';
 import { toast } from 'sonner';
 
-// Mapeamento de tipos para exibição
 const TIPO_IMOVEL_LABELS = {
   'house': 'Casa',
   'apartment': 'Apartamento',
   'land': 'Terreno',
-  'commercial': 'Comercial',
+  'comercial': 'Comercial',
+  'rural': 'Rural',
 };
 
 export default function Detalhes() {
@@ -50,7 +50,7 @@ export default function Detalhes() {
     queryKey: ['imovel', imovelId],
     queryFn: async () => {
       if (!imovelId) return null;
-      return await appwrite.entities.Imovel.get(imovelId); // ✅ CORRIGIDO: usar get() direto
+      return await appwrite.entities.Imovel.get(imovelId);
     },
     enabled: !!imovelId,
   });
@@ -121,7 +121,6 @@ export default function Detalhes() {
     );
   }
 
-  // Converter string de imagens em array
   const imagensArray = imovel.imagens ? imovel.imagens.split(',').map(url => url.trim()) : [];
   const imagens = imagensArray.length > 0 ? imagensArray : [
     imovel.imagemPrincipal || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80'
@@ -137,7 +136,7 @@ export default function Detalhes() {
 
   const whatsappNumber = '5562994045111';
   const whatsappMessage = encodeURIComponent(
-    `Olá! Tenho interesse no imóvel:\n\n${imovel.titulo}\nValor: ${formatPrice(imovel.preco)}\nCódigo: ${imovel.$id}\n\nLink: ${window.location.href}`
+    `Olá! Tenho interesse no imóvel:\n\n${imovel.titulo}\nValor: ${formatPrice(imovel.preco)}\nCódigo: ${imovel.$id}\n\nGostaria de mais informações sobre financiamento.\n\nLink: ${window.location.href}`
   );
 
   const compartilhar = async () => {
@@ -223,7 +222,6 @@ export default function Detalhes() {
                   </>
                 )}
 
-                {/* Badges */}
                 <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                   {imovel.destaque && (
                     <Badge className="bg-amber-400 text-blue-900 border-0 shadow-lg">
@@ -239,7 +237,6 @@ export default function Detalhes() {
                 </div>
               </div>
 
-              {/* Miniaturas */}
               {imagens.length > 1 && (
                 <div className="p-4 bg-white">
                   <div className="flex gap-2 overflow-x-auto">
@@ -329,7 +326,6 @@ export default function Detalhes() {
                   </p>
                 </div>
 
-                {/* Visualizações */}
                 {visualizacoesHoje > 0 && (
                   <div className="mt-6 pt-6 border-t border-slate-200">
                     <div className="flex items-center gap-2 text-slate-600">
@@ -344,9 +340,9 @@ export default function Detalhes() {
             </Card>
           </div>
 
-          {/* Sidebar - Contato e Calculadora */}
+          {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Card de Contato - REMOVIDO sticky */}
+            {/* Card de Contato */}
             <Card className="border-0 shadow-xl bg-gradient-to-br from-blue-900 to-blue-700 text-white">
               <CardContent className="p-6">
                 <div className="mb-4">
@@ -397,8 +393,62 @@ export default function Detalhes() {
               </CardContent>
             </Card>
 
-            {/* Calculadora de Financiamento */}
-            <CalculadoraFinanciamento precoImovel={imovel.preco} />
+            {/* ✅ NOVO: Card de Financiamento Real */}
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-amber-50 to-orange-50">
+              <CardHeader className="border-b bg-white/50">
+                <CardTitle className="flex items-center gap-2 text-slate-900">
+                  <FileText className="w-5 h-5 text-amber-600" />
+                  Financiamento
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="bg-white rounded-lg p-4 border-2 border-amber-200">
+                    <p className="text-sm text-slate-600 mb-2">
+                      Quer saber se você consegue financiar este imóvel?
+                    </p>
+                    <p className="font-semibold text-slate-900">
+                      Fale com nossos especialistas! 🏦
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2 text-sm text-slate-700">
+                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                      <span>Simulação com bancos parceiros</span>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm text-slate-700">
+                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                      <span>Taxas atualizadas e competitivas</span>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm text-slate-700">
+                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                      <span>Análise de crédito personalizada</span>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm text-slate-700">
+                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                      <span>Suporte completo na documentação</span>
+                    </div>
+                  </div>
+
+                  <a
+                    href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-lg">
+                      <Phone className="w-5 h-5 mr-2" />
+                      Consultar Financiamento
+                    </Button>
+                  </a>
+
+                  <p className="text-xs text-slate-600 text-center">
+                    Atendimento personalizado com especialistas em crédito imobiliário
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
