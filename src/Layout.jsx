@@ -1,52 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from './utils';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from './contexts/AuthContext';
+import { Button } from '@/components/ui/button';
 import { 
-  Menu, 
-  X, 
-  Home, 
   Building2, 
-  Tag, 
-  Phone, 
   Heart, 
   Scale, 
   User, 
+  Menu, 
+  X, 
+  Home,
   LogOut,
   Settings,
   Shield,
-  Mail, 
+  Mail,
   MessageCircle,
-  ChevronDown,
+  Phone,
+  Tag,
+  MapPin
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 
 export default function Layout({ children, currentPageName }) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [comparandoCount, setComparandoCount] = useState(0);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { user, logout, isAuthenticated, isAdmin } = useAuth();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const updateComparandoCount = () => {
-      const saved = localStorage.getItem('comparacao');
-      setComparandoCount(saved ? JSON.parse(saved).length : 0);
+    const handleClickOutside = (event) => {
+      if (userMenuOpen && !event.target.closest('.user-menu')) {
+        setUserMenuOpen(false);
+      }
     };
-    
-    updateComparandoCount();
-    window.addEventListener('storage', updateComparandoCount);
-    const interval = setInterval(updateComparandoCount, 1000);
-    
-    return () => {
-      window.removeEventListener('storage', updateComparandoCount);
-      clearInterval(interval);
-    };
-  }, []);
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [userMenuOpen]);
 
   const navigation = [
     { name: 'Início', path: 'Home', icon: Home },
-    { name: 'Imóveis', path: 'Catalogo', icon: Building2 },
+    { name: 'Catálogo', path: 'Catalogo', icon: Building2 },
+    { name: 'Favoritos', path: 'Favoritos', icon: Heart },
+    { name: 'Comparar', path: 'Comparar', icon: Scale },
     { name: 'Promoções', path: 'Promocoes', icon: Tag },
     { name: 'Contato', path: 'Contato', icon: Phone },
   ];
@@ -59,16 +54,18 @@ export default function Layout({ children, currentPageName }) {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-slate-200/50 shadow-sm">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
-            {/* Logo */}
+            {/* Logo - ✅ ATUALIZADO */}
             <Link to={createPageUrl('Home')} className="flex items-center gap-3 group">
-              <div className="bg-gradient-to-br from-blue-900 to-blue-700 p-2.5 rounded-xl group-hover:scale-110 transition-transform duration-200 shadow-lg">
-                <Building2 className="w-6 h-6 text-white" />
-              </div>
-              <div>
+              <img 
+                src="/boscoimoveis.svg" 
+                alt="Bosco Imóveis" 
+                className="h-10 w-auto rounded-xl group-hover:scale-105 transition-transform duration-200"
+              />
+              <div className="hidden sm:block">
                 <span className="text-xl font-bold bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent">
                   Bosco Imóveis
                 </span>
-                <p className="text-xs text-slate-500 hidden sm:block">Realizando sonhos</p>
+                <p className="text-xs text-slate-500">Realizando sonhos</p>
               </div>
             </Link>
 
@@ -87,58 +84,46 @@ export default function Layout({ children, currentPageName }) {
                   </Link>
                 );
               })}
-              
-              <Link
-                to={createPageUrl('Favoritos')}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-all duration-200"
-              >
-                <Heart className="w-4 h-4" />
-                <span className="font-medium">Favoritos</span>
-              </Link>
-              
-              <Link
-                to={createPageUrl('Comparar')}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-all duration-200 relative"
-              >
-                <Scale className="w-4 h-4" />
-                <span className="font-medium">Comparar</span>
-                {comparandoCount > 0 && (
-                  <Badge className="bg-blue-900 text-white h-5 w-5 p-0 flex items-center justify-center text-xs">
-                    {comparandoCount}
-                  </Badge>
-                )}
-              </Link>
+            </div>
 
-              {/* User Menu */}
+            {/* User Menu / Login Button */}
+            <div className="hidden lg:flex items-center gap-2">
               {isAuthenticated ? (
-                <div className="relative ml-2">
+                <div className="relative user-menu">
                   <button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-all duration-200"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 transition-all duration-200"
                   >
-                    <div className="w-8 h-8 bg-blue-900 rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-white" />
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-900 to-blue-700 flex items-center justify-center text-white font-semibold">
+                      {user?.name?.[0]?.toUpperCase() || 'U'}
                     </div>
-                    <span className="font-medium">{user?.name?.split(' ')[0]}</span>
-                    {isAdmin && (
-                      <Badge className="bg-amber-400 text-blue-900 text-xs">Admin</Badge>
-                    )}
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-slate-900 line-clamp-1">{user?.name || 'Usuário'}</p>
+                      {isAdmin && (
+                        <span className="text-xs text-blue-900 font-semibold">Admin</span>
+                      )}
+                    </div>
                   </button>
 
                   {userMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-slate-200 py-2 z-50">
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 py-2 z-50">
+                      <div className="px-4 py-3 border-b border-slate-100">
+                        <p className="text-sm font-semibold text-slate-900">{user?.name}</p>
+                        <p className="text-xs text-slate-500">{user?.email}</p>
+                      </div>
+                      
                       <Link
                         to="/perfil"
-                        className="flex items-center gap-2 px-4 py-2 text-slate-700 hover:bg-slate-100"
+                        className="flex items-center gap-2 px-4 py-2 text-slate-700 hover:bg-slate-50"
                         onClick={() => setUserMenuOpen(false)}
                       >
                         <User className="w-4 h-4" />
                         Meu Perfil
                       </Link>
+                      
                       {isAdmin && (
                         <>
-                          <hr className="my-2" />
-                          <div className="px-4 py-1">
+                          <div className="px-4 py-2 border-t border-slate-100">
                             <p className="text-xs text-slate-500 font-semibold">ADMINISTRAÇÃO</p>
                           </div>
                           <Link
@@ -207,7 +192,7 @@ export default function Layout({ children, currentPageName }) {
           {/* Mobile Navigation */}
           {mobileMenuOpen && (
             <div className="lg:hidden py-4 border-t border-slate-200">
-              <div className="flex flex-col gap-2">
+              <div className="space-y-1">
                 {navigation.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -215,95 +200,89 @@ export default function Layout({ children, currentPageName }) {
                       key={item.name}
                       to={createPageUrl(item.path)}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-all duration-200"
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-all duration-200"
                     >
                       <Icon className="w-5 h-5" />
                       <span className="font-medium">{item.name}</span>
                     </Link>
                   );
                 })}
-                <Link
-                  to={createPageUrl('Favoritos')}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-all duration-200"
-                >
-                  <Heart className="w-5 h-5" />
-                  <span className="font-medium">Favoritos</span>
-                </Link>
-                <Link
-                  to={createPageUrl('Comparar')}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-all duration-200"
-                >
-                  <Scale className="w-5 h-5" />
-                  <span className="font-medium">Comparar</span>
-                  {comparandoCount > 0 && (
-                    <Badge className="bg-blue-900 text-white">{comparandoCount}</Badge>
-                  )}
-                </Link>
-                {isAuthenticated ? (
-                  <>
+
+                <div className="border-t border-slate-200 my-2 pt-2">
+                  {isAuthenticated ? (
+                    <>
+                      <div className="px-4 py-2 border-b border-slate-100 mb-2">
+                        <p className="text-sm font-semibold text-slate-900">{user?.name}</p>
+                        <p className="text-xs text-slate-500">{user?.email}</p>
+                        {isAdmin && (
+                          <span className="inline-block mt-1 text-xs bg-blue-100 text-blue-900 px-2 py-1 rounded-full font-semibold">
+                            Administrador
+                          </span>
+                        )}
+                      </div>
+                      
+                      <Link
+                        to="/perfil"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-all duration-200"
+                      >
+                        <User className="w-5 h-5" />
+                        <span className="font-medium">Meu Perfil</span>
+                      </Link>
+                      {isAdmin && (
+                        <>
+                          <div className="px-4 py-2">
+                            <p className="text-xs text-slate-500 font-semibold">ADMINISTRAÇÃO</p>
+                          </div>
+                          <Link
+                            to="/gerenciador"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="flex items-center gap-2 px-4 py-3 rounded-lg text-blue-900 bg-blue-50 transition-all duration-200"
+                          >
+                            <Settings className="w-5 h-5" />
+                            <span className="font-medium">Gerenciar Imóveis</span>
+                          </Link>
+                          <Link
+                            to="/gerenciar-admins"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="flex items-center gap-2 px-4 py-3 rounded-lg text-blue-900 bg-blue-50 transition-all duration-200"
+                          >
+                            <Shield className="w-5 h-5" />
+                            <span className="font-medium">Gerenciar Admins</span>
+                          </Link>
+                          {/* ✅ NOVO LINK NO MOBILE */}
+                          <Link
+                            to="/gerenciar-contatos"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="flex items-center gap-2 px-4 py-3 rounded-lg text-blue-900 bg-blue-50 transition-all duration-200"
+                          >
+                            <Mail className="w-5 h-5" />
+                            <span className="font-medium">Gerenciar Contatos</span>
+                          </Link>
+                        </>
+                      )}
+                      <button
+                        onClick={() => {
+                          logout();
+                          setMobileMenuOpen(false);
+                        }}
+                        className="flex items-center gap-2 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 text-left"
+                      >
+                        <LogOut className="w-5 h-5" />
+                        <span className="font-medium">Sair</span>
+                      </button>
+                    </>
+                  ) : (
                     <Link
-                      to="/perfil"
+                      to="/login"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-all duration-200"
+                      className="flex items-center gap-2 px-4 py-3 rounded-lg bg-blue-900 text-white hover:bg-blue-800 transition-all duration-200"
                     >
                       <User className="w-5 h-5" />
-                      <span className="font-medium">Meu Perfil</span>
+                      <span className="font-medium">Entrar</span>
                     </Link>
-                    {isAdmin && (
-                      <>
-                        <div className="px-4 py-2">
-                          <p className="text-xs text-slate-500 font-semibold">ADMINISTRAÇÃO</p>
-                        </div>
-                        <Link
-                          to="/gerenciador"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center gap-2 px-4 py-3 rounded-lg text-blue-900 bg-blue-50 transition-all duration-200"
-                        >
-                          <Settings className="w-5 h-5" />
-                          <span className="font-medium">Gerenciar Imóveis</span>
-                        </Link>
-                        <Link
-                          to="/gerenciar-admins"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center gap-2 px-4 py-3 rounded-lg text-blue-900 bg-blue-50 transition-all duration-200"
-                        >
-                          <Shield className="w-5 h-5" />
-                          <span className="font-medium">Gerenciar Admins</span>
-                        </Link>
-                        {/* ✅ NOVO LINK NO MOBILE */}
-                        <Link
-                          to="/gerenciar-contatos"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center gap-2 px-4 py-3 rounded-lg text-blue-900 bg-blue-50 transition-all duration-200"
-                        >
-                          <Mail className="w-5 h-5" />
-                          <span className="font-medium">Gerenciar Contatos</span>
-                        </Link>
-                      </>
-                    )}
-                    <button
-                      onClick={() => {
-                        logout();
-                        setMobileMenuOpen(false);
-                      }}
-                      className="flex items-center gap-2 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 text-left"
-                    >
-                      <LogOut className="w-5 h-5" />
-                      <span className="font-medium">Sair</span>
-                    </button>
-                  </>
-                ) : (
-                  <Link
-                    to="/login"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-2 px-4 py-3 rounded-lg bg-blue-900 text-white hover:bg-blue-800 transition-all duration-200"
-                  >
-                    <User className="w-5 h-5" />
-                    <span className="font-medium">Entrar</span>
-                  </Link>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -317,19 +296,28 @@ export default function Layout({ children, currentPageName }) {
         href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 z-50 group"
+        className="fixed bottom-6 right-6 z-40 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 group"
+        aria-label="Falar no WhatsApp"
       >
         <MessageCircle className="w-6 h-6" />
-        <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-slate-900 text-white px-3 py-1 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-slate-900 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
           Fale conosco no WhatsApp
         </span>
       </a>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-slate-900 to-blue-900 text-white mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <footer className="bg-gradient-to-br from-slate-900 to-blue-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
+              {/* Logo no Footer - ✅ ATUALIZADO */}
+              <div className="flex items-center gap-2 mb-4">
+                <img 
+                  src="/boscoimoveis.svg" 
+                  alt="Bosco Imóveis" 
+                  className="h-12 w-auto"
+                />
+              </div>
               <h3 className="text-2xl font-bold mb-4 text-amber-400">Bosco Imóveis</h3>
               <p className="text-slate-300 mb-4">
                 Há mais de 10 anos realizando o sonho da casa própria.

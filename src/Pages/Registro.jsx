@@ -165,8 +165,14 @@ export default function Registro() {
             <Home className="w-5 h-5" />
             Voltar para o site
           </Link>
+          {/* Logo - ATUALIZADO */}
+          <img 
+            src="/boscoimoveis.svg" 
+            alt="Bosco Imóveis" 
+            className="h-16 w-auto mx-auto mb-4"
+          />
           <h1 className="text-4xl font-bold text-white mb-2">Bosco Imóveis</h1>
-          <p className="text-blue-200">Crie sua conta gratuitamente</p>
+          <p className="text-blue-200">Crie sua conta</p>
         </div>
 
         <Card className="border-0 shadow-2xl">

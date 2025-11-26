@@ -7,7 +7,6 @@ import { Mail, ArrowLeft, Home, CheckCircle2, Loader2, AlertCircle } from 'lucid
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { account } from '@/lib/appwrite';
-import { Client, Functions } from 'appwrite'; // ✅ ADICIONAR IMPORT
 
 export default function RedefinirSenha() {
   const [email, setEmail] = useState('');
@@ -34,43 +33,15 @@ export default function RedefinirSenha() {
     setLoading(true);
 
     try {
-      const resetUrl = `${window.location.origin}/nova-senha`;
+      // ✅ SIMPLIFICADO: Usar apenas o sistema nativo do Appwrite
+      const resetUrl = import.meta.env.VITE_APP_URL
+        ? `${import.meta.env.VITE_APP_URL}/nova-senha`
+        : `${window.location.origin}/nova-senha`;
 
-      // 1️⃣ Criar token de recuperação do Appwrite
+      console.log('🔗 Reset URL:', resetUrl);
+
+      // O Appwrite cuida de tudo: gera o token, adiciona os parâmetros e envia o email
       await account.createRecovery(email, resetUrl);
-
-      // 2️⃣ Enviar email customizado via função
-      const payload = {
-        email: email,
-        resetUrl: `${resetUrl}?email=${encodeURIComponent(email)}`,
-      };
-
-      console.log('📤 Enviando para função reset-password via SDK');
-      console.log('📤 Payload:', payload);
-
-      // ✅ CORRIGIDO: Criar cliente do Appwrite
-      const client = new Client()
-        .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
-        .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
-      
-      const functions = new Functions(client);
-
-      // ✅ Usar createExecution do SDK
-      const execution = await functions.createExecution(
-        import.meta.env.VITE_APPWRITE_FUNCTION_RESET_PASSWORD,
-        JSON.stringify(payload), // Body como string JSON
-        false, // async = false (síncrono)
-        '/', // path
-        'POST', // method
-        {} // headers (opcional)
-      );
-
-      console.log('📥 Resposta da função:', execution);
-
-      if (execution.status === 'failed') {
-        console.error('❌ Erro ao enviar email:', execution);
-        throw new Error(execution.responseBody || 'Falha ao enviar email');
-      }
 
       setEmailEnviado(true);
       toast.success("Email enviado com sucesso!", {
@@ -79,11 +50,25 @@ export default function RedefinirSenha() {
 
     } catch (err) {
       console.error("ERRO AO REDEFINIR SENHA:", err);
-      toast.error("Erro ao processar solicitação");
-      setError("Não foi possível enviar o email.");
+      
+      if (err.message?.includes('user') || err.code === 404) {
+        toast.error("Email não encontrado", {
+          description: "Não encontramos uma conta com este email.",
+        });
+        setError("Email não cadastrado");
+      } else if (err.message?.includes('rate limit')) {
+        toast.error("Muitas tentativas", {
+          description: "Aguarde alguns minutos antes de tentar novamente.",
+        });
+      } else {
+        toast.error("Erro ao processar solicitação", {
+          description: "Tente novamente mais tarde.",
+        });
+        setError("Não foi possível enviar o email.");
+      }
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   if (emailEnviado) {
@@ -101,6 +86,17 @@ export default function RedefinirSenha() {
 
               <div className="bg-blue-50 p-4 rounded-lg mb-6">
                 <p className="text-blue-900 font-semibold">{email}</p>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 text-left">
+                <p className="text-sm text-amber-800">
+                  <strong>📧 Verifique:</strong>
+                </p>
+                <ul className="text-sm text-amber-700 mt-2 space-y-1">
+                  <li>• Caixa de entrada</li>
+                  <li>• Spam/Lixo eletrônico</li>
+                  <li>• Promoções</li>
+                </ul>
               </div>
 
               <div className="space-y-3">
@@ -128,17 +124,34 @@ export default function RedefinirSenha() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 flex items-center justify-center p-4">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <Link to="/" className="inline-flex items-center gap-2 text-white hover:text-blue-200 transition-colors mb-6">
+            <Home className="w-5 h-5" />
+            Voltar para o site
+          </Link>
+          <img 
+            src="/boscoimoveis.svg" 
+            alt="Bosco Imóveis" 
+            className="h-16 w-auto mx-auto mb-4"
+          />
+          <h1 className="text-4xl font-bold text-white mb-2">Bosco Imóveis</h1>
+          <p className="text-blue-200">Redefinir senha</p>
+        </div>
+
         <Card className="border-0 shadow-2xl">
           <CardHeader>
-            <CardTitle className="text-center text-2xl">Redefinir Senha</CardTitle>
+            <CardTitle className="text-center text-2xl">Esqueceu sua senha?</CardTitle>
+            <p className="text-center text-slate-600 text-sm mt-2">
+              Digite seu email e enviaremos instruções para criar uma nova senha
+            </p>
           </CardHeader>
 
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-slate-700">Email</label>
+                <label className="text-sm font-medium text-slate-700 mb-2 block">Email</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${error ? 'text-red-400' : 'text-slate-400'}`} />
                   <Input
                     type="email"
                     value={email}
@@ -147,29 +160,40 @@ export default function RedefinirSenha() {
                       setError('');
                     }}
                     placeholder="seu@email.com"
-                    className="pl-10 h-12"
+                    className={`pl-10 h-12 ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
                   />
                 </div>
                 {error && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                    <AlertCircle className="w-4 h-4" /> {error}
-                  </p>
+                  <div className="flex items-center gap-1 mt-2 text-red-600 text-sm">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{error}</span>
+                  </div>
                 )}
               </div>
 
-              <Button disabled={loading} className="w-full h-12 bg-blue-900 hover:bg-blue-800 text-white font-semibold">
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Enviar Email"}
+              <Button 
+                type="submit"
+                disabled={loading} 
+                className="w-full h-12 bg-blue-900 hover:bg-blue-800 text-white font-semibold"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  "Enviar Email"
+                )}
               </Button>
             </form>
+
+            <div className="mt-6 text-center">
+              <Link to="/login" className="text-sm text-blue-900 hover:text-blue-800 font-semibold">
+                Lembrou sua senha? Faça login
+              </Link>
+            </div>
           </CardContent>
         </Card>
-
-        <p className="text-center text-white mt-6">
-          <Link to="/" className="hover:underline">
-            <ArrowLeft className="inline w-4 h-4 mr-1" />
-            Voltar para o site
-          </Link>
-        </p>
       </motion.div>
     </div>
   );

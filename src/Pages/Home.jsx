@@ -5,7 +5,7 @@ import { appwrite } from '@/api/appwriteClient';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Building2, Search, Tag, Award } from 'lucide-react';
-import ImovelCard from '@/components/imoveis/ImovelCard'; // ✅ CORRIGIDO
+import ImovelCard from '@/components/imoveis/ImovelCard';
 import { motion } from 'framer-motion';
 
 export default function Home() {
@@ -33,18 +33,33 @@ export default function Home() {
 
   return (
     <div>
-      {/* Hero Section */}
+      {/* Hero Section - ✅ CORRIGIDO: Adicionado position relative e z-index */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 text-white">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1600&q=80')] bg-cover bg-center opacity-10" />
         <div className="absolute inset-0 bg-gradient-to-t from-blue-900/90 to-transparent" />
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
+        {/* ✅ CORRIGIDO: Conteúdo com z-index maior que o header */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="max-w-3xl"
           >
+            {/* Logo SVG animado */}
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6 }}
+              className="mb-8"
+            >
+              <img 
+                src="/boscoimoveis.svg" 
+                alt="Bosco Imóveis" 
+                className="h-24 md:h-32 w-auto drop-shadow-2xl"
+              />
+            </motion.div>
+
             <div className="inline-flex items-center gap-2 bg-amber-400/20 border border-amber-400/30 rounded-full px-4 py-2 mb-6">
               <Award className="w-4 h-4 text-amber-400" />
               <span className="text-sm font-medium text-amber-400">Mais de 10 anos de experiência</span>
@@ -56,11 +71,14 @@ export default function Home() {
             <p className="text-xl text-slate-200 mb-8 leading-relaxed">
               Na Bosco Imóveis, oferecemos as melhores opções de casas, apartamentos e terrenos com atendimento personalizado.
             </p>
-            <div className="flex flex-wrap gap-4">
+            
+            {/* ✅ CORRIGIDO: Botões com z-index elevado e position relative */}
+            <div className="flex flex-wrap gap-4 relative z-20">
               <Link to={createPageUrl('Catalogo')}>
                 <Button size="lg" className="bg-amber-400 hover:bg-amber-500 text-blue-900 font-semibold shadow-xl hover:shadow-2xl transition-all duration-300">
                   <Search className="w-5 h-5 mr-2" />
                   Ver Todos os Imóveis
+                  <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
               <Link to={createPageUrl('Contato')}>
@@ -74,7 +92,7 @@ export default function Home() {
         </div>
 
         {/* Wave Divider */}
-        <div className="absolute bottom-0 left-0 right-0">
+        <div className="absolute bottom-0 left-0 right-0 z-0">
           <svg viewBox="0 0 1440 120" className="w-full h-auto">
             <path fill="#f8fafc" d="M0,64L80,69.3C160,75,320,85,480,80C640,75,800,53,960,48C1120,43,1280,53,1360,58.7L1440,64L1440,120L1360,120C1280,120,1120,120,960,120C800,120,640,120,480,120C320,120,160,120,80,120L0,120Z"></path>
           </svg>
