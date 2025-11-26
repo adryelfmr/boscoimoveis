@@ -98,7 +98,7 @@ module.exports = async ({ req, res, log, error }) => {
                 <p style="white-space: pre-wrap;">${mensagem}</p>
               </div>
               <div style="text-align: center; margin-top: 20px;">
-                <a href="https://boscoimoveis.com.br/gerenciar-contatos" style="background: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Ver no Painel Admin</a>
+                <a href="https://boscoimoveis.app/gerenciar-contatos" style="background: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Ver no Painel Admin</a>
               </div>
             </div>
             <div class="footer">
@@ -153,7 +153,7 @@ module.exports = async ({ req, res, log, error }) => {
               <p>Nossa equipe analisará sua solicitação e entrará em contato com você em breve.</p>
               
               <div style="text-align: center; margin: 30px 0;">
-                <a href="https://boscoimoveis.com.br" class="button">Visitar Site</a>
+                <a href="https://boscoimoveis.app" class="button">Visitar Site</a>
                 <a href="https://wa.me/5562994045111" class="button" style="background: #25D366;">💬 WhatsApp</a>
               </div>
 

@@ -385,7 +385,7 @@ export const appwrite = {
               to: data.to,
               subject: data.subject,
               body: data.body,
-              from: data.from || 'noreply@boscoimoveis.com.br',
+              from: data.from,
             }),
           });
 
