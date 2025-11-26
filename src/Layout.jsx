@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { 
   Building2, 
   Heart, 
-  Scale, 
   User, 
   Menu, 
   X, 
@@ -41,7 +40,6 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Início', path: 'Home', icon: Home },
     { name: 'Catálogo', path: 'Catalogo', icon: Building2 },
     { name: 'Favoritos', path: 'Favoritos', icon: Heart },
-    { name: 'Comparar', path: 'Comparar', icon: Scale },
     { name: 'Promoções', path: 'Promocoes', icon: Tag },
     { name: 'Contato', path: 'Contato', icon: Phone },
   ];

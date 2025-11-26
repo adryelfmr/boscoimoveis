@@ -7,7 +7,6 @@ import Catalogo from './Pages/Catalogo';
 import Promocoes from './Pages/Promocoes';
 import Contato from './Pages/Contato';
 import Favoritos from './Pages/Favoritos';
-import Comparar from './Pages/Comparar';
 import Detalhes from './Pages/Detalhes';
 import GerenciadorImoveis from './Pages/GerenciadorImoveis';
 import GerenciarAdmins from './Pages/GerenciarAdmins';
@@ -49,10 +48,6 @@ export const router = createBrowserRouter([
         </ProtectedRoute>
       </Layout>
     ),
-  },
-  {
-    path: '/comparar',
-    element: <Layout currentPageName="Comparar"><Comparar /></Layout>,
   },
   {
     path: '/detalhes',

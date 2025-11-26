@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { MapPin, Maximize, Bed, Bath, Car, Tag as TagIcon, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 import FavoritoButton from './FavoritoButton';
-import ComparadorButton from './ComparadorButton';
 import { appwrite } from '@/api/appwriteClient'; // ✅ MUDOU: usar appwrite ao invés de base44
 import { useQuery } from '@tanstack/react-query';
 
@@ -83,8 +82,7 @@ export default function ImovelCard({ imovel, index = 0 }) {
 
             {/* Botões de Ação */}
             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <FavoritoButton imovelId={imovel.$id} size="sm" variant="secondary" /> {/* ✅ MUDOU: usar $id */}
-              <ComparadorButton imovelId={imovel.$id} size="sm" /> {/* ✅ MUDOU: usar $id */}
+              <FavoritoButton imovelId={imovel.$id} size="sm" variant="secondary" />
             </div>
 
             {/* Badge de Visualizações */}

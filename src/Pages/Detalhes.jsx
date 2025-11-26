@@ -399,9 +399,6 @@ export default function Detalhes() {
 
             {/* Calculadora de Financiamento */}
             <CalculadoraFinanciamento precoImovel={imovel.preco} />
-
-            {/* Botão Comparar */}
-            <ComparadorButton imovelId={imovel.$id} />
           </div>
         </div>
       </div>
