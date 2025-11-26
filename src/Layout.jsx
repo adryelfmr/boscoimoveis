@@ -45,7 +45,56 @@ export default function Layout({ children, currentPageName }) {
   ];
 
   const whatsappNumber = '5562994045111';
-  const whatsappMessage = encodeURIComponent('Olá! Gostaria de mais informações sobre os imóveis.');
+  
+  // ✅ MELHORADO: Mensagem mais completa e personalizada baseada na página
+  const getWhatsappMessage = () => {
+    const userName = user?.name ? ` Meu nome é ${user.name}.` : '';
+    
+    switch(currentPageName) {
+      case 'Catalogo':
+        return encodeURIComponent(
+          `🏡 *Olá! Vim do catálogo de imóveis.*${userName}\n\n` +
+          `Gostaria de mais informações sobre os imóveis disponíveis.\n\n` +
+          `📱 Estou navegando em: ${window.location.href}`
+        );
+      
+      case 'Favoritos':
+        return encodeURIComponent(
+          `❤️ *Olá! Tenho interesse nos imóveis favoritos.*${userName}\n\n` +
+          `Gostaria de agendar visitas ou receber mais informações.\n\n` +
+          `📱 Estou navegando em: ${window.location.href}`
+        );
+      
+      case 'Promocoes':
+        return encodeURIComponent(
+          `🎉 *Olá! Vi os imóveis em promoção.*${userName}\n\n` +
+          `Gostaria de saber mais sobre as ofertas disponíveis.\n\n` +
+          `📱 Estou navegando em: ${window.location.href}`
+        );
+      
+      case 'Contato':
+        return encodeURIComponent(
+          `📞 *Olá! Estou na página de contato.*${userName}\n\n` +
+          `Gostaria de falar com um consultor sobre imóveis.\n\n` +
+          `📱 Estou navegando em: ${window.location.href}`
+        );
+      
+      case 'Detalhes':
+        return encodeURIComponent(
+          `🏠 *Olá! Estou vendo um imóvel específico.*${userName}\n\n` +
+          `Gostaria de mais informações sobre este imóvel.\n\n` +
+          `📱 Link do imóvel: ${window.location.href}`
+        );
+      
+      default:
+        return encodeURIComponent(
+          `🏡 *Olá! Vim do site Bosco Imóveis.*${userName}\n\n` +
+          `Gostaria de mais informações sobre os imóveis disponíveis.\n\n` +
+          `📍 Tenho interesse em imóveis em Goiânia e região.\n\n` +
+          `📱 Site: ${window.location.origin}`
+        );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
@@ -57,7 +106,7 @@ export default function Layout({ children, currentPageName }) {
               <img 
                 src="/boscoimoveis.svg" 
                 alt="Bosco Imóveis" 
-                className="h-10 w-auto rounded-xl group-hover:scale-105 transition-transform duration-200"
+                className="h-10 w-auto group-hover:scale-105 transition-transform duration-200"
               />
               <div className="hidden sm:block">
                 <span className="text-xl font-bold bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent">
@@ -248,7 +297,6 @@ export default function Layout({ children, currentPageName }) {
                             <Shield className="w-5 h-5" />
                             <span className="font-medium">Gerenciar Admins</span>
                           </Link>
-                          {/* ✅ NOVO LINK NO MOBILE */}
                           <Link
                             to="/gerenciar-contatos"
                             onClick={() => setMobileMenuOpen(false)}
@@ -289,9 +337,9 @@ export default function Layout({ children, currentPageName }) {
 
       <main>{children}</main>
 
-      {/* WhatsApp Floating Button */}
+      {/* ✅ ATUALIZADO: WhatsApp Floating Button com mensagem inteligente */}
       <a
-        href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+        href={`https://wa.me/${whatsappNumber}?text=${getWhatsappMessage()}`}
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 z-40 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 group"
