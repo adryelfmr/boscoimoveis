@@ -26,19 +26,21 @@ export function AuthProvider({ children }) {
     try {
       const userData = await appwrite.auth.me();
       
+      // ✅ Se userData for null (não autenticado), não faz nada
+      if (!userData) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      
       // Verificar se o usuário faz parte da equipe de administradores
       let isAdmin = false;
       
       if (ADMIN_TEAM_ID) {
         try {
-          // Listar todas as equipes do usuário
           const userTeams = await teams.list();
-          
-          // Verificar se está na equipe de administradores
           isAdmin = userTeams.teams.some(team => team.$id === ADMIN_TEAM_ID);
-          
         } catch (error) {
-          // ✅ CORRIGIDO: Apenas log silencioso, não é um erro crítico
           console.log('Erro ao verificar equipes:', error);
           isAdmin = false;
         }
@@ -49,7 +51,7 @@ export function AuthProvider({ children }) {
         isAdmin,
       });
     } catch (error) {
-      // ✅ CORRIGIDO: Não logar erro se o usuário simplesmente não está autenticado
+      // Apenas logar erros que não sejam "não autenticado"
       if (error.message !== 'Not authenticated') {
         console.error('Erro ao verificar usuário:', error);
       }

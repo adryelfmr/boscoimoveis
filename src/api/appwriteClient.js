@@ -15,11 +15,15 @@ export const appwrite = {
       try {
         return await account.get();
       } catch (error) {
-        // ✅ CORRIGIDO: Não logar erro se for apenas "não autenticado"
-        if (error.code !== 401) {
-          console.error('Erro ao buscar usuário:', error);
+        // ✅ Silenciosamente ignorar erro 401 (não autenticado)
+        if (error.code === 401) {
+          // Apenas retornar null sem logar nada
+          return null;
         }
-        throw new Error('Not authenticated');
+        
+        // Logar apenas erros reais (diferente de 401)
+        console.error('Erro ao buscar usuário:', error);
+        throw error;
       }
     },
     
