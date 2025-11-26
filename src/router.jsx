@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import Layout from './Layout';
-import { ProtectedRoute } from './Components/ProtectedRoute';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import Home from './Pages/Home';
 import Catalogo from './Pages/Catalogo';
 import Promocoes from './Pages/Promocoes';

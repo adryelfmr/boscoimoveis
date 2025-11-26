@@ -1,7 +1,7 @@
 import React from 'react';
 import { appwrite } from '@/api/appwriteClient';
 import { useQuery } from '@tanstack/react-query';
-import ImovelCard from '@/Components/imoveis/ImovelCard'; // ✅ CORRIGIDO
+import ImovelCard from '@/components/imoveis/ImovelCard'; // ✅ CORRIGIDO
 import { Tag, Building2 } from 'lucide-react';
 
 export default function Promocoes() {

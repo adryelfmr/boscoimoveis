@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { appwrite } from '@/api/appwriteClient';
 import { useQuery } from '@tanstack/react-query';
-import ImovelCard from '@/Components/imoveis/ImovelCard'; // ✅ CORRIGIDO: usar @ alias
-import FiltrosImoveis from '@/Components/imoveis/FiltrosImoveis'; // ✅ CORRIGIDO: usar @ alias
+import ImovelCard from '@/components/imoveis/ImovelCard'; // ✅ CORRIGIDO: usar @ alias
+import FiltrosImoveis from '@/components/imoveis/FiltrosImoveis'; // ✅ CORRIGIDO: usar @ alias
 import { Building2 } from 'lucide-react';
 
 export default function Catalogo() {

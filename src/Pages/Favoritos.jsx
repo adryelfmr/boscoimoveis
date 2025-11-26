@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { appwrite } from '@/api/appwriteClient';
 import { useQuery } from '@tanstack/react-query';
 import { Heart, Loader2 } from 'lucide-react';
-import ImovelCard from '@/Components/imoveis/ImovelCard'; // ✅ CORRIGIDO
+import ImovelCard from '@/components/imoveis/ImovelCard'; // ✅ CORRIGIDO
 
 export default function Favoritos() {
   const [user, setUser] = useState(null);

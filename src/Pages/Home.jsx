@@ -5,7 +5,7 @@ import { appwrite } from '@/api/appwriteClient';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Building2, Search, Tag, Award } from 'lucide-react';
-import ImovelCard from '@/Components/imoveis/ImovelCard'; // ✅ CORRIGIDO
+import ImovelCard from '@/components/imoveis/ImovelCard'; // ✅ CORRIGIDO
 import { motion } from 'framer-motion';
 
 export default function Home() {

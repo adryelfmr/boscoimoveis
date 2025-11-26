@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import ImageUploader from '@/Components/ImageUploader';
+import ImageUploader from '@/components/ImageUploader';
 import { 
   Building2, 
   Plus, 

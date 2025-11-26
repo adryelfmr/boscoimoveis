@@ -22,9 +22,9 @@ import {
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import { motion } from 'framer-motion';
-import FavoritoButton from '@/Components/imoveis/FavoritoButton'; // ✅ CORRIGIDO
-import ComparadorButton from '@/Components/imoveis/ComparadorButton'; // ✅ CORRIGIDO
-import CalculadoraFinanciamento from '@/Components/imoveis/CalculadoraFinanciamento'; // ✅ CORRIGIDO
+import FavoritoButton from '@/components/imoveis/FavoritoButton'; // ✅ CORRIGIDO
+import ComparadorButton from '@/components/imoveis/ComparadorButton'; // ✅ CORRIGIDO
+import CalculadoraFinanciamento from '@/components/imoveis/CalculadoraFinanciamento'; // ✅ CORRIGIDO
 import { toast } from 'sonner';
 
 // Mapeamento de tipos para exibição
