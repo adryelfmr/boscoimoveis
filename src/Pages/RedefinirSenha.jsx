@@ -38,8 +38,6 @@ export default function RedefinirSenha() {
         ? `${import.meta.env.VITE_APP_URL}/nova-senha`
         : `${window.location.origin}/nova-senha`;
 
-      console.log('🔗 Reset URL:', resetUrl);
-
       // O Appwrite cuida de tudo: gera o token, adiciona os parâmetros e envia o email
       await account.createRecovery(email, resetUrl);
 
