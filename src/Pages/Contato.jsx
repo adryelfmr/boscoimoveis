@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Mail, Phone, MapPin, MessageCircle, Send, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { Client, Functions } from 'appwrite'; // ✅ ADICIONAR IMPORT
 
 export default function Contato() {
   const [formData, setFormData] = useState({
@@ -35,7 +36,12 @@ export default function Contato() {
 
       // 2. Enviar email via Appwrite Function
       try {
-        const functionId = import.meta.env.VITE_APPWRITE_FUNCTION_EMAIL;
+        // ✅ CORRIGIDO: Criar cliente do Appwrite
+        const client = new Client()
+          .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
+          .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
+        
+        const functions = new Functions(client);
         
         const bodyData = {
           nome: formData.nome,
@@ -44,35 +50,30 @@ export default function Contato() {
           mensagem: formData.mensagem,
         };
 
-        console.log('📤 Enviando para função:', functionId);
+        console.log('📤 Enviando para função via SDK');
         console.log('📤 Dados:', bodyData);
 
-        // ✅ CORRIGIDO: Usar a URL completa da API
-        const functionUrl = `${import.meta.env.VITE_APPWRITE_ENDPOINT}/functions/${functionId}/executions`;
-        
-        const response = await fetch(functionUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Appwrite-Project': import.meta.env.VITE_APPWRITE_PROJECT_ID,
-          },
-          body: JSON.stringify({
-            data: JSON.stringify(bodyData), // ✅ Enviar como "data"
-            async: false
-          }),
-        });
+        // ✅ Usar createExecution do SDK
+        const execution = await functions.createExecution(
+          import.meta.env.VITE_APPWRITE_FUNCTION_EMAIL,
+          JSON.stringify(bodyData), // Body como string JSON
+          false, // async = false (síncrono)
+          '/', // path
+          'POST', // method
+          {} // headers (opcional)
+        );
 
-        const result = await response.json();
-        console.log('📥 Resposta da função:', result);
+        console.log('📥 Resposta da função:', execution);
 
-        if (!response.ok || result.status === 'failed') {
-          console.error('❌ Erro ao enviar email:', result);
-          throw new Error('Falha ao enviar email');
+        if (execution.status === 'failed') {
+          console.error('❌ Erro ao enviar email:', execution);
+          throw new Error(execution.responseBody || 'Falha ao enviar email');
         }
 
         console.log('✅ Email enviado com sucesso!');
       } catch (emailError) {
         console.error('❌ Erro ao executar função de email:', emailError);
+        // Não bloquear o fluxo se o email falhar
       }
 
       toast.success('Mensagem enviada com sucesso! 🎉', {

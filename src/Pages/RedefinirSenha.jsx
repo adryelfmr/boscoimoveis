@@ -7,6 +7,7 @@ import { Mail, ArrowLeft, Home, CheckCircle2, Loader2, AlertCircle } from 'lucid
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { account } from '@/lib/appwrite';
+import { Client, Functions } from 'appwrite'; // ✅ ADICIONAR IMPORT
 
 export default function RedefinirSenha() {
   const [email, setEmail] = useState('');
@@ -44,30 +45,31 @@ export default function RedefinirSenha() {
         resetUrl: `${resetUrl}?email=${encodeURIComponent(email)}`,
       };
 
-      console.log('📤 Enviando para função reset-password');
+      console.log('📤 Enviando para função reset-password via SDK');
       console.log('📤 Payload:', payload);
 
-      // ✅ CORRIGIDO: Usar a URL completa da API
-      const functionUrl = `${import.meta.env.VITE_APPWRITE_ENDPOINT}/functions/${import.meta.env.VITE_APPWRITE_FUNCTION_RESET_PASSWORD}/executions`;
+      // ✅ CORRIGIDO: Criar cliente do Appwrite
+      const client = new Client()
+        .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
+        .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
+      
+      const functions = new Functions(client);
 
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Appwrite-Project': import.meta.env.VITE_APPWRITE_PROJECT_ID,
-        },
-        body: JSON.stringify({
-          data: JSON.stringify(payload), // ✅ Enviar como "data"
-          async: false
-        }),
-      });
+      // ✅ Usar createExecution do SDK
+      const execution = await functions.createExecution(
+        import.meta.env.VITE_APPWRITE_FUNCTION_RESET_PASSWORD,
+        JSON.stringify(payload), // Body como string JSON
+        false, // async = false (síncrono)
+        '/', // path
+        'POST', // method
+        {} // headers (opcional)
+      );
 
-      const result = await response.json();
-      console.log('📥 Resposta da função:', result);
+      console.log('📥 Resposta da função:', execution);
 
-      if (!response.ok || result.status === 'failed') {
-        console.error('❌ Erro ao enviar email:', result);
-        throw new Error('Falha ao enviar email');
+      if (execution.status === 'failed') {
+        console.error('❌ Erro ao enviar email:', execution);
+        throw new Error(execution.responseBody || 'Falha ao enviar email');
       }
 
       setEmailEnviado(true);
