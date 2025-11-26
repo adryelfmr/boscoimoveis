@@ -38,27 +38,37 @@ export default function RedefinirSenha() {
       // 1️⃣ Criar token de recuperação do Appwrite
       await account.createRecovery(email, resetUrl);
 
-      // 2️⃣ Enviar email customizado
+      // 2️⃣ Enviar email customizado via função
       const payload = {
         email: email,
         resetUrl: `${resetUrl}?email=${encodeURIComponent(email)}`,
       };
 
-      const response = await fetch(
-        `${import.meta.env.VITE_APPWRITE_ENDPOINT}/functions/${import.meta.env.VITE_APPWRITE_FUNCTION_RESET_PASSWORD}/executions`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Appwrite-Project": import.meta.env.VITE_APPWRITE_PROJECT_ID,
-          },
-          body: JSON.stringify(payload)
+      console.log('📤 Enviando para função reset-password');
+      console.log('📤 Payload:', payload);
 
-        }
-      );
+      // ✅ CORRIGIDO: Usar a URL completa da API
+      const functionUrl = `${import.meta.env.VITE_APPWRITE_ENDPOINT}/functions/${import.meta.env.VITE_APPWRITE_FUNCTION_RESET_PASSWORD}/executions`;
+
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Appwrite-Project': import.meta.env.VITE_APPWRITE_PROJECT_ID,
+        },
+        body: JSON.stringify({
+          data: JSON.stringify(payload), // ✅ Enviar como "data"
+          async: false
+        }),
+      });
 
       const result = await response.json();
-      console.log("RESPOSTA FUNÇÃO:", result);
+      console.log('📥 Resposta da função:', result);
+
+      if (!response.ok || result.status === 'failed') {
+        console.error('❌ Erro ao enviar email:', result);
+        throw new Error('Falha ao enviar email');
+      }
 
       setEmailEnviado(true);
       toast.success("Email enviado com sucesso!", {

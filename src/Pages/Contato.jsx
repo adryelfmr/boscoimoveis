@@ -36,13 +36,7 @@ export default function Contato() {
       // 2. Enviar email via Appwrite Function
       try {
         const functionId = import.meta.env.VITE_APPWRITE_FUNCTION_EMAIL;
-        const functionUrl = `${import.meta.env.VITE_APPWRITE_ENDPOINT}/functions/${functionId}/executions`;
         
-        console.log('🔧 Configuração:');
-        console.log('Function ID:', functionId);
-        console.log('Function URL:', functionUrl);
-        console.log('Project ID:', import.meta.env.VITE_APPWRITE_PROJECT_ID);
-
         const bodyData = {
           nome: formData.nome,
           email: formData.email,
@@ -50,41 +44,35 @@ export default function Contato() {
           mensagem: formData.mensagem,
         };
 
-        console.log('📤 Enviando dados:', bodyData);
-        console.log('📤 Body stringified:', JSON.stringify(bodyData));
+        console.log('📤 Enviando para função:', functionId);
+        console.log('📤 Dados:', bodyData);
 
-        const functionResponse = await fetch(functionUrl, {
+        // ✅ CORRIGIDO: Usar a URL completa da API
+        const functionUrl = `${import.meta.env.VITE_APPWRITE_ENDPOINT}/functions/${functionId}/executions`;
+        
+        const response = await fetch(functionUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'X-Appwrite-Project': import.meta.env.VITE_APPWRITE_PROJECT_ID,
           },
-          body: JSON.stringify(bodyData),
+          body: JSON.stringify({
+            data: JSON.stringify(bodyData), // ✅ Enviar como "data"
+            async: false
+          }),
         });
 
-        console.log('📥 Status da resposta:', functionResponse.status);
-        console.log('📥 Status text:', functionResponse.statusText);
-        
-        const responseText = await functionResponse.text();
-        console.log('📥 Resposta raw:', responseText);
+        const result = await response.json();
+        console.log('📥 Resposta da função:', result);
 
-        let result;
-        try {
-          result = JSON.parse(responseText);
-          console.log('📥 Resposta parseada:', result);
-        } catch (e) {
-          console.error('❌ Erro ao parsear resposta:', e);
-          result = { error: 'Resposta inválida', raw: responseText };
+        if (!response.ok || result.status === 'failed') {
+          console.error('❌ Erro ao enviar email:', result);
+          throw new Error('Falha ao enviar email');
         }
 
-        if (!functionResponse.ok) {
-          console.error('❌ Erro ao enviar email via função:', result);
-        } else {
-          console.log('✅ Email enviado com sucesso!');
-        }
+        console.log('✅ Email enviado com sucesso!');
       } catch (emailError) {
         console.error('❌ Erro ao executar função de email:', emailError);
-        console.error('Stack:', emailError.stack);
       }
 
       toast.success('Mensagem enviada com sucesso! 🎉', {

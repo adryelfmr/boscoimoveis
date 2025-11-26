@@ -4,13 +4,25 @@ const nodemailer = require('nodemailer');
 module.exports = async ({ req, res, log, error }) => {
   try {
     log('=== INÍCIO DA EXECUÇÃO ===');
-    log('Body type:', typeof req.body);
-    log('Body:', JSON.stringify(req.body));
-
-    // ✅ Usar req.body diretamente (Appwrite já faz o parse)
-    const payload = req.body;
+    log('req.body:', JSON.stringify(req.body));
     
-    log('Payload recebido:', JSON.stringify(payload));
+    // ✅ CORRIGIDO: Appwrite envia o body no campo "data"
+    let payload;
+    
+    if (req.body && req.body.data) {
+      // Se vier como JSON string no campo "data"
+      payload = typeof req.body.data === 'string' 
+        ? JSON.parse(req.body.data) 
+        : req.body.data;
+    } else if (req.bodyRaw) {
+      // Fallback para bodyRaw
+      payload = JSON.parse(req.bodyRaw);
+    } else {
+      // Usar req.body diretamente
+      payload = req.body;
+    }
+    
+    log('✅ Payload parseado:', JSON.stringify(payload));
 
     const { nome, email, telefone, mensagem } = payload;
     

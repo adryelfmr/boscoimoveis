@@ -3,31 +3,25 @@ const nodemailer = require("nodemailer");
 module.exports = async ({ req, res, log, error }) => {
   try {
     log("=== INÍCIO DA EXECUÇÃO - RESET PASSWORD ===");
-    log("req.body type:", typeof req.body);
     log("req.body:", JSON.stringify(req.body));
-    log("req.bodyRaw:", req.bodyRaw);
-    // ❌ REMOVIDO: log("req.bodyJson:", req.bodyJson);
     
-    // ✅ Tentar parsear de diferentes formas
+    // ✅ CORRIGIDO: Appwrite envia o body no campo "data"
     let payload;
     
-    if (typeof req.body === 'object' && req.body !== null && Object.keys(req.body).length > 0) {
-      log("✅ req.body já é objeto válido");
-      payload = req.body;
-    } else if (typeof req.bodyRaw === 'string' && req.bodyRaw.trim() !== '') {
-      log("✅ Parseando req.bodyRaw");
+    if (req.body && req.body.data) {
+      // Se vier como JSON string no campo "data"
+      payload = typeof req.body.data === 'string' 
+        ? JSON.parse(req.body.data) 
+        : req.body.data;
+    } else if (req.bodyRaw) {
+      // Fallback para bodyRaw
       payload = JSON.parse(req.bodyRaw);
-    } else if (typeof req.body === 'string' && req.body.trim() !== '') {
-      log("✅ Parseando req.body como string");
-      payload = JSON.parse(req.body);
     } else {
-      log("❌ Nenhum body válido encontrado");
-      log("req.body:", req.body);
-      log("req.bodyRaw:", req.bodyRaw);
-      throw new Error("Nenhum payload válido recebido");
+      // Usar req.body diretamente
+      payload = req.body;
     }
     
-    log("✅ Payload recebido:", JSON.stringify(payload));
+    log("✅ Payload parseado:", JSON.stringify(payload));
 
     const { email, resetUrl } = payload;
 
