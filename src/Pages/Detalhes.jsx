@@ -135,8 +135,36 @@ export default function Detalhes() {
   };
 
   const whatsappNumber = '5562994045111';
+  
+  // ✅ MELHORADO: Mensagem mais completa e profissional
   const whatsappMessage = encodeURIComponent(
-    `Olá! Tenho interesse no imóvel:\n\n${imovel.titulo}\nValor: ${formatPrice(imovel.preco)}\nCódigo: ${imovel.$id}\n\nGostaria de mais informações sobre financiamento.\n\nLink: ${window.location.href}`
+    `🏡 *Olá! Tenho interesse neste imóvel:*\n\n` +
+    `📌 *${imovel.titulo}*\n` +
+    `💰 *Valor:* ${formatPrice(imovel.preco)}\n` +
+    `📍 *Localização:* ${imovel.bairro}, ${imovel.cidade} - ${imovel.estado}\n` +
+    `🔑 *Código:* ${imovel.$id}\n\n` +
+    `${imovel.area ? `📐 *Área:* ${imovel.area}m²\n` : ''}` +
+    `${imovel.numeroQuartos ? `🛏️ *Quartos:* ${imovel.numeroQuartos}\n` : ''}` +
+    `${imovel.numeroBanheiros ? `🚿 *Banheiros:* ${imovel.numeroBanheiros}\n` : ''}` +
+    `${imovel.vagas ? `🚗 *Vagas:* ${imovel.vagas}\n` : ''}` +
+    `\n🔗 *Link do anúncio:*\n${window.location.href}\n\n` +
+    `Gostaria de mais informações e agendar uma visita! 😊`
+  );
+
+  // ✅ NOVO: Mensagem específica para financiamento
+  const whatsappMessageFinanciamento = encodeURIComponent(
+    `💳 *Olá! Gostaria de informações sobre financiamento:*\n\n` +
+    `🏡 *Imóvel:* ${imovel.titulo}\n` +
+    `💰 *Valor:* ${formatPrice(imovel.preco)}\n` +
+    `📍 *Localização:* ${imovel.bairro}, ${imovel.cidade} - ${imovel.estado}\n` +
+    `🔑 *Código:* ${imovel.$id}\n\n` +
+    `🔗 *Link:* ${window.location.href}\n\n` +
+    `Gostaria de saber:\n` +
+    `✓ Opções de financiamento disponíveis\n` +
+    `✓ Taxas de juros atuais\n` +
+    `✓ Simulação de parcelas\n` +
+    `✓ Documentação necessária\n\n` +
+    `Aguardo retorno! 😊`
   );
 
   const compartilhar = async () => {
@@ -144,11 +172,14 @@ export default function Detalhes() {
       try {
         await navigator.share({
           title: imovel.titulo,
-          text: `Confira este imóvel: ${imovel.titulo}`,
+          text: `Confira este imóvel: ${imovel.titulo} - ${formatPrice(imovel.preco)}`,
           url: window.location.href,
         });
+        toast.success('Compartilhado com sucesso!');
       } catch (err) {
-        copiarLink();
+        if (err.name !== 'AbortError') {
+          copiarLink();
+        }
       }
     } else {
       copiarLink();
@@ -356,6 +387,7 @@ export default function Detalhes() {
                 </div>
 
                 <div className="space-y-3">
+                  {/* ✅ ATUALIZADO: Botão com mensagem melhorada */}
                   <a
                     href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
                     target="_blank"
@@ -393,7 +425,7 @@ export default function Detalhes() {
               </CardContent>
             </Card>
 
-            {/* ✅ NOVO: Card de Financiamento Real */}
+            {/* Card de Financiamento Real */}
             <Card className="border-0 shadow-lg bg-gradient-to-br from-amber-50 to-orange-50">
               <CardHeader className="border-b bg-white/50">
                 <CardTitle className="flex items-center gap-2 text-slate-900">
@@ -431,8 +463,9 @@ export default function Detalhes() {
                     </div>
                   </div>
 
+                  {/* ✅ ATUALIZADO: Botão com mensagem específica de financiamento */}
                   <a
-                    href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+                    href={`https://wa.me/${whatsappNumber}?text=${whatsappMessageFinanciamento}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block"
