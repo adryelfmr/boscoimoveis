@@ -4,27 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { User, Mail, Calendar, LogOut, Heart, Bell, Shield } from 'lucide-react';
+import { User, Mail, Calendar, LogOut, Heart, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
 export default function Perfil() {
-  const { user, logout, loading } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-900 border-t-transparent" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    navigate('/login');
-    return null;
-  }
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -34,6 +21,7 @@ export default function Perfil() {
       navigate('/');
     } catch (error) {
       toast.error('Erro ao fazer logout');
+    } finally {
       setLoggingOut(false);
     }
   };
@@ -55,6 +43,12 @@ export default function Perfil() {
                 <div>
                   <h1 className="text-3xl font-bold">{user.name}</h1>
                   <p className="text-blue-200">{user.email}</p>
+                  {isAdmin && (
+                    <Badge className="mt-2 bg-amber-400 text-blue-900 border-0">
+                      <Shield className="w-3 h-3 mr-1" />
+                      Administrador
+                    </Badge>
+                  )}
                 </div>
               </div>
               <Badge className="bg-green-500 text-white border-0">Ativo</Badge>
@@ -65,10 +59,7 @@ export default function Perfil() {
             {/* Informações da Conta */}
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="w-5 h-5" />
-                  Informações da Conta
-                </CardTitle>
+                <CardTitle>Informações da Conta</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
@@ -76,13 +67,6 @@ export default function Perfil() {
                   <div>
                     <p className="text-sm text-slate-600">Email</p>
                     <p className="font-semibold">{user.email}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                  <User className="w-5 h-5 text-slate-600" />
-                  <div>
-                    <p className="text-sm text-slate-600">Nome</p>
-                    <p className="font-semibold">{user.name}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
@@ -111,14 +95,9 @@ export default function Perfil() {
                   <Heart className="w-5 h-5 mr-3 text-red-500" />
                   Meus Favoritos
                 </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start h-12"
-                  onClick={() => navigate('/alertas')}
-                >
-                  <Bell className="w-5 h-5 mr-3 text-amber-500" />
-                  Alertas Personalizados
-                </Button>
+                
+                {/* ✅ REMOVIDO: Botão de Alertas */}
+                
                 <Button
                   variant="outline"
                   className="w-full justify-start h-12 text-red-600 hover:bg-red-50"

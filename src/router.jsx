@@ -15,8 +15,9 @@ import GerenciarContatos from './Pages/GerenciarContatos';
 import Login from './Pages/Login';
 import Registro from './Pages/Registro';
 import Perfil from './Pages/Perfil';
-import RedefinirSenha from './Pages/RedefinirSenha'; // ✅ NOVO
-import NovaSenha from './Pages/NovaSenha'; // ✅ NOVO
+import RedefinirSenha from './Pages/RedefinirSenha';
+import NovaSenha from './Pages/NovaSenha';
+import NotFound from './Pages/NotFound';
 
 export const router = createBrowserRouter([
   {
@@ -95,7 +96,6 @@ export const router = createBrowserRouter([
     path: '/registro',
     element: <Registro />,
   },
-  // ✅ NOVAS ROTAS
   {
     path: '/redefinir-senha',
     element: <RedefinirSenha />,
@@ -113,5 +113,10 @@ export const router = createBrowserRouter([
         </ProtectedRoute>
       </Layout>
     ),
+  },
+  // ✅ ROTA 404 (DEVE SER A ÚLTIMA)
+  {
+    path: '*',
+    element: <NotFound />,
   },
 ]);
