@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { appwrite } from '@/api/appwriteClient'; // ✅ MUDOU: usar appwrite
+import { appwrite } from '@/api/appwriteClient';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,9 +22,9 @@ import {
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import { motion } from 'framer-motion';
-import FavoritoButton from '../components/imoveis/FavoritoButton';
-import ComparadorButton from '../components/imoveis/ComparadorButton';
-import CalculadoraFinanciamento from '../components/imoveis/CalculadoraFinanciamento';
+import FavoritoButton from '@/Components/imoveis/FavoritoButton'; // ✅ CORRIGIDO
+import ComparadorButton from '@/Components/imoveis/ComparadorButton'; // ✅ CORRIGIDO
+import CalculadoraFinanciamento from '@/Components/imoveis/CalculadoraFinanciamento'; // ✅ CORRIGIDO
 import { toast } from 'sonner';
 
 // Mapeamento de tipos para exibição
