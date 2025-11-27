@@ -32,7 +32,6 @@ export function AuthProvider({ children }) {
         return;
       }
       
-      // Verificar se o usuário faz parte da equipe de administradores
       let isAdmin = false;
       
       if (ADMIN_TEAM_ID) {
@@ -66,26 +65,42 @@ export function AuthProvider({ children }) {
     return session;
   };
 
-  // ✅ ATUALIZADO: Usar Phone Session nativa do Appwrite
   const register = async (email, password, name, telefone) => {
     try {
-      // 1. Criar conta no Appwrite
-      const newUser = await appwrite.auth.register(email, password, name);
-      
-      // 2. Fazer login automático
-      await login(email, password);
-      
-      // 3. ✅ NOVO: Atualizar telefone usando API nativa do Appwrite
-      if (telefone) {
-        await account.updatePhone(telefone, password);
+      // ✅ 1. FAZER LOGOUT SE HOUVER SESSÃO ATIVA
+      try {
+        await account.deleteSession('current');
+        console.log('✅ Sessão anterior encerrada');
+      } catch (error) {
+        // Ignorar se não houver sessão ativa
+        console.log('ℹ️ Nenhuma sessão ativa para encerrar');
       }
       
-      // 4. Atualizar estado do usuário
+      // ✅ 2. Criar conta no Appwrite
+      const newUser = await appwrite.auth.register(email, password, name);
+      console.log('✅ Conta criada:', newUser);
+      
+      // ✅ 3. Fazer login automático
+      await login(email, password);
+      console.log('✅ Login automático realizado');
+      
+      // ✅ 4. Atualizar telefone (se fornecido)
+      if (telefone) {
+        try {
+          await account.updatePhone(telefone, password);
+          console.log('✅ Telefone atualizado:', telefone);
+        } catch (phoneError) {
+          console.warn('⚠️ Erro ao atualizar telefone (não crítico):', phoneError);
+          // Não falhar o registro por causa do telefone
+        }
+      }
+      
+      // ✅ 5. Atualizar estado do usuário
       await checkUser();
       
       return newUser;
     } catch (error) {
-      console.error('Erro ao registrar:', error);
+      console.error('❌ Erro ao registrar:', error);
       throw error;
     }
   };

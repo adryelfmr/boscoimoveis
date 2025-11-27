@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Lock, User, Loader2, Home, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, User, Loader2, Home, AlertCircle, CheckCircle2, Phone } from 'lucide-react'; // ✅ Adicionar Phone
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { 
@@ -60,6 +60,11 @@ export default function Registro() {
       newErrors.email = 'Email inválido';
     }
 
+    // ✅ ADICIONAR: Validar telefone (OPCIONAL no registro)
+    if (formData.telefone && !validarTelefone(formData.telefone)) {
+      newErrors.telefone = 'Telefone inválido. Use o formato (62) 99999-9999';
+    }
+
     // Validar senha
     if (!formData.password) {
       newErrors.password = 'Senha é obrigatória';
@@ -103,10 +108,8 @@ export default function Registro() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Limpar erros anteriores
     setErrors({});
 
-    // Validar formulário
     if (!validateForm()) {
       return;
     }
@@ -114,7 +117,16 @@ export default function Registro() {
     setLoading(true);
 
     try {
-      await register(formData.email, formData.password, formData.name);
+      // ✅ ATUALIZADO: Passar telefone convertido para E.164
+      const telefoneE164 = formData.telefone ? converterParaE164(formData.telefone) : null;
+      
+      await register(
+        formData.email, 
+        formData.password, 
+        formData.name,
+        telefoneE164 // ✅ Passar telefone
+      );
+      
       toast.success('Conta criada com sucesso! 🎉', {
         description: 'Bem-vindo ao Bosco Imóveis!',
       });
@@ -171,7 +183,6 @@ export default function Registro() {
             <Home className="w-5 h-5" />
             Voltar para o site
           </Link>
-          {/* Logo - ATUALIZADO */}
           <img 
             src="/boscoimoveis.svg" 
             alt="Bosco Imóveis" 
@@ -240,6 +251,40 @@ export default function Registro() {
                     <AlertCircle className="w-4 h-4" />
                     <span>{errors.email}</span>
                   </div>
+                )}
+              </div>
+
+              {/* ✅ ADICIONAR ESTE CAMPO DE TELEFONE AQUI */}
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-2 block">
+                  Telefone (Opcional)
+                </label>
+                <div className="relative">
+                  <Phone className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${errors.telefone ? 'text-red-400' : 'text-slate-400'}`} />
+                  <Input
+                    type="tel"
+                    value={formData.telefone}
+                    onChange={(e) => {
+                      const telefoneFormatado = formatarTelefoneAoDigitar(e.target.value);
+                      setFormData({ ...formData, telefone: telefoneFormatado });
+                      if (errors.telefone) {
+                        setErrors({ ...errors, telefone: undefined });
+                      }
+                    }}
+                    placeholder="(62) 99999-9999"
+                    maxLength={15}
+                    className={`pl-10 h-12 ${errors.telefone ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                  />
+                </div>
+                {errors.telefone ? (
+                  <div className="flex items-center gap-1 mt-1 text-red-600 text-sm">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{errors.telefone}</span>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500 mt-1">
+                    📱 Necessário para anunciar imóveis. Você pode adicionar depois no seu perfil.
+                  </p>
                 )}
               </div>
 
