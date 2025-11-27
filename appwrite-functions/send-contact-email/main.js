@@ -215,7 +215,7 @@ module.exports = async ({ req, res, log, error }) => {
               <div style="background: #e0f2fe; padding: 15px; border-radius: 8px; margin-top: 20px;">
                 <p style="margin: 0;"><strong>📞 Contatos:</strong></p>
                 <p style="margin: 5px 0;">Telefone: (62) 99404-5111</p>
-                <p style="margin: 5px 0;">Email: ${ADMIN_EMAIL}</p>
+                <p style="margin: 5px 0;">Email: ${CONTATO_EMAIL}</p>
               </div>
             </div>
             <div class="footer">
