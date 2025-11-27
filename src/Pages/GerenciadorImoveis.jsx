@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { appwrite } from '@/api/appwriteClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,6 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import ImageUploader from '@/components/ImageUploader';
+import { geocodeEndereco } from '@/services/geocoding';
+import { buscarEnderecoPorCEP, formatarCEP, validarCEP } from '@/services/cep';
+import { 
+  gerarCodigoAutomatico, 
+  validarCodigoPersonalizado, 
+  formatarCodigo 
+} from '@/utils/gerarCodigo'; // ✅ NOVO IMPORT
 import { 
   Building2, 
   Plus, 
@@ -17,8 +24,13 @@ import {
   Loader2,
   X,
   Save,
+  MapPin,
+  AlertCircle,
+  Hash, // ✅ NOVO IMPORT
+  RefreshCw, // ✅ NOVO IMPORT
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLocation } from 'react-router-dom'; // ✅ NOVO IMPORT
 
 // Mapeamento de tipos de imóvel
 const TIPO_IMOVEL_MAP = {
@@ -59,12 +71,15 @@ export default function GerenciadorImoveis() {
   const [modalAberto, setModalAberto] = useState(false);
   const [imovelEditando, setImovelEditando] = useState(null);
   const [formData, setFormData] = useState({
+    codigo: '', // ✅ NOVO
+    codigoPersonalizado: false, // ✅ NOVO
     titulo: '',
     descricao: '',
     tipoImovel: 'Casa',
     finalidade: 'Residencial',
     tipoNegocio: 'Venda',
     preco: '',
+    cep: '', // ✅ NOVO
     endereco: '',
     bairro: '',
     cidade: '',
@@ -84,7 +99,26 @@ export default function GerenciadorImoveis() {
     garagemDisponivel: false,
     documentacaoRegular: true,
     acessibilidade: true,
+    latitude: '',
+    longitude: '',
   });
+
+  const [buscandoCEP, setBuscandoCEP] = useState(false); // ✅ NOVO
+  const [gerandoCodigo, setGerandoCodigo] = useState(false); // ✅ NOVO
+
+  // ✅ NOVO: Detectar se veio da página de detalhes para editar
+  const location = useLocation();
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const editId = params.get('edit');
+    
+    if (editId) {
+      const imovelParaEditar = imoveis.find(i => i.$id === editId);
+      if (imovelParaEditar) {
+        abrirModalEditar(imovelParaEditar);
+      }
+    }
+  }, [location.search, imoveis]);
 
   const { data: imoveis = [], isLoading } = useQuery({
     queryKey: ['admin-imoveis'],
@@ -104,19 +138,87 @@ export default function GerenciadorImoveis() {
     );
   });
 
+  // ✅ NOVO: Função para gerar código automático
+  const handleGerarCodigoAutomatico = async () => {
+    if (!formData.tipoImovel || !formData.cidade) {
+      toast.error('Preencha o tipo de imóvel e a cidade primeiro');
+      return;
+    }
+
+    setGerandoCodigo(true);
+    
+    try {
+      // Buscar o último imóvel para pegar o próximo número
+      const todosImoveis = await appwrite.entities.Imovel.filter({}, '-$createdAt', 1000);
+      
+      // Filtrar imóveis com código no formato XXX-YYY-NNNN
+      const imoveisComCodigo = todosImoveis.filter(i => 
+        i.codigo && i.codigo.match(/^[A-Z]{3}-[A-Z]{3}-\d{4}$/)
+      );
+      
+      // Pegar o maior número
+      let maiorNumero = 0;
+      imoveisComCodigo.forEach(imovel => {
+        const match = imovel.codigo.match(/-(\d{4})$/);
+        if (match) {
+          const numero = parseInt(match[1]);
+          if (numero > maiorNumero) {
+            maiorNumero = numero;
+          }
+        }
+      });
+      
+      const proximoNumero = maiorNumero + 1;
+      const codigoGerado = gerarCodigoAutomatico(formData.tipoImovel, formData.cidade, proximoNumero);
+      
+      setFormData(prev => ({
+        ...prev,
+        codigo: codigoGerado,
+        codigoPersonalizado: false,
+      }));
+      
+      toast.success(`Código gerado: ${codigoGerado}`);
+    } catch (error) {
+      console.error('Erro ao gerar código:', error);
+      toast.error('Erro ao gerar código automático');
+    } finally {
+      setGerandoCodigo(false);
+    }
+  };
+
   const criarImovelMutation = useMutation({
     mutationFn: async (data) => {
       const imagensUrls = data.images.map(img => img.url);
       const imagemPrincipal = imagensUrls.length > 0 ? imagensUrls[0] : '';
 
+      // ✅ NOVO: Validar código se for personalizado
+      if (data.codigoPersonalizado) {
+        if (!validarCodigoPersonalizado(data.codigo)) {
+          throw new Error('Código inválido. Use apenas letras, números e hífens (ex: CAS-001)');
+        }
+        
+        // Verificar se código já existe
+        const imoveisExistentes = await appwrite.entities.Imovel.filter({}, '-$createdAt', 1000);
+        const codigoExiste = imoveisExistentes.some(i => 
+          i.codigo && i.codigo.toLowerCase() === data.codigo.toLowerCase()
+        );
+        
+        if (codigoExiste) {
+          throw new Error('Este código já está em uso. Escolha outro.');
+        }
+      }
+
       const imovelData = {
+        codigo: data.codigo ? formatarCodigo(data.codigo) : null, // ✅ NOVO
         titulo: data.titulo,
         descricao: data.descricao || '',
         tipoImovel: TIPO_IMOVEL_MAP[data.tipoImovel] || 'house',
         finalidade: data.finalidade,
         tipoNegocio: data.tipoNegocio,
         preco: parseFloat(data.preco),
+        cep: data.cep || null, // ✅ NOVO
         endereco: data.endereco,
+        numero: data.numero || null, // ✅ NOVO
         bairro: data.bairro || '',
         cidade: data.cidade,
         estado: data.estado,
@@ -138,6 +240,8 @@ export default function GerenciadorImoveis() {
         acessibilidade: data.acessibilidade,
         dataDisponivel: new Date().toISOString(),
         ultimaVisualizacao: new Date().toISOString(),
+        latitude: data.latitude || null, // ✅ COORDENADAS
+        longitude: data.longitude || null, // ✅ COORDENADAS
       };
 
       console.log('Criando imóvel com dados:', imovelData);
@@ -150,7 +254,7 @@ export default function GerenciadorImoveis() {
     },
     onError: (error) => {
       console.error('Erro ao criar imóvel:', error);
-      toast.error(`Erro ao criar imóvel: ${error.message}`);
+      toast.error(error.message || 'Erro ao criar imóvel');
     },
   });
 
@@ -159,14 +263,36 @@ export default function GerenciadorImoveis() {
       const imagensUrls = data.images.map(img => img.url);
       const imagemPrincipal = imagensUrls.length > 0 ? imagensUrls[0] : '';
 
+      // ✅ NOVO: Validar código se mudou
+      if (data.codigoPersonalizado) {
+        if (!validarCodigoPersonalizado(data.codigo)) {
+          throw new Error('Código inválido. Use apenas letras, números e hífens (ex: CAS-001)');
+        }
+        
+        // Verificar se código já existe (exceto o atual)
+        const imoveisExistentes = await appwrite.entities.Imovel.filter({}, '-$createdAt', 1000);
+        const codigoExiste = imoveisExistentes.some(i => 
+          i.$id !== id && 
+          i.codigo && 
+          i.codigo.toLowerCase() === data.codigo.toLowerCase()
+        );
+        
+        if (codigoExiste) {
+          throw new Error('Este código já está em uso. Escolha outro.');
+        }
+      }
+
       const imovelData = {
+        codigo: data.codigo ? formatarCodigo(data.codigo) : null, // ✅ NOVO
         titulo: data.titulo,
         descricao: data.descricao || '',
         tipoImovel: TIPO_IMOVEL_MAP[data.tipoImovel] || 'house',
         finalidade: data.finalidade,
         tipoNegocio: data.tipoNegocio,
         preco: parseFloat(data.preco),
+        cep: data.cep || null, // ✅ NOVO
         endereco: data.endereco,
+        numero: data.numero || null, // ✅ NOVO
         bairro: data.bairro || '',
         cidade: data.cidade,
         estado: data.estado,
@@ -186,7 +312,8 @@ export default function GerenciadorImoveis() {
         garagemDisponivel: data.garagemDisponivel,
         documentacaoRegular: data.documentacaoRegular,
         acessibilidade: data.acessibilidade,
-        ultimaVisualizacao: new Date().toISOString(),
+        latitude: data.latitude || null, // ✅ COORDENADAS
+        longitude: data.longitude || null, // ✅ COORDENADAS
       };
 
       console.log('Atualizando imóvel com dados:', imovelData);
@@ -199,7 +326,7 @@ export default function GerenciadorImoveis() {
     },
     onError: (error) => {
       console.error('Erro ao atualizar imóvel:', error);
-      toast.error(`Erro ao atualizar imóvel: ${error.message}`);
+      toast.error(error.message || 'Erro ao atualizar imóvel');
     },
   });
 
@@ -231,12 +358,15 @@ export default function GerenciadorImoveis() {
   const abrirModalNovo = () => {
     setImovelEditando(null);
     setFormData({
+      codigo: '', // ✅ NOVO
+      codigoPersonalizado: false, // ✅ NOVO
       titulo: '',
       descricao: '',
       tipoImovel: 'Casa',
       finalidade: 'Residencial',
       tipoNegocio: 'Venda',
       preco: '',
+      cep: '', // ✅ NOVO
       endereco: '',
       bairro: '',
       cidade: '',
@@ -256,6 +386,8 @@ export default function GerenciadorImoveis() {
       garagemDisponivel: false,
       documentacaoRegular: true,
       acessibilidade: true,
+      latitude: '',
+      longitude: '',
     });
     setModalAberto(true);
   };
@@ -271,13 +403,17 @@ export default function GerenciadorImoveis() {
     }));
 
     setFormData({
+      codigo: imovel.codigo || '', // ✅ NOVO
+      codigoPersonalizado: !!imovel.codigo, // ✅ NOVO
       titulo: imovel.titulo || '',
       descricao: imovel.descricao || '',
       tipoImovel: TIPO_IMOVEL_REVERSE_MAP[imovel.tipoImovel] || 'Casa',
       finalidade: imovel.finalidade || 'Residencial',
       tipoNegocio: imovel.tipoNegocio || 'Venda',
       preco: imovel.preco?.toString() || '',
+      cep: imovel.cep || '', // ✅ NOVO
       endereco: imovel.endereco || '',
+      numero: imovel.numero || '', // ✅ NOVO
       bairro: imovel.bairro || '',
       cidade: imovel.cidade || '',
       estado: imovel.estado || '',
@@ -296,6 +432,8 @@ export default function GerenciadorImoveis() {
       garagemDisponivel: imovel.garagemDisponivel || false,
       documentacaoRegular: imovel.documentacaoRegular !== false,
       acessibilidade: imovel.acessibilidade !== false,
+      latitude: imovel.latitude || '',
+      longitude: imovel.longitude || '',
     });
     setModalAberto(true);
   };
@@ -305,12 +443,87 @@ export default function GerenciadorImoveis() {
     setImovelEditando(null);
   };
 
-  const handleSubmit = (e) => {
+  // ✅ NOVO: Função para buscar endereço pelo CEP
+  const handleBuscarCEP = async (cep) => {
+    const cepLimpo = cep.replace(/\D/g, '');
+    
+    if (cepLimpo.length !== 8) {
+      return; // Aguarda digitar 8 dígitos
+    }
+
+    setBuscandoCEP(true);
+    toast.loading('🔍 Buscando endereço...', { id: 'buscar-cep' });
+
+    try {
+      const dadosEndereco = await buscarEnderecoPorCEP(cepLimpo);
+
+      if (dadosEndereco) {
+        // Preencher campos automaticamente
+        setFormData(prev => ({
+          ...prev,
+          cep: formatarCEP(dadosEndereco.cep),
+          endereco: dadosEndereco.endereco,
+          bairro: dadosEndereco.bairro,
+          cidade: dadosEndereco.cidade,
+          estado: dadosEndereco.estado,
+        }));
+
+        toast.success('✅ Endereço encontrado!', { id: 'buscar-cep' });
+      } else {
+        toast.error('❌ CEP não encontrado', { id: 'buscar-cep' });
+      }
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+      toast.error('❌ Erro ao buscar CEP', { id: 'buscar-cep' });
+    } finally {
+      setBuscandoCEP(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (formData.images.length === 0) {
       toast.error('Adicione pelo menos uma imagem do imóvel');
       return;
+    }
+
+    // Buscar coordenadas automaticamente
+    let coordenadas = null;
+    
+    if (formData.cidade && formData.estado) {
+      toast.loading('🗺️ Buscando localização no mapa...', { id: 'geocoding' });
+      
+      try {
+        // ✅ ATUALIZADO: Passar CEP e número também
+        coordenadas = await geocodeEndereco({
+          cep: formData.cep,
+          endereco: formData.endereco,
+          numero: formData.numero,
+          bairro: formData.bairro,
+          cidade: formData.cidade,
+          estado: formData.estado,
+        });
+
+        if (coordenadas) {
+          toast.success('✅ Localização encontrada!', { 
+            id: 'geocoding',
+            description: '⚠️ Localização aproximada baseada no endereço fornecido'
+          });
+          
+          formData.latitude = coordenadas.latitude;
+          formData.longitude = coordenadas.longitude;
+          
+          if (coordenadas.displayName) {
+            console.log('📍 Local encontrado:', coordenadas.displayName);
+          }
+        } else {
+          toast.warning('⚠️ Não foi possível localizar no mapa. O imóvel será cadastrado sem localização.', { id: 'geocoding' });
+        }
+      } catch (error) {
+        console.error('Erro ao buscar coordenadas:', error);
+        toast.dismiss('geocoding');
+      }
     }
     
     if (imovelEditando) {
@@ -402,6 +615,12 @@ export default function GerenciadorImoveis() {
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+                    {/* ✅ NOVO: Badge com código */}
+                    {imovel.codigo && (
+                      <Badge className="bg-white/90 text-blue-900 border-0 shadow-md font-mono text-xs">
+                        #{imovel.codigo}
+                      </Badge>
+                    )}
                     {imovel.destaque && (
                       <Badge className="bg-amber-400 text-blue-900">Destaque</Badge>
                     )}
@@ -489,6 +708,103 @@ export default function GerenciadorImoveis() {
                     <h3 className="font-semibold text-lg mb-4 text-blue-900 border-b pb-2">
                       Informações Básicas
                     </h3>
+                  </div>
+
+                  {/* ✅ NOVO: Campo de Código */}
+                  <div className="md:col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <Hash className="w-5 h-5 text-blue-900 mt-1" />
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-blue-900 mb-2">Código do Imóvel</h4>
+                        
+                        <div className="space-y-3">
+                          {/* Toggle: Automático vs Personalizado */}
+                          <div className="flex items-center gap-4">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                checked={!formData.codigoPersonalizado}
+                                onChange={() => setFormData({...formData, codigoPersonalizado: false, codigo: ''})}
+                                className="w-4 h-4"
+                              />
+                              <span className="text-sm font-medium text-slate-700">Gerar Automaticamente</span>
+                            </label>
+                            
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                checked={formData.codigoPersonalizado}
+                                onChange={() => setFormData({...formData, codigoPersonalizado: true})}
+                                className="w-4 h-4"
+                              />
+                              <span className="text-sm font-medium text-slate-700">Código Personalizado</span>
+                            </label>
+                          </div>
+
+                          {/* Campo de Código */}
+                          {formData.codigoPersonalizado ? (
+                            <div>
+                              <label className="block text-sm font-medium mb-2">Digite o código personalizado</label>
+                              <Input
+                                value={formData.codigo}
+                                onChange={(e) => setFormData({...formData, codigo: e.target.value.toUpperCase()})}
+                                placeholder="Ex: CAS-001, APT-GOI-234"
+                                maxLength={20}
+                              />
+                              <p className="text-xs text-slate-500 mt-1">
+                                Use apenas letras, números e hífens. Ex: CAS-001, APT-GOI-234, TER-123
+                              </p>
+                            </div>
+                          ) : (
+                            <div>
+                              <div className="flex gap-2">
+                                <Input
+                                  value={formData.codigo}
+                                  readOnly
+                                  placeholder="Será gerado automaticamente"
+                                  className="bg-slate-50"
+                                />
+                                <Button
+                                  type="button"
+                                  onClick={handleGerarCodigoAutomatico}
+                                  disabled={gerandoCodigo || !formData.tipoImovel || !formData.cidade}
+                                  className="bg-blue-900 hover:bg-blue-800 whitespace-nowrap"
+                                >
+                                  {gerandoCodigo ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                      Gerando...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <RefreshCw className="w-4 h-4 mr-2" />
+                                      Gerar Código
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                              <p className="text-xs text-slate-500 mt-1">
+                                💡 O código será gerado no formato: TIPO-CIDADE-NUMERO (ex: CAS-GOI-0001)
+                              </p>
+                              {(!formData.tipoImovel || !formData.cidade) && (
+                                <p className="text-xs text-amber-600 mt-1">
+                                  ⚠️ Preencha o tipo de imóvel e a cidade primeiro
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Preview do código */}
+                          {formData.codigo && (
+                            <div className="bg-green-50 border border-green-200 rounded p-2">
+                              <p className="text-xs text-green-700 font-semibold">
+                                ✓ Código: <span className="font-mono">{formData.codigo}</span>
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="md:col-span-2">
@@ -675,26 +991,82 @@ export default function GerenciadorImoveis() {
                   {/* LOCALIZAÇÃO */}
                   <div className="md:col-span-2 mt-4">
                     <h3 className="font-semibold text-lg mb-4 text-blue-900 border-b pb-2">
-                      Localização
+                      📍 Localização
                     </h3>
                   </div>
 
+                  {/* ✅ NOVO: Campo de CEP */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      CEP *
+                    </label>
+                    <div className="relative">
+                      <Input
+                        value={formData.cep}
+                        onChange={(e) => {
+                          const cep = e.target.value;
+                          setFormData({...formData, cep: cep});
+                          
+                          // Buscar automaticamente quando digitar 8 dígitos
+                          const cepLimpo = cep.replace(/\D/g, '');
+                          if (cepLimpo.length === 8) {
+                            handleBuscarCEP(cepLimpo);
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const cep = e.target.value.replace(/\D/g, '');
+                          if (cep.length === 8) {
+                            setFormData({...formData, cep: formatarCEP(cep)});
+                          }
+                        }}
+                        required
+                        placeholder="99999-999"
+                        maxLength={9}
+                        disabled={buscandoCEP}
+                      />
+                      {buscandoCEP && (
+                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-900 animate-spin" />
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      💡 Digite o CEP e o endereço será preenchido automaticamente
+                    </p>
+                  </div>
+
+                  {/* Número da casa/apto (complemento do CEP) */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Número *
+                    </label>
+                    <Input
+                      value={formData.numero || ''}
+                      onChange={(e) => setFormData({...formData, numero: e.target.value})}
+                      required
+                      placeholder="123"
+                    />
+                  </div>
+
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium mb-2">Endereço *</label>
+                    <label className="block text-sm font-medium mb-2">
+                      Endereço *
+                    </label>
                     <Input
                       value={formData.endereco}
                       onChange={(e) => setFormData({...formData, endereco: e.target.value})}
-                      placeholder="Rua das Flores, 123"
                       required
+                      placeholder="Ex: Rua das Flores"
+                      disabled={buscandoCEP}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Bairro</label>
+                    <label className="block text-sm font-medium mb-2">Bairro *</label>
                     <Input
                       value={formData.bairro}
                       onChange={(e) => setFormData({...formData, bairro: e.target.value})}
-                      placeholder="Jardim Primavera"
+                      required
+                      placeholder="Ex: Setor Bueno"
+                      disabled={buscandoCEP}
                     />
                   </div>
 
@@ -703,21 +1075,56 @@ export default function GerenciadorImoveis() {
                     <Input
                       value={formData.cidade}
                       onChange={(e) => setFormData({...formData, cidade: e.target.value})}
-                      placeholder="São Paulo"
                       required
+                      placeholder="Ex: Goiânia"
+                      disabled={buscandoCEP}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Estado *</label>
+                    <label className="block text-sm font-medium mb-2">Estado (UF) *</label>
                     <Input
                       value={formData.estado}
-                      onChange={(e) => setFormData({...formData, estado: e.target.value})}
+                      onChange={(e) => setFormData({...formData, estado: e.target.value.toUpperCase()})}
                       maxLength={2}
-                      placeholder="SP"
                       required
+                      placeholder="GO"
+                      disabled={buscandoCEP}
                     />
                   </div>
+
+                  {/* Coordenadas (readonly) */}
+                  {(formData.latitude && formData.longitude) && (
+                    <div className="md:col-span-2 space-y-2">
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 text-green-800 mb-2">
+                          <MapPin className="w-5 h-5" />
+                          <span className="font-semibold">Localização no mapa configurada</span>
+                        </div>
+                        <p className="text-xs text-green-700">
+                          📍 Coordenadas: {formData.latitude.toFixed(6)}, {formData.longitude.toFixed(6)}
+                        </p>
+                      </div>
+
+                      {/* ✅ NOVO: Aviso sobre precisão */}
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-xs text-amber-800 font-semibold mb-1">
+                              ⚠️ Importante sobre a Localização:
+                            </p>
+                            <ul className="text-xs text-amber-700 space-y-1">
+                              <li>• A localização é aproximada, baseada no CEP e endereço</li>
+                              <li>• Pode haver variação de 50-200 metros</li>
+                              <li>• O marcador será exibido na página de detalhes</li>
+                              <li>• Endereço exato é informado apenas após agendamento</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* OPÇÕES */}
                   <div className="md:col-span-2 mt-4">

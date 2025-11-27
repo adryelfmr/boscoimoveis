@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { appwrite } from '@/api/appwriteClient';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext'; // ✅ NOVO IMPORT
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,12 +21,15 @@ import {
   Phone,
   FileText,
   CheckCircle,
+  Edit, // ✅ NOVO IMPORT
+  Settings, // ✅ NOVO IMPORT
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // ✅ ADICIONADO useNavigate
 import { createPageUrl } from '../utils';
 import { motion } from 'framer-motion';
 import FavoritoButton from '@/components/imoveis/FavoritoButton';
 import { toast } from 'sonner';
+import MapaLeaflet from '@/components/imoveis/MapaLeaflet'; // ✅ NOVO IMPORT
 
 const TIPO_IMOVEL_LABELS = {
   'house': 'Casa',
@@ -36,6 +40,8 @@ const TIPO_IMOVEL_LABELS = {
 };
 
 export default function Detalhes() {
+  const { isAdmin } = useAuth(); // ✅ NOVO
+  const navigate = useNavigate(); // ✅ NOVO
   const urlParams = new URLSearchParams(window.location.search);
   const imovelId = urlParams.get('id');
   const [imagemAtual, setImagemAtual] = useState(0);
@@ -203,12 +209,25 @@ export default function Detalhes() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white">
       <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Link to={createPageUrl('Catalogo')}>
-            <Button variant="ghost" className="text-white hover:bg-white/10 mb-4">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar ao Catálogo
-            </Button>
-          </Link>
+          <div className="flex items-center justify-between">
+            <Link to={createPageUrl('Catalogo')}>
+              <Button variant="ghost" className="text-white hover:bg-white/10 mb-4">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Voltar ao Catálogo
+              </Button>
+            </Link>
+
+            {/* ✅ NOVO: Botão de Edição para Admins */}
+            {isAdmin && (
+              <Button
+                onClick={() => navigate(`/gerenciador?edit=${imovelId}`)}
+                className="bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow-lg"
+              >
+                <Edit className="w-5 h-5 mr-2" />
+                Editar Imóvel
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -369,6 +388,20 @@ export default function Detalhes() {
                 )}
               </CardContent>
             </Card>
+
+            {/* ✅ ATUALIZADO: Mapa com aviso */}
+            {imovel.latitude && imovel.longitude && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold text-slate-900">📍 Localização</h2>
+                
+                <MapaLeaflet
+                  latitude={imovel.latitude}
+                  longitude={imovel.longitude}
+                  titulo={imovel.titulo}
+                  endereco={imovel.endereco || `${imovel.bairro}, ${imovel.cidade} - ${imovel.estado}`}
+                />
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -420,7 +453,12 @@ export default function Detalhes() {
 
                 <div className="mt-4 pt-4 border-t border-blue-600">
                   <p className="text-xs text-blue-200 mb-1">Código do Imóvel</p>
-                  <p className="font-mono text-sm font-semibold">{imovel.$id}</p>
+                  <p className="font-mono text-sm font-semibold">
+                    {imovel.codigo || imovel.$id} {/* ✅ ATUALIZADO: Mostra código personalizado ou ID */}
+                  </p>
+                  {!imovel.codigo && (
+                    <p className="text-xs text-blue-300 mt-1">ID do sistema</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
