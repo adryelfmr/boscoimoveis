@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
-export default function FavoritoButton({ imovelId, size = "default", variant = "ghost" }) {
+export default function FavoritoButton({ imovelId, size = "default", variant = "ghost", className = "" }) {
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -37,7 +37,6 @@ export default function FavoritoButton({ imovelId, size = "default", variant = "
         toast.success('Removido dos favoritos');
       } else {
         
-
         // Certifique-se de que imovelId não está undefined/null
         if (!imovelId) {
           throw new Error('imovelId é obrigatório');
@@ -69,12 +68,18 @@ export default function FavoritoButton({ imovelId, size = "default", variant = "
         e.stopPropagation();
         toggleFavoritoMutation.mutate();
       }}
-      className={`${isFavorito ? 'text-red-500 hover:text-red-600' : ''} w-full`}
+      className={`${isFavorito ? 'text-red-500 hover:text-red-600' : ''} ${className}`}
       disabled={toggleFavoritoMutation.isPending}
     >
       <Heart 
-        className={`w-5 h-5 ${isFavorito ? 'fill-current' : ''}`}
+        className={`w-5 h-5 ${isFavorito ? 'fill-current' : ''} transition-transform duration-200 hover:scale-110`}
       />
+      {/* ✅ NOVO: Mostrar texto no botão quando está no card de detalhes */}
+      {size === "default" && (
+        <span className="ml-2 font-semibold">
+          {isFavorito ? 'Favoritado' : 'Favoritar'}
+        </span>
+      )}
     </Button>
   );
 }

@@ -29,7 +29,6 @@ import { createPageUrl } from '../utils';
 import { motion } from 'framer-motion';
 import FavoritoButton from '@/components/imoveis/FavoritoButton';
 import ComparadorButton from '@/components/imoveis/ComparadorButton';
-import CalculadoraFinanciamento from '@/components/imoveis/CalculadoraFinanciamento';
 import { toast } from 'sonner';
 import MapaLeaflet from '@/components/imoveis/MapaLeaflet';
 import SEO from '@/components/SEO';
@@ -454,11 +453,18 @@ export default function Detalhes() {
                     </Button>
                   </Link>
 
+                  {/* ✅ MELHORADO: Botões de Favoritar e Compartilhar mais visíveis */}
                   <div className="flex gap-2">
-                    <FavoritoButton imovelId={imovel.$id} variant="outline" className="flex-1 bg-white/10 border-white/30 text-white hover:bg-white/20" />
+                    <div className="flex-1">
+                      <FavoritoButton 
+                        imovelId={imovel.$id} 
+                        variant="outline" 
+                        className="w-full bg-white hover:bg-white/90 text-blue-900 border-2 border-white font-semibold py-3 shadow-lg transition-all duration-300 hover:scale-105"
+                      />
+                    </div>
                     <Button 
                       variant="outline" 
-                      className="flex-1 bg-white/10 border-white/30 text-white hover:bg-white/20"
+                      className="flex-1 bg-white hover:bg-white/90 text-blue-900 border-2 border-white font-semibold py-3 shadow-lg transition-all duration-300 hover:scale-105"
                       onClick={compartilhar}
                     >
                       <Share2 className="w-5 h-5" />
@@ -468,94 +474,19 @@ export default function Detalhes() {
                   <Button
                     variant="outline"
                     onClick={() => gerarPDFImovel(imovel)}
-                    className="w-full"
+                    className="w-full bg-white/10 border-white/30 text-white hover:bg-white/20"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Baixar Ficha (PDF)
                   </Button>
-                </div>
 
-                <div className="mt-4 pt-4 border-t border-blue-600">
-                  <p className="text-xs text-blue-200 mb-1">Código do Imóvel</p>
-                  <p className="font-mono text-sm font-semibold">
-                    {imovel.codigo || imovel.$id}
-                  </p>
-                  {!imovel.codigo && (
-                    <p className="text-xs text-blue-300 mt-1">ID do sistema</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-amber-50 to-orange-50">
-              <CardHeader className="border-b bg-white/50">
-                <CardTitle className="flex items-center gap-2 text-slate-900">
-                  <FileText className="w-5 h-5 text-amber-600" />
-                  Financiamento
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <div className="bg-white rounded-lg p-4 border-2 border-amber-200">
-                    <p className="text-sm text-slate-600 mb-2">
-                      Quer saber se você consegue financiar este imóvel?
+                  <div className="mt-4 pt-4 border-t border-blue-600">
+                    <p className="text-xs text-blue-200 mb-1">Código do Imóvel</p>
+                    <p className="font-mono text-sm font-semibold">
+                      {imovel.codigo || imovel.$id}
                     </p>
-                    <p className="font-semibold text-slate-900">
-                      Fale com nossos especialistas! 🏦
-                    </p>
+                    {!imovel.codigo && (
+                      <p className="text-xs text-blue-300 mt-1">ID do sistema</p>
+                    )}
                   </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-start gap-2 text-sm text-slate-700">
-                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <span>Simulação com bancos parceiros</span>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm text-slate-700">
-                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <span>Taxas atualizadas e competitivas</span>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm text-slate-700">
-                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <span>Análise de crédito personalizada</span>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm text-slate-700">
-                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <span>Suporte completo na documentação</span>
-                    </div>
-                  </div>
-
-                  <a
-                    href={`https://wa.me/${whatsappNumber}?text=${whatsappMessageFinanciamento}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block"
-                    onClick={() => handleWhatsAppClick('financiamento')}
-                  >
-                    <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-lg">
-                      <Phone className="w-5 h-5 mr-2" />
-                      Consultar Financiamento
-                    </Button>
-                  </a>
-
-                  <p className="text-xs text-slate-600 text-center">
-                    Atendimento personalizado com especialistas em crédito imobiliário
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <CalculadoraFinanciamento precoImovel={imovel.preco} />
-            <ComparadorButton imovelId={imovel.$id} />
-          </div>
-        </div>
-      </div>
-
-      <SEO
-        title={`${imovel.titulo} - Bosco Imóveis`}
-        description={imovel.descricao}
-        keywords={`${imovel.tipoImovel}, ${imovel.cidade}, ${imovel.bairro}`}
-        image={imovel.imagemPrincipal}
-      />
-    </div>
-  );
-}
+             
