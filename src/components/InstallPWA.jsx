@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Download, X, Smartphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { analytics } from '@/utils/analytics'; // ✅ NOVO IMPORT
 
 export default function InstallPWA() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -59,15 +60,12 @@ export default function InstallPWA() {
 
     // Mostrar prompt nativo
     deferredPrompt.prompt();
-
-    // Aguardar escolha do usuário
     const { outcome } = await deferredPrompt.userChoice;
     
     if (outcome === 'accepted') {
+      analytics.installPWA(); // ✅ RASTREAR INSTALAÇÃO
       console.log('✅ PWA instalado');
       setIsInstalled(true);
-    } else {
-      console.log('❌ Instalação cancelada');
     }
 
     setDeferredPrompt(null);

@@ -17,27 +17,41 @@ import Perfil from './Pages/Perfil';
 import RedefinirSenha from './Pages/RedefinirSenha';
 import NovaSenha from './Pages/NovaSenha';
 import NotFound from './Pages/NotFound';
+import { trackPageView } from './utils/analytics'; // ✅ NOVO IMPORT
+
+// ✅ NOVO: Wrapper para rastrear navegação
+const PageWrapper = ({ Component, pageName }) => {
+  React.useEffect(() => {
+    trackPageView(window.location.pathname);
+  }, []);
+
+  return (
+    <Layout currentPageName={pageName}>
+      <Component />
+    </Layout>
+  );
+};
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Layout currentPageName="Home"><Home /></Layout>,
+    element: <PageWrapper Component={Home} pageName="Home" />,
   },
   {
     path: '/home',
-    element: <Layout currentPageName="Home"><Home /></Layout>,
+    element: <PageWrapper Component={Home} pageName="Home" />,
   },
   {
     path: '/catalogo',
-    element: <Layout currentPageName="Catalogo"><Catalogo /></Layout>,
+    element: <PageWrapper Component={Catalogo} pageName="Catalogo" />,
   },
   {
     path: '/promocoes',
-    element: <Layout currentPageName="Promocoes"><Promocoes /></Layout>,
+    element: <PageWrapper Component={Promocoes} pageName="Promocoes" />,
   },
   {
     path: '/contato',
-    element: <Layout currentPageName="Contato"><Contato /></Layout>,
+    element: <PageWrapper Component={Contato} pageName="Contato" />,
   },
   {
     path: '/favoritos',
@@ -51,7 +65,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/detalhes',
-    element: <Layout currentPageName="Detalhes"><Detalhes /></Layout>,
+    element: <PageWrapper Component={Detalhes} pageName="Detalhes" />,
   },
   {
     path: '/gerenciador',

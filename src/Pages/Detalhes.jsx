@@ -33,6 +33,7 @@ import { toast } from 'sonner';
 import MapaLeaflet from '@/components/imoveis/MapaLeaflet'; // ✅ NOVO IMPORT
 import SEO from '@/components/SEO';
 import { gerarPDFImovel } from '@/utils/pdfGenerator';
+import { analytics } from '@/utils/analytics'; // ✅ NOVO IMPORT
 
 const TIPO_IMOVEL_LABELS = {
   'house': 'Casa',
@@ -108,6 +109,44 @@ export default function Detalhes() {
       };
     }
   }, [imovelId]);
+
+  // ✅ NOVO: Rastrear visualização do imóvel
+  useEffect(() => {
+    if (imovel) {
+      analytics.viewImovel(imovel.$id, imovel.titulo, imovel.preco);
+    }
+  }, [imovel]);
+
+  // ✅ NOVO: Rastrear clique no WhatsApp
+  const handleWhatsAppClick = (tipo = 'geral') => {
+    analytics.clickWhatsApp(tipo);
+  };
+
+  // ✅ NOVO: Rastrear compartilhamento
+  const compartilhar = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: imovel.titulo,
+          text: `Confira este imóvel: ${imovel.titulo}`,
+          url: window.location.href,
+        });
+        analytics.shareImovel(imovel.$id, 'native'); // ✅ RASTREAR
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          copiarLink();
+        }
+      }
+    } else {
+      copiarLink();
+    }
+  };
+
+  const copiarLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    analytics.shareImovel(imovel.$id, 'copy_link'); // ✅ RASTREAR
+    toast.success('Link copiado!');
+  };
 
   if (isLoading) {
     return (

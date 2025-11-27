@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Client, Functions } from 'appwrite';
 import { rateLimits } from '@/utils/rateLimit'; // ✅ NOVO IMPORT
+import { analytics } from '@/utils/analytics'; // ✅ NOVO IMPORT
 import SEO from '@/components/SEO';
 
 export default function Contato() {
@@ -97,6 +98,10 @@ export default function Contato() {
       } catch (emailError) {
         console.error('❌ Erro ao executar função de email:', emailError);
       }
+
+      // ✅ NOVO: Rastrear envio do formulário
+      analytics.submitContact(formData.nome, formData.email);
+      analytics.conversion('contact', 0); // Lead qualificado
 
       toast.success('Mensagem enviada com sucesso! 🎉', {
         description: `Entraremos em contato em breve. Você tem ${limitCheck.remainingAttempts - 1} envios restantes nesta hora.`,
