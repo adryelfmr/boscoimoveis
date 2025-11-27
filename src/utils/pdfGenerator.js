@@ -71,7 +71,7 @@ export function gerarPDFImovel(imovel) {
   // Footer
   pdf.setFontSize(10);
   pdf.setTextColor(100, 100, 100);
-  pdf.text('Contato: (62) 99404-5111 | bosco.mr@hotmail.com', 105, 280, { align: 'center' });
+  pdf.text('Contato: (62) 99404-5111 | contato@boscoimoveis.app', 105, 280, { align: 'center' });
   pdf.text('www.boscoimoveis.app', 105, 286, { align: 'center' });
   
   // Salvar

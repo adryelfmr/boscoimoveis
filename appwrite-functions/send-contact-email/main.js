@@ -87,13 +87,13 @@ module.exports = async ({ req, res, log, error }) => {
     log(`✅ Rate limit OK para ${email}. Envios restantes: ${limitCheck.remainingAttempts}`);
     log('✅ Dados extraídos:', JSON.stringify({ nome, email, telefone }));
 
-    // ✅ Usar variáveis de ambiente
+    // ✅ Usar variáveis de ambiente corretas
     const SMTP_USER = process.env.BREVO_SMTP_USER;
     const SMTP_PASS = process.env.BREVO_SMTP_PASS;
-    const FROM_EMAIL = process.env.BREVO_FROM_EMAIL;
+    const CONTATO_EMAIL = process.env.CONTATO_EMAIL || 'contato@boscoimoveis.app'; // ✅ Email que aceita respostas
     const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
-    if (!SMTP_USER || !SMTP_PASS || !FROM_EMAIL || !ADMIN_EMAIL) {
+    if (!SMTP_USER || !SMTP_PASS || !CONTATO_EMAIL || !ADMIN_EMAIL) {
       throw new Error('Variáveis de ambiente SMTP não configuradas');
     }
 
@@ -110,11 +110,11 @@ module.exports = async ({ req, res, log, error }) => {
 
     log('✅ Transporter configurado');
 
-    // Email para o ADMIN
+    // ✅ Email para o ADMIN (como contato@boscoimoveis.app)
     const mailOptionsAdmin = {
-      from: `"Bosco Imóveis" <${FROM_EMAIL}>`,
-      to: ADMIN_EMAIL,
-      replyTo: email,
+      from: `"Bosco Imóveis - Formulário" <${CONTATO_EMAIL}>`, // ✅ Usar contato@
+      to: ADMIN_EMAIL, // Seu Gmail pessoal
+      replyTo: email, // ✅ Cliente pode responder diretamente
       subject: `🏠 Nova mensagem de contato - ${nome}`,
       html: `
         <!DOCTYPE html>
@@ -165,16 +165,16 @@ module.exports = async ({ req, res, log, error }) => {
         </html>
       `,
     };
-
+    
     log('📧 Enviando email para admin...');
     const infoAdmin = await transporter.sendMail(mailOptionsAdmin);
     log('✅ Email admin enviado! MessageId:', infoAdmin.messageId);
 
-    // Email de confirmação para o CLIENTE
+    // ✅ Email de confirmação para o CLIENTE
     const mailOptionsCliente = {
-      from: `"Bosco Imóveis" <${FROM_EMAIL}>`,
+      from: `"Bosco Imóveis" <${CONTATO_EMAIL}>`, // ✅ Usar contato@
       to: email,
-      replyTo: ADMIN_EMAIL,
+      replyTo: CONTATO_EMAIL, // ✅ Cliente pode responder para contato@
       subject: '✅ Recebemos sua mensagem - Bosco Imóveis',
       html: `
         <!DOCTYPE html>

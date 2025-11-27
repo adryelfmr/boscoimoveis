@@ -174,8 +174,8 @@ export default function Contato() {
                       </div>
                       <div>
                         <h3 className="font-semibold mb-1">Email</h3>
-                        <a href="mailto:bosco.mr@hotmail.com" className="text-blue-100 hover:text-white transition-colors">
-                          bosco.mr@hotmail.com
+                        <a href="mailto:contato@boscoimoveis.app" className="text-blue-100 hover:text-white transition-colors">
+                          contato@boscoimoveis.app
                         </a>
                       </div>
                     </div>

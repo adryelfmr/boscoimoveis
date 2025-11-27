@@ -31,19 +31,19 @@ module.exports = async ({ req, res, log, error }) => {
 
     log("✅ Dados extraídos:", JSON.stringify({ email, resetUrl }));
 
-    // Variáveis de ambiente
+    // ✅ Variáveis de ambiente
     const SMTP_USER = process.env.BREVO_SMTP_USER;
     const SMTP_PASS = process.env.BREVO_SMTP_PASS;
-    const FROM_EMAIL = process.env.BREVO_FROM_EMAIL;
+    const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL || 'noreply@boscoimoveis.app'; // ✅ Email automático
     const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
-    if (!SMTP_USER || !SMTP_PASS || !FROM_EMAIL || !ADMIN_EMAIL) {
+    if (!SMTP_USER || !SMTP_PASS || !NOREPLY_EMAIL || !ADMIN_EMAIL) {
       throw new Error("Variáveis SMTP faltando.");
     }
 
     log("✅ Variáveis SMTP configuradas");
 
-    // Transporter
+    // ✅ Transporter
     const transporter = nodemailer.createTransport({
       host: "smtp-relay.brevo.com",
       port: 587,
@@ -56,11 +56,11 @@ module.exports = async ({ req, res, log, error }) => {
 
     log("✅ Transporter criado");
 
-    // Conteúdo do e-mail
+    // ✅ Conteúdo do e-mail (SEM reply-to)
     const mailOptions = {
-      from: `"Bosco Imóveis" <${FROM_EMAIL}>`,
+      from: `"Bosco Imóveis - Redefinição de Senha" <${NOREPLY_EMAIL}>`, // ✅ Usar noreply@
       to: email,
-      replyTo: ADMIN_EMAIL,
+      // ❌ SEM replyTo - não aceita respostas
       subject: "🔐 Redefinir sua senha - Bosco Imóveis",
       html: `
         <!DOCTYPE html>
@@ -104,12 +104,58 @@ module.exports = async ({ req, res, log, error }) => {
           </div>
         </body>
         </html>
-      `
+      `,
     };
-
     
-    const info = await transporter.sendMail(mailOptions);
+    log('📧 Enviando email para admin...');
+    const infoAdmin = await transporter.sendMail(mailOptions);
+    log('✅ Email admin enviado! MessageId:', infoAdmin.messageId);
 
+    // ✅ Email de confirmação para o CLIENTE
+    const mailOptionsCliente = {
+      from: `"Bosco Imóveis" <${CONTATO_EMAIL}>`, // ✅ Usar contato@
+      to: email,
+      replyTo: CONTATO_EMAIL, // ✅ Cliente pode responder para contato@
+      subject: '✅ Recebemos sua mensagem - Bosco Imóveis',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #ffffff; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            .button { display: inline-block; padding: 15px 30px; background: #1e3a8a; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 30px; color: #64748b; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>✅ Recebemos sua mensagem!</h1>
+              <p>Bosco Imóveis</p>
+            </div>
+            <div class="content">
+              <p>Olá,</p>
+              <p>Agradecemos pelo seu contato!</p>
+              <p>Recebemos sua solicitação de redefinição de senha. Caso não tenha sido você quem solicitou, por favor, desconsidere este email.</p>
+              <p>Atenciosamente,</p>
+              <p>Equipe Bosco Imóveis</p>
+            </div>
+            <div class="footer">
+              <p>Bosco Imóveis - Há mais de 10 anos realizando sonhos</p>
+              <p>${new Date().toLocaleString('pt-BR')}</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    };
+    
+    log('📧 Enviando email para cliente...');
+    const infoCliente = await transporter.sendMail(mailOptionsCliente);
+    log('✅ Email cliente enviado! MessageId:', infoCliente.messageId);
 
     return res.json({
       success: true,
