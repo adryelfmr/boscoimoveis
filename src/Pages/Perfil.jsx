@@ -1,116 +1,285 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { User, Mail, Calendar, LogOut, Heart, Shield } from 'lucide-react';
+import { User, Mail, Phone, Lock, Loader2, CheckCircle, Shield } from 'lucide-react';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
+import { account } from '@/lib/appwrite';
+import { 
+  formatarTelefoneAoDigitar, 
+  validarTelefone, 
+  converterParaE164,
+  converterParaBrasileiro 
+} from '@/utils/telefone';
+import { Badge } from '@/components/ui/badge';
 
 export default function Perfil() {
-  const { user, logout, isAdmin } = useAuth();
-  const navigate = useNavigate();
-  const [loggingOut, setLoggingOut] = useState(false);
+  const { user, checkUser, isAdmin } = useAuth();
+  const [editando, setEditando] = useState(false);
+  const [salvando, setSalvando] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    name: user?.name || '',
+    telefone: user?.phone ? converterParaBrasileiro(user.phone) : '',
+    senhaAtual: '',
+    novaSenha: '',
+  });
 
-  const handleLogout = async () => {
-    setLoggingOut(true);
+  const handleSalvar = async () => {
+    setSalvando(true);
+    
     try {
-      await logout();
-      toast.success('Logout realizado com sucesso!');
-      navigate('/');
+      // Atualizar nome
+      if (formData.name !== user?.name) {
+        await account.updateName(formData.name);
+      }
+
+      // Atualizar telefone
+      if (formData.telefone) {
+        if (!validarTelefone(formData.telefone)) {
+          toast.error('Telefone inválido');
+          setSalvando(false);
+          return;
+        }
+
+        const telefoneE164 = converterParaE164(formData.telefone);
+        
+        if (telefoneE164 !== user?.phone) {
+          if (!formData.senhaAtual) {
+            toast.error('Digite sua senha para atualizar o telefone');
+            setSalvando(false);
+            return;
+          }
+          
+          await account.updatePhone(telefoneE164, formData.senhaAtual);
+        }
+      }
+
+      // Atualizar senha
+      if (formData.novaSenha) {
+        if (!formData.senhaAtual) {
+          toast.error('Digite sua senha atual');
+          setSalvando(false);
+          return;
+        }
+        
+        await account.updatePassword(formData.novaSenha, formData.senhaAtual);
+      }
+
+      toast.success('Perfil atualizado com sucesso!');
+      await checkUser();
+      setEditando(false);
+      setFormData({
+        ...formData,
+        senhaAtual: '',
+        novaSenha: '',
+      });
     } catch (error) {
-      toast.error('Erro ao fazer logout');
+      console.error('Erro ao atualizar perfil:', error);
+      toast.error(error.message || 'Erro ao atualizar perfil');
     } finally {
-      setLoggingOut(false);
+      setSalvando(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white rounded-2xl p-8 mb-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <User className="w-8 h-8 text-blue-900" />
+            <h1 className="text-3xl font-bold text-slate-900">Meu Perfil</h1>
+          </div>
+          {isAdmin && (
+            <Badge className="bg-blue-100 text-blue-900 border-blue-300">
+              <Shield className="w-4 h-4 mr-1" />
+              Administrador
+            </Badge>
+          )}
+        </div>
+
+        {/* Card de Informações */}
+        <Card>
+          <CardHeader>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
-                  <User className="w-10 h-10" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold">{user.name}</h1>
-                  <p className="text-blue-200">{user.email}</p>
-                  {isAdmin && (
-                    <Badge className="mt-2 bg-amber-400 text-blue-900 border-0">
-                      <Shield className="w-3 h-3 mr-1" />
-                      Administrador
-                    </Badge>
+              <CardTitle>Informações Pessoais</CardTitle>
+              {!editando && (
+                <Button onClick={() => setEditando(true)} variant="outline">
+                  Editar
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Nome */}
+            <div>
+              <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Nome Completo
+              </label>
+              {editando ? (
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  placeholder="Seu nome"
+                />
+              ) : (
+                <p className="text-slate-900 font-medium">{user?.name}</p>
+              )}
+            </div>
+
+            {/* Email (não editável) */}
+            <div>
+              <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                Email
+              </label>
+              <p className="text-slate-600">{user?.email}</p>
+              <p className="text-xs text-slate-500 mt-1">
+                O email não pode ser alterado
+              </p>
+            </div>
+
+            {/* Telefone */}
+            <div>
+              <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+                <Phone className="w-4 h-4" />
+                Telefone
+              </label>
+              {editando ? (
+                <>
+                  <Input
+                    value={formData.telefone}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      telefone: formatarTelefoneAoDigitar(e.target.value)
+                    })}
+                    placeholder="(62) 99999-9999"
+                    maxLength={15}
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    📱 Necessário para anunciar imóveis
+                  </p>
+                </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  {user?.phone ? (
+                    <>
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <p className="text-slate-900 font-medium">
+                        {converterParaBrasileiro(user.phone)}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-amber-600">Telefone não cadastrado</p>
+                      <Button
+                        size="sm"
+                        onClick={() => setEditando(true)}
+                        className="ml-2"
+                      >
+                        Cadastrar
+                      </Button>
+                    </>
                   )}
                 </div>
+              )}
+            </div>
+
+            {/* Senha (apenas ao editar) */}
+            {editando && (
+              <>
+                <div className="border-t pt-6">
+                  <h3 className="font-semibold mb-4 flex items-center gap-2">
+                    <Lock className="w-4 h-4" />
+                    Alterar Senha (Opcional)
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Senha Atual *
+                      </label>
+                      <Input
+                        type="password"
+                        value={formData.senhaAtual}
+                        onChange={(e) => setFormData({...formData, senhaAtual: e.target.value})}
+                        placeholder="Digite sua senha atual"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">
+                        Obrigatório para atualizar telefone ou senha
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Nova Senha
+                      </label>
+                      <Input
+                        type="password"
+                        value={formData.novaSenha}
+                        onChange={(e) => setFormData({...formData, novaSenha: e.target.value})}
+                        placeholder="Deixe em branco para manter a atual"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Botões */}
+            {editando && (
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditando(false);
+                    setFormData({
+                      name: user?.name || '',
+                      telefone: user?.phone ? converterParaBrasileiro(user.phone) : '',
+                      senhaAtual: '',
+                      novaSenha: '',
+                    });
+                  }}
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleSalvar}
+                  disabled={salvando}
+                  className="flex-1 bg-blue-900 hover:bg-blue-800"
+                >
+                  {salvando ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    'Salvar Alterações'
+                  )}
+                </Button>
               </div>
-              <Badge className="bg-green-500 text-white border-0">Ativo</Badge>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Informação sobre anúncios */}
+        {!user?.phone && (
+          <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="flex items-start gap-2">
+              <Phone className="w-5 h-5 text-amber-600 mt-0.5" />
+              <div className="text-sm text-amber-800">
+                <p className="font-semibold mb-1">Cadastre seu telefone</p>
+                <p>
+                  Para anunciar imóveis gratuitamente, você precisa cadastrar um número de telefone válido.
+                </p>
+              </div>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Informações da Conta */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle>Informações da Conta</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                  <Mail className="w-5 h-5 text-slate-600" />
-                  <div>
-                    <p className="text-sm text-slate-600">Email</p>
-                    <p className="font-semibold">{user.email}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                  <Calendar className="w-5 h-5 text-slate-600" />
-                  <div>
-                    <p className="text-sm text-slate-600">Membro desde</p>
-                    <p className="font-semibold">
-                      {new Date(user.$createdAt).toLocaleDateString('pt-BR')}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Ações Rápidas */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle>Ações Rápidas</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start h-12"
-                  onClick={() => navigate('/favoritos')}
-                >
-                  <Heart className="w-5 h-5 mr-3 text-red-500" />
-                  Meus Favoritos
-                </Button>
-                
-                {/* ✅ REMOVIDO: Botão de Alertas */}
-                
-                <Button
-                  variant="outline"
-                  className="w-full justify-start h-12 text-red-600 hover:bg-red-50"
-                  onClick={handleLogout}
-                  disabled={loggingOut}
-                >
-                  <LogOut className="w-5 h-5 mr-3" />
-                  {loggingOut ? 'Saindo...' : 'Sair da Conta'}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </motion.div>
+        )}
       </div>
     </div>
   );

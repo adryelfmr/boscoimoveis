@@ -1,14 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { appwrite } from '@/api/appwriteClient';
-import { teams, ADMIN_TEAM_ID } from '@/lib/appwrite';
 import { useQueryClient } from '@tanstack/react-query';
+import { appwrite } from '@/api/appwriteClient';
+import { account, teams, ADMIN_TEAM_ID } from '@/lib/appwrite';
 
-const AuthContext = createContext({});
+const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth deve ser usado dentro de AuthProvider');
   }
   return context;
 };
@@ -26,7 +26,6 @@ export function AuthProvider({ children }) {
     try {
       const userData = await appwrite.auth.me();
       
-      // ✅ Se userData for null (não autenticado), não faz nada
       if (!userData) {
         setUser(null);
         setLoading(false);
@@ -51,7 +50,6 @@ export function AuthProvider({ children }) {
         isAdmin,
       });
     } catch (error) {
-      // Apenas logar erros que não sejam "não autenticado"
       if (error.message !== 'Not authenticated') {
         console.error('Erro ao verificar usuário:', error);
       }
@@ -68,9 +66,28 @@ export function AuthProvider({ children }) {
     return session;
   };
 
-  const register = async (email, password, name) => {
-    await appwrite.auth.register(email, password, name);
-    await login(email, password);
+  // ✅ ATUALIZADO: Usar Phone Session nativa do Appwrite
+  const register = async (email, password, name, telefone) => {
+    try {
+      // 1. Criar conta no Appwrite
+      const newUser = await appwrite.auth.register(email, password, name);
+      
+      // 2. Fazer login automático
+      await login(email, password);
+      
+      // 3. ✅ NOVO: Atualizar telefone usando API nativa do Appwrite
+      if (telefone) {
+        await account.updatePhone(telefone, password);
+      }
+      
+      // 4. Atualizar estado do usuário
+      await checkUser();
+      
+      return newUser;
+    } catch (error) {
+      console.error('Erro ao registrar:', error);
+      throw error;
+    }
   };
 
   const logout = async () => {
@@ -89,6 +106,14 @@ export function AuthProvider({ children }) {
     isAuthenticated: !!user,
     isAdmin: user?.isAdmin || false,
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-900 border-t-transparent" />
+      </div>
+    );
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

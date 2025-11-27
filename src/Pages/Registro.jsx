@@ -7,11 +7,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, Lock, User, Loader2, Home, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { 
+  formatarTelefoneAoDigitar, 
+  validarTelefone, 
+  converterParaE164 
+} from '@/utils/telefone'; // ✅ IMPORTAR funções de telefone
 
 export default function Registro() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    telefone: '',
     password: '',
     confirmPassword: '',
   });

@@ -41,8 +41,7 @@ export default function Sobre() {
           <div className="prose prose-lg max-w-none text-slate-700">
             <p className="text-lg leading-relaxed">
               A <strong>Bosco Imóveis</strong> nasceu da paixão de pai e filho por transformar vidas através do mercado imobiliário. 
-              Com mais de <strong>10 anos de experiência</strong>, atuamos como <strong>corretores autônomos especializados</strong> 
-              em Goiânia e região metropolitana.
+              Com mais de <strong>10 anos de experiência</strong>, atuamos como <strong>corretores autônomos especializados</strong> em Goiânia e região metropolitana.
             </p>
             <p className="text-lg leading-relaxed mt-4">
               Nossa missão é simples: <strong>encontrar o imóvel perfeito para cada cliente</strong>, oferecendo 
@@ -111,11 +110,7 @@ export default function Sobre() {
                 <div>
                   <h3 className="font-bold text-xl text-blue-900 mb-3">Goiânia</h3>
                   <ul className="space-y-2 text-slate-700">
-                    <li>✓ Setor Bueno</li>
-                    <li>✓ Setor Marista</li>
-                    <li>✓ Setor Oeste</li>
-                    <li>✓ Jardim Goiás</li>
-                    <li>✓ Alto da Glória</li>
+                    <li>✓ Toda a cidade</li>
                   </ul>
                 </div>
                 <div>
