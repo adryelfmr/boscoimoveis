@@ -1,0 +1,16 @@
+# Bosco Imóveis - Robots.txt
+User-agent: *
+Allow: /
+Disallow: /gerenciador
+Disallow: /meus-dados
+
+# Sitemap
+Sitemap: https://boscoimoveis.app/sitemap.xml
+
+# Google
+User-agent: Googlebot
+Allow: /
+
+# Bing
+User-agent: Bingbot
+Allow: /

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <!-- Página Inicial -->
+  <url>
+    <loc>https://boscoimoveis.app/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <lastmod>2025-01-26</lastmod>
+  </url>
+
+  <!-- Catálogo -->
+  <url>
+    <loc>https://boscoimoveis.app/catalogo</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+    <lastmod>2025-01-26</lastmod>
+  </url>
+
+  <!-- Promoções -->
+  <url>
+    <loc>https://boscoimoveis.app/promocoes</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2025-01-26</lastmod>
+  </url>
+
+  <!-- Favoritos -->
+  <url>
+    <loc>https://boscoimoveis.app/favoritos</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Comparar -->
+  <url>
+    <loc>https://boscoimoveis.app/comparar</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Contato -->
+  <url>
+    <loc>https://boscoimoveis.app/contato</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Login -->
+  <url>
+    <loc>https://boscoimoveis.app/login</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- Registro -->
+  <url>
+    <loc>https://boscoimoveis.app/registro</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+</urlset>
