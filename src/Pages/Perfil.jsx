@@ -13,11 +13,13 @@ import {
   converterParaBrasileiro 
 } from '@/utils/telefone';
 import { Badge } from '@/components/ui/badge';
+import VerificarTelefone from '@/components/VerificarTelefone'; // ✅ NOVO IMPORT
 
 export default function Perfil() {
   const { user, checkUser, isAdmin } = useAuth();
   const [editando, setEditando] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const [verificandoTelefone, setVerificandoTelefone] = useState(false); // ✅ NOVO
   
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -83,6 +85,24 @@ export default function Perfil() {
     }
   };
 
+  // ✅ NOVO: Handler para telefone verificado
+  const handleTelefoneVerificado = async (telefoneE164) => {
+    try {
+      // Salvar telefone verificado no Appwrite
+      await account.updatePhone(telefoneE164, formData.senhaAtual || 'senha-temporaria');
+      
+      toast.success('✅ Telefone verificado e salvo!');
+      
+      await checkUser();
+      setVerificandoTelefone(false);
+      setEditando(false);
+      
+    } catch (error) {
+      console.error('Erro ao salvar telefone:', error);
+      toast.error('Erro ao salvar telefone verificado');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -101,11 +121,11 @@ export default function Perfil() {
         </div>
 
         {/* Card de Informações */}
-        <Card>
+        <Card className="mb-6">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Informações Pessoais</CardTitle>
-              {!editando && (
+              {!editando && !verificandoTelefone && (
                 <Button onClick={() => setEditando(true)} variant="outline">
                   Editar
                 </Button>
@@ -148,22 +168,7 @@ export default function Perfil() {
                 <Phone className="w-4 h-4" />
                 Telefone
               </label>
-              {editando ? (
-                <>
-                  <Input
-                    value={formData.telefone}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      telefone: formatarTelefoneAoDigitar(e.target.value)
-                    })}
-                    placeholder="(62) 99999-9999"
-                    maxLength={15}
-                  />
-                  <p className="text-xs text-slate-500 mt-1">
-                    📱 Necessário para anunciar imóveis
-                  </p>
-                </>
-              ) : (
+              {!verificandoTelefone ? (
                 <div className="flex items-center gap-2">
                   {user?.phone ? (
                     <>
@@ -171,21 +176,25 @@ export default function Perfil() {
                       <p className="text-slate-900 font-medium">
                         {converterParaBrasileiro(user.phone)}
                       </p>
+                      <Badge className="bg-green-100 text-green-800 border-green-300">
+                        Verificado
+                      </Badge>
                     </>
                   ) : (
                     <>
                       <p className="text-amber-600">Telefone não cadastrado</p>
                       <Button
                         size="sm"
-                        onClick={() => setEditando(true)}
+                        onClick={() => setVerificandoTelefone(true)}
                         className="ml-2"
                       >
-                        Cadastrar
+                        <Phone className="w-4 h-4 mr-1" />
+                        Verificar Telefone
                       </Button>
                     </>
                   )}
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* Senha (apenas ao editar) */}
@@ -266,15 +275,25 @@ export default function Perfil() {
           </CardContent>
         </Card>
 
+        {/* ✅ NOVO: Modal de Verificação */}
+        {verificandoTelefone && (
+          <div className="mb-6">
+            <VerificarTelefone 
+              onVerified={handleTelefoneVerificado}
+              onCancel={() => setVerificandoTelefone(false)}
+            />
+          </div>
+        )}
+
         {/* Informação sobre anúncios */}
-        {!user?.phone && (
+        {!user?.phone && !verificandoTelefone && (
           <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
             <div className="flex items-start gap-2">
               <Phone className="w-5 h-5 text-amber-600 mt-0.5" />
               <div className="text-sm text-amber-800">
-                <p className="font-semibold mb-1">Cadastre seu telefone</p>
+                <p className="font-semibold mb-1">Verifique seu telefone</p>
                 <p>
-                  Para anunciar imóveis gratuitamente, você precisa cadastrar um número de telefone válido.
+                  Para anunciar imóveis, você precisa verificar um número de telefone válido via SMS.
                 </p>
               </div>
             </div>
