@@ -18,8 +18,8 @@ import RedefinirSenha from './Pages/RedefinirSenha';
 import NovaSenha from './Pages/NovaSenha';
 import NotFound from './Pages/NotFound';
 import Sobre from './Pages/Sobre';
-import AnunciarImovel from './Pages/AnunciarImovel'; // ✅ IMPORTAR
-import MeusAnuncios from './Pages/MeusAnuncios'; // ✅ IMPORTAR
+import AnunciarImovel from './Pages/AnunciarImovel';
+import MeusAnuncios from './Pages/MeusAnuncios';
 import { trackPageView } from './utils/analytics';
 
 // ✅ NOVO: Wrapper para rastrear navegação
