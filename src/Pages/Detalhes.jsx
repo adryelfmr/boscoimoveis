@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { appwrite } from '@/api/appwriteClient';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext'; // ✅ NOVO IMPORT
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,19 +21,20 @@ import {
   Phone,
   FileText,
   CheckCircle,
-  Edit, // ✅ NOVO IMPORT
-  Settings, // ✅ NOVO IMPORT
-  Download, // ✅ NOVO IMPORT
+  Edit,
+  Download,
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom'; // ✅ ADICIONADO useNavigate
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import { motion } from 'framer-motion';
 import FavoritoButton from '@/components/imoveis/FavoritoButton';
+import ComparadorButton from '@/components/imoveis/ComparadorButton';
+import CalculadoraFinanciamento from '@/components/imoveis/CalculadoraFinanciamento';
 import { toast } from 'sonner';
-import MapaLeaflet from '@/components/imoveis/MapaLeaflet'; // ✅ NOVO IMPORT
+import MapaLeaflet from '@/components/imoveis/MapaLeaflet';
 import SEO from '@/components/SEO';
 import { gerarPDFImovel } from '@/utils/pdfGenerator';
-import { analytics } from '@/utils/analytics'; // ✅ NOVO IMPORT
+import { analytics } from '@/utils/analytics';
 
 const TIPO_IMOVEL_LABELS = {
   'house': 'Casa',
@@ -44,8 +45,8 @@ const TIPO_IMOVEL_LABELS = {
 };
 
 export default function Detalhes() {
-  const { isAdmin } = useAuth(); // ✅ NOVO
-  const navigate = useNavigate(); // ✅ NOVO
+  const { isAdmin } = useAuth();
+  const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
   const imovelId = urlParams.get('id');
   const [imagemAtual, setImagemAtual] = useState(0);
@@ -68,34 +69,32 @@ export default function Detalhes() {
   const { data: visualizacoes = [] } = useQuery({
     queryKey: ['visualizacoes-count', imovelId],
     queryFn: async () => {
-      return await appwrite.entities.Visualizacao.filter({ imovelId: imovelId });
+      if (!imovelId) return [];
+      return await appwrite.entities.Visualizacao.filter({ imovelId }, '-$createdAt', 1000);
     },
     enabled: !!imovelId,
   });
 
-  const visualizacoesHoje = visualizacoes.filter(v => {
-    const hoje = new Date().toDateString();
-    const dataVisualizacao = new Date(v.$createdAt).toDateString();
-    return hoje === dataVisualizacao;
-  }).length;
+  const hoje = new Date().toISOString().split('T')[0];
+  const visualizacoesHoje = visualizacoes.filter(v => 
+    v.$createdAt.split('T')[0] === hoje
+  ).length;
 
   const registrarVisualizacaoMutation = useMutation({
-    mutationFn: async (dados) => {
-      await appwrite.entities.Visualizacao.create(dados);
+    mutationFn: async ({ imovelId, tempoVisualizacao, sessionId }) => {
+      return await appwrite.entities.Visualizacao.create({
+        imovelId,
+        userId: user?.$id || null,
+        tempoVisualizacao,
+        sessionId,
+        origem: document.referrer.includes('catalogo') ? 'catalogo' : 'direto',
+      });
     },
   });
 
   useEffect(() => {
-    if (imovelId) {
-      const sessionId = localStorage.getItem('session_id') || Math.random().toString(36);
-      localStorage.setItem('session_id', sessionId);
-
-      registrarVisualizacaoMutation.mutate({
-        imovelId: imovelId,
-        userEmail: user?.email || null,
-        sessionId: sessionId,
-        origem: document.referrer.includes('catalogo') ? 'catalogo' : 'direto',
-      });
+    if (imovelId && user) {
+      const sessionId = `session_${Date.now()}_${Math.random()}`;
 
       return () => {
         const tempoVisualizacao = Math.floor((Date.now() - tempoInicio) / 1000);
@@ -110,28 +109,29 @@ export default function Detalhes() {
     }
   }, [imovelId]);
 
-  // ✅ NOVO: Rastrear visualização do imóvel
+  // ✅ Rastrear visualização do imóvel
   useEffect(() => {
     if (imovel) {
       analytics.viewImovel(imovel.$id, imovel.titulo, imovel.preco);
     }
   }, [imovel]);
 
-  // ✅ NOVO: Rastrear clique no WhatsApp
+  // ✅ Rastrear clique no WhatsApp
   const handleWhatsAppClick = (tipo = 'geral') => {
     analytics.clickWhatsApp(tipo);
   };
 
-  // ✅ NOVO: Rastrear compartilhamento
+  // ✅ CORRIGIDO: Manter apenas UMA função compartilhar
   const compartilhar = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
           title: imovel.titulo,
-          text: `Confira este imóvel: ${imovel.titulo}`,
+          text: `Confira este imóvel: ${imovel.titulo} - ${formatPrice(imovel.preco)}`,
           url: window.location.href,
         });
-        analytics.shareImovel(imovel.$id, 'native'); // ✅ RASTREAR
+        analytics.shareImovel(imovel.$id, 'native');
+        toast.success('Compartilhado com sucesso!');
       } catch (err) {
         if (err.name !== 'AbortError') {
           copiarLink();
@@ -144,8 +144,8 @@ export default function Detalhes() {
 
   const copiarLink = () => {
     navigator.clipboard.writeText(window.location.href);
-    analytics.shareImovel(imovel.$id, 'copy_link'); // ✅ RASTREAR
-    toast.success('Link copiado!');
+    analytics.shareImovel(imovel.$id, 'copy_link');
+    toast.success('Link copiado para a área de transferência!');
   };
 
   if (isLoading) {
@@ -184,7 +184,6 @@ export default function Detalhes() {
 
   const whatsappNumber = '5562994045111';
   
-  // ✅ MELHORADO: Mensagem mais completa e profissional
   const whatsappMessage = encodeURIComponent(
     `🏡 *Olá! Tenho interesse neste imóvel:*\n\n` +
     `📌 *${imovel.titulo}*\n` +
@@ -199,7 +198,6 @@ export default function Detalhes() {
     `Gostaria de mais informações e agendar uma visita! 😊`
   );
 
-  // ✅ NOVO: Mensagem específica para financiamento
   const whatsappMessageFinanciamento = encodeURIComponent(
     `💳 *Olá! Gostaria de informações sobre financiamento:*\n\n` +
     `🏡 *Imóvel:* ${imovel.titulo}\n` +
@@ -215,30 +213,6 @@ export default function Detalhes() {
     `Aguardo retorno! 😊`
   );
 
-  const compartilhar = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: imovel.titulo,
-          text: `Confira este imóvel: ${imovel.titulo} - ${formatPrice(imovel.preco)}`,
-          url: window.location.href,
-        });
-        toast.success('Compartilhado com sucesso!');
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          copiarLink();
-        }
-      }
-    } else {
-      copiarLink();
-    }
-  };
-
-  const copiarLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast.success('Link copiado para a área de transferência!');
-  };
-
   const proximaImagem = () => {
     setImagemAtual((prev) => (prev + 1) % imagens.length);
   };
@@ -249,6 +223,7 @@ export default function Detalhes() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white">
+      {/* Header */}
       <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
@@ -259,7 +234,6 @@ export default function Detalhes() {
               </Button>
             </Link>
 
-            {/* ✅ NOVO: Botão de Edição para Admins */}
             {isAdmin && (
               <Button
                 onClick={() => navigate(`/gerenciador?edit=${imovelId}`)}
@@ -448,7 +422,6 @@ export default function Detalhes() {
 
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Card de Contato */}
             <Card className="border-0 shadow-xl bg-gradient-to-br from-blue-900 to-blue-700 text-white">
               <CardContent className="p-6">
                 <div className="mb-4">
@@ -462,12 +435,12 @@ export default function Detalhes() {
                 </div>
 
                 <div className="space-y-3">
-                  {/* ✅ ATUALIZADO: Botão com mensagem melhorada */}
                   <a
                     href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block"
+                    onClick={() => handleWhatsAppClick('detalhes')}
                   >
                     <Button className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 text-base shadow-lg">
                       <MessageCircle className="w-5 h-5 mr-2" />
@@ -492,7 +465,6 @@ export default function Detalhes() {
                     </Button>
                   </div>
 
-                  {/* ✅ NOVO: Botão para baixar ficha em PDF */}
                   <Button
                     variant="outline"
                     onClick={() => gerarPDFImovel(imovel)}
@@ -506,7 +478,7 @@ export default function Detalhes() {
                 <div className="mt-4 pt-4 border-t border-blue-600">
                   <p className="text-xs text-blue-200 mb-1">Código do Imóvel</p>
                   <p className="font-mono text-sm font-semibold">
-                    {imovel.codigo || imovel.$id} {/* ✅ ATUALIZADO: Mostra código personalizado ou ID */}
+                    {imovel.codigo || imovel.$id}
                   </p>
                   {!imovel.codigo && (
                     <p className="text-xs text-blue-300 mt-1">ID do sistema</p>
@@ -515,7 +487,6 @@ export default function Detalhes() {
               </CardContent>
             </Card>
 
-            {/* Card de Financiamento Real */}
             <Card className="border-0 shadow-lg bg-gradient-to-br from-amber-50 to-orange-50">
               <CardHeader className="border-b bg-white/50">
                 <CardTitle className="flex items-center gap-2 text-slate-900">
@@ -553,12 +524,12 @@ export default function Detalhes() {
                     </div>
                   </div>
 
-                  {/* ✅ ATUALIZADO: Botão com mensagem específica de financiamento */}
                   <a
                     href={`https://wa.me/${whatsappNumber}?text=${whatsappMessageFinanciamento}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block"
+                    onClick={() => handleWhatsAppClick('financiamento')}
                   >
                     <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-lg">
                       <Phone className="w-5 h-5 mr-2" />
@@ -572,6 +543,9 @@ export default function Detalhes() {
                 </div>
               </CardContent>
             </Card>
+
+            <CalculadoraFinanciamento precoImovel={imovel.preco} />
+            <ComparadorButton imovelId={imovel.$id} />
           </div>
         </div>
       </div>
