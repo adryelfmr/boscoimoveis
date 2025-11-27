@@ -33,7 +33,6 @@ export function initGA() {
     send_page_view: true,
   });
 
-  console.log('✅ Google Analytics inicializado:', GA_MEASUREMENT_ID);
 }
 
 /**

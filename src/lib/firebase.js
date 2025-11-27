@@ -16,5 +16,3 @@ const app = initializeApp(firebaseConfig);
 
 // Exportar auth
 export const auth = getAuth(app);
-
-console.log('✅ Firebase inicializado:', firebaseConfig.projectId);

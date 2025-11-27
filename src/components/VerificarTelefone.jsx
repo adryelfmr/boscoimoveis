@@ -116,7 +116,6 @@ export default function VerificarTelefone({ onVerified, onCancel }) {
                   <ul className="space-y-1 text-xs">
                     <li>✓ Garante que o telefone é real</li>
                     <li>✓ Protege contra spam</li>
-                    <li>✓ 100% gratuito (10k SMS/mês)</li>
                   </ul>
                 </div>
               </div>
