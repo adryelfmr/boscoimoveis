@@ -12,18 +12,58 @@ const PREFIXOS_TIPO = {
   'Rural': 'RUR',
 };
 
-const PREFIXOS_CIDADE = {
-  'Goiânia': 'GOI',
-  'Aparecida de Goiânia': 'APA',
-  'Anápolis': 'ANA',
-  'Rio Verde': 'RIO',
-  'Trindade': 'TRI',
-  'Senador Canedo': 'SEN',
-  'Catalão': 'CAT',
-  'Luziânia': 'LUZ',
-  'Valparaíso de Goiás': 'VAL',
-  'Águas Lindas de Goiás': 'AGU',
-};
+/**
+ * Gera prefixo da cidade automaticamente
+ * Remove acentos, espaços e pega as 3 primeiras letras
+ * @param {string} cidade - Nome da cidade
+ * @returns {string} Prefixo de 3 letras
+ */
+function gerarPrefixoCidade(cidade) {
+  if (!cidade) return 'CID';
+  
+  // 1. Converter para maiúsculas
+  let prefixo = cidade.toUpperCase();
+  
+  // 2. Remover acentos e caracteres especiais
+  prefixo = prefixo
+    .normalize('NFD') // Decompor caracteres acentuados
+    .replace(/[\u0300-\u036f]/g, '') // Remover marcas diacríticas
+    .replace(/[^A-Z]/g, ''); // Remover tudo que não for letra
+  
+  // 3. Se a cidade tem múltiplas palavras, pegar primeira letra de cada
+  const palavras = cidade.split(/\s+/);
+  
+  if (palavras.length >= 3) {
+    // Ex: "Aparecida de Goiânia" → "ADG"
+    prefixo = palavras
+      .slice(0, 3)
+      .map(p => p.charAt(0).toUpperCase())
+      .join('')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  } else if (palavras.length === 2) {
+    // Ex: "Rio Verde" → "RVE" (primeira letra + 2 letras da segunda palavra)
+    const primeira = palavras[0].charAt(0).toUpperCase();
+    const segunda = palavras[1]
+      .substring(0, 2)
+      .toUpperCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+    prefixo = primeira + segunda;
+  } else {
+    // Ex: "Goiânia" → "GOI" (3 primeiras letras)
+    prefixo = prefixo.substring(0, 3);
+  }
+  
+  // 4. Garantir que tem exatamente 3 letras
+  if (prefixo.length < 3) {
+    prefixo = prefixo.padEnd(3, 'X');
+  } else if (prefixo.length > 3) {
+    prefixo = prefixo.substring(0, 3);
+  }
+  
+  return prefixo;
+}
 
 /**
  * Gera código automático baseado nos dados do imóvel
@@ -35,9 +75,8 @@ const PREFIXOS_CIDADE = {
 export function gerarCodigoAutomatico(tipoImovel, cidade, contador) {
   const prefixoTipo = PREFIXOS_TIPO[tipoImovel] || 'IMO';
   
-  // Pegar primeiras 3 letras da cidade (uppercase) se não estiver no mapa
-  const prefixoCidade = PREFIXOS_CIDADE[cidade] || 
-    cidade.substring(0, 3).toUpperCase().replace(/[^A-Z]/g, '');
+  // ✅ NOVO: Gerar prefixo automaticamente
+  const prefixoCidade = gerarPrefixoCidade(cidade);
   
   // Formatar contador com zeros à esquerda (4 dígitos)
   const numero = String(contador).padStart(4, '0');

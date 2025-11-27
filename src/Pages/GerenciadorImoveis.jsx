@@ -549,6 +549,14 @@ export default function GerenciadorImoveis() {
     return DISPONIBILIDADE_REVERSE_MAP[disponibilidade] || disponibilidade;
   };
 
+  // Logo após os imports, adicionar helper:
+  import { gerarCodigoAutomatico } from '@/utils/gerarCodigo';
+
+  // Dentro do componente, após o formData:
+  const previewCodigoAutomatico = formData.tipoImovel && formData.cidade 
+    ? gerarCodigoAutomatico(formData.tipoImovel, formData.cidade, 9999) // Mock para preview
+    : null;
+
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -783,6 +791,19 @@ export default function GerenciadorImoveis() {
                                   )}
                                 </Button>
                               </div>
+                              
+                              {/* ✅ NOVO: Preview do código */}
+                              {previewCodigoAutomatico && !formData.codigo && (
+                                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                                  <p className="text-xs text-blue-700">
+                                    💡 <strong>Preview:</strong> Será gerado algo como{' '}
+                                    <code className="font-mono font-semibold">
+                                      {previewCodigoAutomatico.replace('9999', 'XXXX')}
+                                    </code>
+                                  </p>
+                                </div>
+                              )}
+                              
                               <p className="text-xs text-slate-500 mt-1">
                                 💡 O código será gerado no formato: TIPO-CIDADE-NUMERO (ex: CAS-GOI-0001)
                               </p>
