@@ -136,14 +136,6 @@ export const analytics = {
     });
   },
 
-  // Comparação de imóveis
-  compareImoveis: (imovelIds) => {
-    trackEvent('compare_properties', {
-      item_count: imovelIds.length,
-      items: imovelIds,
-    });
-  },
-
   // Download de PDF
   downloadPDF: (imovelId) => {
     trackEvent('download_pdf', {

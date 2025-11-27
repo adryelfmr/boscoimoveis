@@ -4,14 +4,20 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Lock, User, Loader2, Home, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, User, Loader2, Home, AlertCircle, CheckCircle2, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { 
+  formatarTelefoneAoDigitar, 
+  validarTelefone, 
+  converterParaE164 
+} from '@/utils/telefone'; // ✅ NOVO IMPORT
 
 export default function Registro() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    telefone: '', // ✅ Formato brasileiro ao digitar
     password: '',
     confirmPassword: '',
   });
@@ -21,9 +27,7 @@ export default function Registro() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const validateEmail = (email) => {
-    return /\S+@\S+\.\S+/.test(email);
-  };
+  const validateEmail = (email) => /\S+@\S+\.\S+/.test(email);
 
   const calculatePasswordStrength = (password) => {
     let strength = 0;
@@ -38,7 +42,6 @@ export default function Registro() {
   const validateForm = () => {
     const newErrors = {};
 
-    // Validar nome
     if (!formData.name.trim()) {
       newErrors.name = 'Nome é obrigatório';
     } else if (formData.name.trim().length < 3) {
@@ -47,14 +50,19 @@ export default function Registro() {
       newErrors.name = 'Nome deve conter apenas letras';
     }
 
-    // Validar email
     if (!formData.email) {
       newErrors.email = 'Email é obrigatório';
     } else if (!validateEmail(formData.email)) {
       newErrors.email = 'Email inválido';
     }
 
-    // Validar senha
+    // ✅ NOVO: Validar telefone
+    if (!formData.telefone) {
+      newErrors.telefone = 'Telefone é obrigatório para anunciar imóveis';
+    } else if (!validarTelefone(formData.telefone)) {
+      newErrors.telefone = 'Telefone inválido. Use formato: (62) 99999-9999';
+    }
+
     if (!formData.password) {
       newErrors.password = 'Senha é obrigatória';
     } else if (formData.password.length < 8) {
@@ -63,7 +71,6 @@ export default function Registro() {
       newErrors.password = 'Senha muito fraca. Use letras maiúsculas, minúsculas e números';
     }
 
-    // Validar confirmação de senha
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = 'Confirme sua senha';
     } else if (formData.password !== formData.confirmPassword) {
@@ -96,11 +103,8 @@ export default function Registro() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Limpar erros anteriores
     setErrors({});
 
-    // Validar formulário
     if (!validateForm()) {
       return;
     }
@@ -108,44 +112,36 @@ export default function Registro() {
     setLoading(true);
 
     try {
-      await register(formData.email, formData.password, formData.name);
-      toast.success('Conta criada com sucesso! 🎉', {
-        description: 'Bem-vindo ao Bosco Imóveis!',
+      // ✅ NOVO: Converter telefone para E.164 antes de enviar
+      const telefoneE164 = converterParaE164(formData.telefone);
+      
+      console.log('📱 Telefone formatado:', {
+        original: formData.telefone,
+        e164: telefoneE164,
+      });
+
+      await register(formData.email, formData.password, formData.name, telefoneE164);
+      
+      toast.success('🎉 Conta criada com sucesso!', {
+        description: 'Agora você pode anunciar imóveis gratuitamente!',
       });
       navigate('/');
     } catch (error) {
       console.error('Erro ao criar conta:', error);
       
-      // Mensagens de erro específicas
       if (error.message?.includes('already exists') || error.message?.includes('user_already_exists')) {
         toast.error('Email já cadastrado', {
           description: 'Já existe uma conta com este email. Faça login ou use outro email.',
         });
-        setErrors({
-          email: 'Este email já está cadastrado',
-        });
+        setErrors({ email: 'Este email já está cadastrado' });
       } else if (error.message?.includes('Invalid email')) {
-        toast.error('Email inválido', {
-          description: 'Por favor, insira um endereço de email válido.',
-        });
-        setErrors({
-          email: 'Email inválido',
-        });
+        toast.error('Email inválido');
+        setErrors({ email: 'Email inválido' });
       } else if (error.message?.includes('Password')) {
-        toast.error('Senha inválida', {
-          description: 'A senha não atende aos requisitos mínimos de segurança.',
-        });
-        setErrors({
-          password: 'Senha não atende aos requisitos de segurança',
-        });
-      } else if (error.message?.includes('network') || error.message?.includes('Failed to fetch')) {
-        toast.error('Erro de conexão', {
-          description: 'Não foi possível conectar ao servidor. Verifique sua internet.',
-        });
+        toast.error('Senha inválida');
+        setErrors({ password: 'Senha inválida' });
       } else {
-        toast.error('Erro ao criar conta', {
-          description: 'Ocorreu um erro inesperado. Tente novamente.',
-        });
+        toast.error('Erro ao criar conta');
       }
     } finally {
       setLoading(false);
@@ -165,19 +161,21 @@ export default function Registro() {
             <Home className="w-5 h-5" />
             Voltar para o site
           </Link>
-          {/* Logo - ATUALIZADO */}
           <img 
             src="/boscoimoveis.svg" 
             alt="Bosco Imóveis" 
             className="h-16 w-auto mx-auto mb-4"
           />
           <h1 className="text-4xl font-bold text-white mb-2">Bosco Imóveis</h1>
-          <p className="text-blue-200">Crie sua conta</p>
+          <p className="text-blue-200">Crie sua conta e anuncie grátis</p>
         </div>
 
         <Card className="border-0 shadow-2xl">
           <CardHeader className="space-y-1 pb-6">
             <CardTitle className="text-2xl text-center">Criar Conta</CardTitle>
+            <p className="text-center text-sm text-slate-600">
+              📱 Anuncie seu imóvel gratuitamente após o cadastro
+            </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -193,12 +191,10 @@ export default function Registro() {
                     value={formData.name}
                     onChange={(e) => {
                       setFormData({ ...formData, name: e.target.value });
-                      if (errors.name) {
-                        setErrors({ ...errors, name: undefined });
-                      }
+                      if (errors.name) setErrors({ ...errors, name: undefined });
                     }}
                     placeholder="Seu nome completo"
-                    className={`pl-10 h-12 ${errors.name ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                    className={`pl-10 h-12 ${errors.name ? 'border-red-300' : ''}`}
                   />
                 </div>
                 {errors.name && (
@@ -221,12 +217,10 @@ export default function Registro() {
                     value={formData.email}
                     onChange={(e) => {
                       setFormData({ ...formData, email: e.target.value });
-                      if (errors.email) {
-                        setErrors({ ...errors, email: undefined });
-                      }
+                      if (errors.email) setErrors({ ...errors, email: undefined });
                     }}
                     placeholder="seu@email.com"
-                    className={`pl-10 h-12 ${errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                    className={`pl-10 h-12 ${errors.email ? 'border-red-300' : ''}`}
                   />
                 </div>
                 {errors.email && (
@@ -234,6 +228,39 @@ export default function Registro() {
                     <AlertCircle className="w-4 h-4" />
                     <span>{errors.email}</span>
                   </div>
+                )}
+              </div>
+
+              {/* ✅ Telefone com Formato E.164 */}
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-2 block">
+                  Telefone/WhatsApp *
+                </label>
+                <div className="relative">
+                  <Phone className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${errors.telefone ? 'text-red-400' : 'text-slate-400'}`} />
+                  <Input
+                    type="tel"
+                    value={formData.telefone}
+                    onChange={(e) => {
+                      const formatted = formatarTelefoneAoDigitar(e.target.value);
+                      setFormData({ ...formData, telefone: formatted });
+                      if (errors.telefone) setErrors({ ...errors, telefone: undefined });
+                    }}
+                    placeholder="(62) 99999-9999"
+                    maxLength={15}
+                    className={`pl-10 h-12 ${errors.telefone ? 'border-red-300' : ''}`}
+                  />
+                </div>
+                {errors.telefone ? (
+                  <div className="flex items-center gap-1 mt-1 text-red-600 text-sm">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{errors.telefone}</span>
+                  </div>
+                ) : (
+                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Necessário para anunciar imóveis e receber contatos
+                  </p>
                 )}
               </div>
 
@@ -249,11 +276,10 @@ export default function Registro() {
                     value={formData.password}
                     onChange={(e) => handlePasswordChange(e.target.value)}
                     placeholder="••••••••"
-                    className={`pl-10 h-12 ${errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                    className={`pl-10 h-12 ${errors.password ? 'border-red-300' : ''}`}
                   />
                 </div>
                 
-                {/* Barra de força da senha */}
                 {formData.password && (
                   <div className="mt-2">
                     <div className="flex items-center gap-2 mb-1">
@@ -294,12 +320,10 @@ export default function Registro() {
                     value={formData.confirmPassword}
                     onChange={(e) => {
                       setFormData({ ...formData, confirmPassword: e.target.value });
-                      if (errors.confirmPassword) {
-                        setErrors({ ...errors, confirmPassword: undefined });
-                      }
+                      if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: undefined });
                     }}
                     placeholder="••••••••"
-                    className={`pl-10 h-12 ${errors.confirmPassword ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                    className={`pl-10 h-12 ${errors.confirmPassword ? 'border-red-300' : ''}`}
                   />
                   {formData.confirmPassword && formData.password === formData.confirmPassword && (
                     <CheckCircle2 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-green-500" />
@@ -324,7 +348,7 @@ export default function Registro() {
                     Criando conta...
                   </>
                 ) : (
-                  'Criar Conta'
+                  'Criar Conta Grátis'
                 )}
               </Button>
             </form>

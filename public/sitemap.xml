@@ -32,13 +32,6 @@
     <priority>0.6</priority>
   </url>
 
-  <!-- Comparar -->
-  <url>
-    <loc>https://boscoimoveis.app/comparar</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
   <!-- Contato -->
   <url>
     <loc>https://boscoimoveis.app/contato</loc>

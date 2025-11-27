@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from './utils';
 import { useAuth } from './contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import InstallPWA from '@/components/InstallPWA'; // ✅ NOVO IMPORT
+import InstallPWA from '@/components/InstallPWA';
 import { 
   Building2, 
   Heart, 
@@ -18,7 +18,10 @@ import {
   MessageCircle,
   Phone,
   Tag,
-  MapPin
+  MapPin,
+  PlusCircle,
+  Scale,
+  Users
 } from 'lucide-react';
 
 export default function Layout({ children, currentPageName }) {
@@ -38,18 +41,17 @@ export default function Layout({ children, currentPageName }) {
   }, [userMenuOpen]);
 
   const navigation = [
-    { name: 'Início', to: 'Home', icon: Home },
-    { name: 'Catálogo', to: 'Catalogo', icon: Building2 },
-    { name: 'Promoções', to: 'Promocoes', icon: Tag },
-    { name: 'Favoritos', to: 'Favoritos', icon: Heart },
-    { name: 'Comparar', to: 'Comparar', icon: Scale },
-    { name: 'Sobre', to: 'Sobre', icon: Users }, // ✅ NOVO
-    { name: 'Contato', to: 'Contato', icon: Phone },
+    { name: 'Início', to: 'Home', icon: Home, path: 'Home' },
+    { name: 'Catálogo', to: 'Catalogo', icon: Building2, path: 'Catalogo' },
+    { name: 'Promoções', to: 'Promocoes', icon: Tag, path: 'Promocoes' },
+    { name: 'Anunciar Grátis', to: '/anunciar', icon: PlusCircle, path: '/anunciar' },
+    { name: 'Favoritos', to: 'Favoritos', icon: Heart, path: 'Favoritos' },
+    { name: 'Sobre', to: 'Sobre', icon: Users, path: 'Sobre' },
+    { name: 'Contato', to: 'Contato', icon: Phone, path: 'Contato' },
   ];
 
   const whatsappNumber = '5562994045111';
   
-  // ✅ MELHORADO: Mensagem mais completa e personalizada baseada na página
   const getWhatsappMessage = () => {
     const userName = user?.name ? ` Meu nome é ${user.name}.` : '';
     
@@ -103,16 +105,16 @@ export default function Layout({ children, currentPageName }) {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-slate-200/50 shadow-sm">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo - ✅ ATUALIZADO */}
-            <Link to={createPageUrl('Home')} className="flex items-center gap-3 group">
+        <nav className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8"> {/* ✅ AUMENTADO max-w */}
+          <div className="flex justify-between items-center h-20"> {/* ✅ AUMENTADO altura */}
+            {/* Logo */}
+            <Link to={createPageUrl('Home')} className="flex items-center gap-3 group flex-shrink-0"> {/* ✅ flex-shrink-0 */}
               <img 
                 src="/boscoimoveis.svg" 
                 alt="Bosco Imóveis" 
                 className="h-10 w-auto group-hover:scale-105 transition-transform duration-200"
               />
-              <div className="hidden sm:block">
+              <div className="hidden xl:block"> {/* ✅ MUDOU: sm para xl */}
                 <span className="text-xl font-bold bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent">
                   Bosco Imóveis
                 </span>
@@ -120,25 +122,25 @@ export default function Layout({ children, currentPageName }) {
               </div>
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-1">
+            {/* Desktop Navigation - MELHORADO */}
+            <div className="hidden lg:flex items-center gap-2 flex-1 justify-center px-8"> {/* ✅ NOVO: gap-2, flex-1, justify-center, px-8 */}
               {navigation.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link
                     key={item.name}
-                    to={createPageUrl(item.path)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-all duration-200"
+                    to={item.path.startsWith('/') ? item.path : createPageUrl(item.path)}
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-blue-900 transition-all duration-200 whitespace-nowrap text-sm font-medium" // ✅ MELHORADO: px-3, py-2.5, text-sm, whitespace-nowrap
                   >
-                    <Icon className="w-4 h-4" />
-                    <span className="font-medium">{item.name}</span>
+                    <Icon className="w-4 h-4 flex-shrink-0" /> {/* ✅ flex-shrink-0 */}
+                    <span>{item.name}</span>
                   </Link>
                 );
               })}
             </div>
 
             {/* User Menu / Login Button */}
-            <div className="hidden lg:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2 flex-shrink-0"> {/* ✅ flex-shrink-0 */}
               {isAuthenticated ? (
                 <div className="relative user-menu">
                   <button
@@ -170,6 +172,15 @@ export default function Layout({ children, currentPageName }) {
                       >
                         <User className="w-4 h-4" />
                         Meu Perfil
+                      </Link>
+
+                      <Link
+                        to="/meus-anuncios"
+                        className="flex items-center gap-2 px-4 py-2 text-slate-700 hover:bg-slate-50"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <Home className="w-4 h-4" />
+                        Meus Anúncios
                       </Link>
                       
                       {isAdmin && (
@@ -240,7 +251,7 @@ export default function Layout({ children, currentPageName }) {
             </button>
           </div>
 
-          {/* Mobile Navigation */}
+          {/* Mobile Navigation - permanece igual */}
           {mobileMenuOpen && (
             <div className="lg:hidden py-4 border-t border-slate-200">
               <div className="space-y-1">
@@ -249,7 +260,7 @@ export default function Layout({ children, currentPageName }) {
                   return (
                     <Link
                       key={item.name}
-                      to={createPageUrl(item.path)}
+                      to={item.path.startsWith('/') ? item.path : createPageUrl(item.path)}
                       onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-all duration-200"
                     >
@@ -280,6 +291,16 @@ export default function Layout({ children, currentPageName }) {
                         <User className="w-5 h-5" />
                         <span className="font-medium">Meu Perfil</span>
                       </Link>
+
+                      <Link
+                        to="/meus-anuncios"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-all duration-200"
+                      >
+                        <Home className="w-5 h-5" />
+                        <span className="font-medium">Meus Anúncios</span>
+                      </Link>
+
                       {isAdmin && (
                         <>
                           <div className="px-4 py-2">
@@ -316,7 +337,7 @@ export default function Layout({ children, currentPageName }) {
                           logout();
                           setMobileMenuOpen(false);
                         }}
-                        className="flex items-center gap-2 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 text-left"
+                        className="flex items-center gap-2 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 text-left w-full"
                       >
                         <LogOut className="w-5 h-5" />
                         <span className="font-medium">Sair</span>
@@ -341,7 +362,6 @@ export default function Layout({ children, currentPageName }) {
 
       <main>{children}</main>
 
-      {/* ✅ NOVO: Componente de Instalação PWA */}
       <InstallPWA />
 
       {/* WhatsApp Button */}
@@ -363,7 +383,6 @@ export default function Layout({ children, currentPageName }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
-              {/* Logo no Footer - ✅ ATUALIZADO */}
               <div className="flex items-center gap-2 mb-4">
                 <img 
                   src="/boscoimoveis.svg" 
@@ -383,7 +402,7 @@ export default function Layout({ children, currentPageName }) {
                 {navigation.map((item) => (
                   <li key={item.name}>
                     <Link
-                      to={createPageUrl(item.path)}
+                      to={item.path.startsWith('/') ? item.path : createPageUrl(item.path)}
                       className="text-slate-300 hover:text-white transition-colors"
                     >
                       {item.name}
@@ -411,52 +430,3 @@ export default function Layout({ children, currentPageName }) {
     </div>
   );
 }
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  
-  <url>
-    <loc>https://boscoimoveis.app/</loc>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-    <lastmod>2025-01-26</lastmod>
-  </url>
-
-  <!-- ✅ NOVO: Página Sobre -->
-  <url>
-    <loc>https://boscoimoveis.app/sobre</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-    <lastmod>2025-01-26</lastmod>
-  </url>
-
-  <url>
-    <loc>https://boscoimoveis.app/catalogo</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://boscoimoveis.app/promocoes</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://boscoimoveis.app/favoritos</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <url>
-    <loc>https://boscoimoveis.app/comparar</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <url>
-    <loc>https://boscoimoveis.app/contato</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-</urlset>

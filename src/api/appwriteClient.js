@@ -5,7 +5,6 @@ export const COLLECTIONS = {
   IMOVEIS: import.meta.env.VITE_APPWRITE_COLLECTION_IMOVEIS,
   FAVORITOS: import.meta.env.VITE_APPWRITE_COLLECTION_FAVORITOS,
   VISUALIZACOES: import.meta.env.VITE_APPWRITE_COLLECTION_VISUALIZACOES,
-  COMPARACOES: import.meta.env.VITE_APPWRITE_COLLECTION_COMPARACOES,
   ALERTAS: import.meta.env.VITE_APPWRITE_COLLECTION_ALERTAS,
   CONTATOS: import.meta.env.VITE_APPWRITE_COLLECTION_CONTATOS,
 };
@@ -202,6 +201,106 @@ export const appwrite = {
           console.error('Erro ao buscar imóveis:', error);
           return [];
         }
+      },
+    
+      // ✅ NOVO: Filtrar imóveis aprovados (para catálogo público)
+      filterAprovados: async (filters = {}, orderBy = '-$createdAt', limit = 100) => {
+        const queries = [
+          Query.limit(limit),
+          Query.equal('statusAprovacao', 'aprovado'),
+          Query.equal('disponibilidade', 'disponivel'),
+        ];
+        
+        if (orderBy) {
+          queries.push(orderBy.startsWith('-') 
+            ? Query.orderDesc(orderBy.substring(1)) 
+            : Query.orderAsc(orderBy)
+          );
+        }
+        
+        // Adicionar outros filtros
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value && value !== 'todos' && value !== 'todas') {
+            queries.push(Query.equal(key, value));
+          }
+        });
+        
+        const response = await databases.listDocuments(
+          DATABASE_ID,
+          COLLECTIONS.IMOVEIS,
+          queries
+        );
+        return response.documents;
+      },
+      
+      // ✅ NOVO: Buscar meus anúncios (usuário)
+      filterMeusAnuncios: async (userId) => {
+        try {
+          const queries = [
+            Query.equal('criadoPor', userId),
+            Query.orderDesc('$createdAt'),
+          ];
+          
+          const response = await databases.listDocuments(
+            DATABASE_ID,
+            COLLECTIONS.IMOVEIS,
+            queries
+          );
+          return response.documents;
+        } catch (error) {
+          console.error('Erro ao buscar meus anúncios:', error);
+          return [];
+        }
+      },
+      
+      // ✅ NOVO: Buscar anúncios pendentes (admin)
+      filterPendentes: async () => {
+        try {
+          const queries = [
+            Query.equal('statusAprovacao', 'pendente'),
+            Query.orderDesc('$createdAt'),
+          ];
+          
+          const response = await databases.listDocuments(
+            DATABASE_ID,
+            COLLECTIONS.IMOVEIS,
+            queries
+          );
+          return response.documents;
+        } catch (error) {
+          console.error('Erro ao buscar anúncios pendentes:', error);
+          return [];
+        }
+      },
+      
+      // ✅ NOVO: Aprovar anúncio (admin)
+      aprovar: async (id, adminId) => {
+        return await databases.updateDocument(
+          DATABASE_ID,
+          COLLECTIONS.IMOVEIS,
+          id,
+          {
+            statusAprovacao: 'aprovado',
+            disponibilidade: 'disponivel',
+            aprovadoPor: adminId,
+            dataAprovacao: new Date().toISOString(),
+          }
+        );
+      },
+      
+      // ✅ NOVO: Rejeitar anúncio (admin)
+      rejeitar: async (id, adminId, motivo) => {
+        return await databases.updateDocument(
+          DATABASE_ID,
+          COLLECTIONS.IMOVEIS,
+          id,
+          {
+            statusAprovacao: 'rejeitado',
+            motivoRejeicao: motivo,
+            aprovadoPor: adminId,
+            dataAprovacao: new Date().toISOString(),
+          }
+        );
       },
     },
 

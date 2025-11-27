@@ -17,10 +17,11 @@ import Perfil from './Pages/Perfil';
 import RedefinirSenha from './Pages/RedefinirSenha';
 import NovaSenha from './Pages/NovaSenha';
 import NotFound from './Pages/NotFound';
-import { trackPageView } from './utils/analytics'; // ✅ NOVO IMPORT
+import { trackPageView } from './utils/analytics';
 import Sobre from './Pages/Sobre';
+import AnunciarImovel from './Pages/AnunciarImovel';
+import MeusAnuncios from './Pages/MeusAnuncios';
 
-// ✅ NOVO: Wrapper para rastrear navegação
 const PageWrapper = ({ Component, pageName }) => {
   React.useEffect(() => {
     trackPageView(window.location.pathname);
@@ -57,11 +58,9 @@ export const router = createBrowserRouter([
   {
     path: '/favoritos',
     element: (
-      <Layout currentPageName="Favoritos">
-        <ProtectedRoute>
-          <Favoritos />
-        </ProtectedRoute>
-      </Layout>
+      <ProtectedRoute>
+        <PageWrapper Component={Favoritos} pageName="Favoritos" />
+      </ProtectedRoute>
     ),
   },
   {
@@ -69,33 +68,47 @@ export const router = createBrowserRouter([
     element: <PageWrapper Component={Detalhes} pageName="Detalhes" />,
   },
   {
+    path: '/sobre',
+    element: <PageWrapper Component={Sobre} pageName="Sobre" />,
+  },
+  {
+    path: '/anunciar',
+    element: (
+      <ProtectedRoute>
+        <AnunciarImovel />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/meus-anuncios',
+    element: (
+      <ProtectedRoute>
+        <MeusAnuncios />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: '/gerenciador',
     element: (
-      <Layout currentPageName="Gerenciador">
-        <ProtectedRoute requireAdmin={true}>
-          <GerenciadorImoveis /> 
-        </ProtectedRoute>
-      </Layout>
+      <ProtectedRoute>
+        <GerenciadorImoveis />
+      </ProtectedRoute>
     ),
   },
   {
     path: '/gerenciar-admins',
     element: (
-      <Layout currentPageName="GerenciarAdmins">
-        <ProtectedRoute requireAdmin={true}>
-          <GerenciarAdmins />
-        </ProtectedRoute>
-      </Layout>
+      <ProtectedRoute>
+        <GerenciarAdmins />
+      </ProtectedRoute>
     ),
   },
   {
     path: '/gerenciar-contatos',
     element: (
-      <Layout currentPageName="GerenciarContatos">
-        <ProtectedRoute requireAdmin={true}>
-          <GerenciarContatos />
-        </ProtectedRoute>
-      </Layout>
+      <ProtectedRoute>
+        <GerenciarContatos />
+      </ProtectedRoute>
     ),
   },
   {
@@ -107,6 +120,14 @@ export const router = createBrowserRouter([
     element: <Registro />,
   },
   {
+    path: '/perfil',
+    element: (
+      <ProtectedRoute>
+        <Perfil />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: '/redefinir-senha',
     element: <RedefinirSenha />,
   },
@@ -114,21 +135,6 @@ export const router = createBrowserRouter([
     path: '/nova-senha',
     element: <NovaSenha />,
   },
-  {
-    path: '/perfil',
-    element: (
-      <Layout currentPageName="Perfil">
-        <ProtectedRoute>
-          <Perfil />
-        </ProtectedRoute>
-      </Layout>
-    ),
-  },
-  {
-    path: '/sobre',
-    element: <Sobre />,
-  },
-  // ✅ ROTA 404 (DEVE SER A ÚLTIMA)
   {
     path: '*',
     element: <NotFound />,
