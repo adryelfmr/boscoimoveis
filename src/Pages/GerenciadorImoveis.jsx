@@ -14,7 +14,7 @@ import {
   gerarCodigoAutomatico, 
   validarCodigoPersonalizado, 
   formatarCodigo 
-} from '@/utils/gerarCodigo'; // ✅ NOVO IMPORT
+} from '@/utils/gerarCodigo';
 import { 
   Building2, 
   Plus, 
@@ -26,11 +26,11 @@ import {
   Save,
   MapPin,
   AlertCircle,
-  Hash, // ✅ NOVO IMPORT
-  RefreshCw, // ✅ NOVO IMPORT
+  Hash,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useLocation } from 'react-router-dom'; // ✅ NOVO IMPORT
+import { useLocation } from 'react-router-dom';
 
 // Mapeamento de tipos de imóvel
 const TIPO_IMOVEL_MAP = {
@@ -49,7 +49,6 @@ const TIPO_IMOVEL_REVERSE_MAP = {
   'rural': 'Rural',
 };
 
-// Mapeamento de disponibilidade
 const DISPONIBILIDADE_MAP = {
   'Disponível': 'disponivel',
   'Indisponível': 'indisponivel',
@@ -67,19 +66,23 @@ const DISPONIBILIDADE_REVERSE_MAP = {
 export default function GerenciadorImoveis() {
   const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
+  const location = useLocation();
   const [busca, setBusca] = useState('');
   const [modalAberto, setModalAberto] = useState(false);
   const [imovelEditando, setImovelEditando] = useState(null);
+  const [buscandoCEP, setBuscandoCEP] = useState(false);
+  const [gerandoCodigo, setGerandoCodigo] = useState(false);
+  
   const [formData, setFormData] = useState({
-    codigo: '', // ✅ NOVO
-    codigoPersonalizado: false, // ✅ NOVO
+    codigo: '',
+    codigoPersonalizado: false,
     titulo: '',
     descricao: '',
     tipoImovel: 'Casa',
     finalidade: 'Residencial',
     tipoNegocio: 'Venda',
     preco: '',
-    cep: '', // ✅ NOVO
+    cep: '',
     endereco: '',
     bairro: '',
     cidade: '',
@@ -103,23 +106,7 @@ export default function GerenciadorImoveis() {
     longitude: '',
   });
 
-  const [buscandoCEP, setBuscandoCEP] = useState(false); // ✅ NOVO
-  const [gerandoCodigo, setGerandoCodigo] = useState(false); // ✅ NOVO
-
-  // ✅ NOVO: Detectar se veio da página de detalhes para editar
-  const location = useLocation();
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const editId = params.get('edit');
-    
-    if (editId) {
-      const imovelParaEditar = imoveis.find(i => i.$id === editId);
-      if (imovelParaEditar) {
-        abrirModalEditar(imovelParaEditar);
-      }
-    }
-  }, [location.search, imoveis]);
-
+  // ✅ MOVIDO PARA CIMA: useQuery ANTES do useEffect
   const { data: imoveis = [], isLoading } = useQuery({
     queryKey: ['admin-imoveis'],
     queryFn: async () => {
@@ -127,6 +114,19 @@ export default function GerenciadorImoveis() {
     },
     enabled: isAdmin,
   });
+
+  // ✅ AGORA useEffect pode usar 'imoveis' porque já foi declarado
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const editId = params.get('edit');
+    
+    if (editId && imoveis.length > 0) {
+      const imovelParaEditar = imoveis.find(i => i.$id === editId);
+      if (imovelParaEditar) {
+        abrirModalEditar(imovelParaEditar);
+      }
+    }
+  }, [location.search, imoveis]);
 
   const imoveisFiltrados = imoveis.filter(imovel => {
     if (!busca) return true;
@@ -138,7 +138,7 @@ export default function GerenciadorImoveis() {
     );
   });
 
-  // ✅ NOVO: Função para gerar código automático
+  // Função para gerar código automático
   const handleGerarCodigoAutomatico = async () => {
     if (!formData.tipoImovel || !formData.cidade) {
       toast.error('Preencha o tipo de imóvel e a cidade primeiro');
@@ -148,15 +148,12 @@ export default function GerenciadorImoveis() {
     setGerandoCodigo(true);
     
     try {
-      // Buscar o último imóvel para pegar o próximo número
       const todosImoveis = await appwrite.entities.Imovel.filter({}, '-$createdAt', 1000);
       
-      // Filtrar imóveis com código no formato XXX-YYY-NNNN
       const imoveisComCodigo = todosImoveis.filter(i => 
         i.codigo && i.codigo.match(/^[A-Z]{3}-[A-Z]{3}-\d{4}$/)
       );
       
-      // Pegar o maior número
       let maiorNumero = 0;
       imoveisComCodigo.forEach(imovel => {
         const match = imovel.codigo.match(/-(\d{4})$/);
@@ -186,18 +183,17 @@ export default function GerenciadorImoveis() {
     }
   };
 
+  // Mutation de criar imóvel
   const criarImovelMutation = useMutation({
     mutationFn: async (data) => {
       const imagensUrls = data.images.map(img => img.url);
       const imagemPrincipal = imagensUrls.length > 0 ? imagensUrls[0] : '';
 
-      // ✅ NOVO: Validar código se for personalizado
       if (data.codigoPersonalizado) {
         if (!validarCodigoPersonalizado(data.codigo)) {
           throw new Error('Código inválido. Use apenas letras, números e hífens (ex: CAS-001)');
         }
         
-        // Verificar se código já existe
         const imoveisExistentes = await appwrite.entities.Imovel.filter({}, '-$createdAt', 1000);
         const codigoExiste = imoveisExistentes.some(i => 
           i.codigo && i.codigo.toLowerCase() === data.codigo.toLowerCase()
@@ -209,16 +205,16 @@ export default function GerenciadorImoveis() {
       }
 
       const imovelData = {
-        codigo: data.codigo ? formatarCodigo(data.codigo) : null, // ✅ NOVO
+        codigo: data.codigo ? formatarCodigo(data.codigo) : null,
         titulo: data.titulo,
         descricao: data.descricao || '',
         tipoImovel: TIPO_IMOVEL_MAP[data.tipoImovel] || 'house',
         finalidade: data.finalidade,
         tipoNegocio: data.tipoNegocio,
         preco: parseFloat(data.preco),
-        cep: data.cep || null, // ✅ NOVO
+        cep: data.cep || null,
         endereco: data.endereco,
-        numero: data.numero || null, // ✅ NOVO
+        numero: data.numero || null,
         bairro: data.bairro || '',
         cidade: data.cidade,
         estado: data.estado,
@@ -240,11 +236,10 @@ export default function GerenciadorImoveis() {
         acessibilidade: data.acessibilidade,
         dataDisponivel: new Date().toISOString(),
         ultimaVisualizacao: new Date().toISOString(),
-        latitude: data.latitude || null, // ✅ COORDENADAS
-        longitude: data.longitude || null, // ✅ COORDENADAS
+        latitude: data.latitude || null,
+        longitude: data.longitude || null,
       };
 
-      console.log('Criando imóvel com dados:', imovelData);
       return await appwrite.entities.Imovel.create(imovelData);
     },
     onSuccess: () => {
@@ -258,18 +253,17 @@ export default function GerenciadorImoveis() {
     },
   });
 
+  // Mutation de atualizar imóvel
   const atualizarImovelMutation = useMutation({
     mutationFn: async ({ id, data }) => {
       const imagensUrls = data.images.map(img => img.url);
       const imagemPrincipal = imagensUrls.length > 0 ? imagensUrls[0] : '';
 
-      // ✅ NOVO: Validar código se mudou
       if (data.codigoPersonalizado) {
         if (!validarCodigoPersonalizado(data.codigo)) {
           throw new Error('Código inválido. Use apenas letras, números e hífens (ex: CAS-001)');
         }
         
-        // Verificar se código já existe (exceto o atual)
         const imoveisExistentes = await appwrite.entities.Imovel.filter({}, '-$createdAt', 1000);
         const codigoExiste = imoveisExistentes.some(i => 
           i.$id !== id && 
@@ -283,16 +277,16 @@ export default function GerenciadorImoveis() {
       }
 
       const imovelData = {
-        codigo: data.codigo ? formatarCodigo(data.codigo) : null, // ✅ NOVO
+        codigo: data.codigo ? formatarCodigo(data.codigo) : null,
         titulo: data.titulo,
         descricao: data.descricao || '',
         tipoImovel: TIPO_IMOVEL_MAP[data.tipoImovel] || 'house',
         finalidade: data.finalidade,
         tipoNegocio: data.tipoNegocio,
         preco: parseFloat(data.preco),
-        cep: data.cep || null, // ✅ NOVO
+        cep: data.cep || null,
         endereco: data.endereco,
-        numero: data.numero || null, // ✅ NOVO
+        numero: data.numero || null,
         bairro: data.bairro || '',
         cidade: data.cidade,
         estado: data.estado,
@@ -312,11 +306,10 @@ export default function GerenciadorImoveis() {
         garagemDisponivel: data.garagemDisponivel,
         documentacaoRegular: data.documentacaoRegular,
         acessibilidade: data.acessibilidade,
-        latitude: data.latitude || null, // ✅ COORDENADAS
-        longitude: data.longitude || null, // ✅ COORDENADAS
+        latitude: data.latitude || null,
+        longitude: data.longitude || null,
       };
 
-      console.log('Atualizando imóvel com dados:', imovelData);
       return await appwrite.entities.Imovel.update(id, imovelData);
     },
     onSuccess: () => {
@@ -330,6 +323,7 @@ export default function GerenciadorImoveis() {
     },
   });
 
+  // Mutation de deletar imóvel
   const deletarImovelMutation = useMutation({
     mutationFn: async (imovel) => {
       if (imovel.images && imovel.images.length > 0) {
@@ -358,15 +352,15 @@ export default function GerenciadorImoveis() {
   const abrirModalNovo = () => {
     setImovelEditando(null);
     setFormData({
-      codigo: '', // ✅ NOVO
-      codigoPersonalizado: false, // ✅ NOVO
+      codigo: '',
+      codigoPersonalizado: false,
       titulo: '',
       descricao: '',
       tipoImovel: 'Casa',
       finalidade: 'Residencial',
       tipoNegocio: 'Venda',
       preco: '',
-      cep: '', // ✅ NOVO
+      cep: '',
       endereco: '',
       bairro: '',
       cidade: '',
@@ -403,17 +397,17 @@ export default function GerenciadorImoveis() {
     }));
 
     setFormData({
-      codigo: imovel.codigo || '', // ✅ NOVO
-      codigoPersonalizado: !!imovel.codigo, // ✅ NOVO
+      codigo: imovel.codigo || '',
+      codigoPersonalizado: !!imovel.codigo,
       titulo: imovel.titulo || '',
       descricao: imovel.descricao || '',
       tipoImovel: TIPO_IMOVEL_REVERSE_MAP[imovel.tipoImovel] || 'Casa',
       finalidade: imovel.finalidade || 'Residencial',
       tipoNegocio: imovel.tipoNegocio || 'Venda',
       preco: imovel.preco?.toString() || '',
-      cep: imovel.cep || '', // ✅ NOVO
+      cep: imovel.cep || '',
       endereco: imovel.endereco || '',
-      numero: imovel.numero || '', // ✅ NOVO
+      numero: imovel.numero || '',
       bairro: imovel.bairro || '',
       cidade: imovel.cidade || '',
       estado: imovel.estado || '',
@@ -443,12 +437,11 @@ export default function GerenciadorImoveis() {
     setImovelEditando(null);
   };
 
-  // ✅ NOVO: Função para buscar endereço pelo CEP
   const handleBuscarCEP = async (cep) => {
     const cepLimpo = cep.replace(/\D/g, '');
     
     if (cepLimpo.length !== 8) {
-      return; // Aguarda digitar 8 dígitos
+      return;
     }
 
     setBuscandoCEP(true);
@@ -458,7 +451,6 @@ export default function GerenciadorImoveis() {
       const dadosEndereco = await buscarEnderecoPorCEP(cepLimpo);
 
       if (dadosEndereco) {
-        // Preencher campos automaticamente
         setFormData(prev => ({
           ...prev,
           cep: formatarCEP(dadosEndereco.cep),
@@ -488,14 +480,12 @@ export default function GerenciadorImoveis() {
       return;
     }
 
-    // Buscar coordenadas automaticamente
     let coordenadas = null;
     
     if (formData.cidade && formData.estado) {
       toast.loading('🗺️ Buscando localização no mapa...', { id: 'geocoding' });
       
       try {
-        // ✅ ATUALIZADO: Passar CEP e número também
         coordenadas = await geocodeEndereco({
           cep: formData.cep,
           endereco: formData.endereco,
@@ -549,12 +539,8 @@ export default function GerenciadorImoveis() {
     return DISPONIBILIDADE_REVERSE_MAP[disponibilidade] || disponibilidade;
   };
 
-  // Logo após os imports, adicionar helper:
-  import { gerarCodigoAutomatico } from '@/utils/gerarCodigo';
-
-  // Dentro do componente, após o formData:
   const previewCodigoAutomatico = formData.tipoImovel && formData.cidade 
-    ? gerarCodigoAutomatico(formData.tipoImovel, formData.cidade, 9999) // Mock para preview
+    ? gerarCodigoAutomatico(formData.tipoImovel, formData.cidade, 9999)
     : null;
 
   if (!isAdmin) {
