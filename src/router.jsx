@@ -18,6 +18,7 @@ import RedefinirSenha from './Pages/RedefinirSenha';
 import NovaSenha from './Pages/NovaSenha';
 import NotFound from './Pages/NotFound';
 import { trackPageView } from './utils/analytics'; // ✅ NOVO IMPORT
+import Sobre from './Pages/Sobre';
 
 // ✅ NOVO: Wrapper para rastrear navegação
 const PageWrapper = ({ Component, pageName }) => {
@@ -122,6 +123,10 @@ export const router = createBrowserRouter([
         </ProtectedRoute>
       </Layout>
     ),
+  },
+  {
+    path: '/sobre',
+    element: <Sobre />,
   },
   // ✅ ROTA 404 (DEVE SER A ÚLTIMA)
   {

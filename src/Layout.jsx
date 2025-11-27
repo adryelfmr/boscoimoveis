@@ -38,11 +38,13 @@ export default function Layout({ children, currentPageName }) {
   }, [userMenuOpen]);
 
   const navigation = [
-    { name: 'Início', path: 'Home', icon: Home },
-    { name: 'Catálogo', path: 'Catalogo', icon: Building2 },
-    { name: 'Favoritos', path: 'Favoritos', icon: Heart },
-    { name: 'Promoções', path: 'Promocoes', icon: Tag },
-    { name: 'Contato', path: 'Contato', icon: Phone },
+    { name: 'Início', to: 'Home', icon: Home },
+    { name: 'Catálogo', to: 'Catalogo', icon: Building2 },
+    { name: 'Promoções', to: 'Promocoes', icon: Tag },
+    { name: 'Favoritos', to: 'Favoritos', icon: Heart },
+    { name: 'Comparar', to: 'Comparar', icon: Scale },
+    { name: 'Sobre', to: 'Sobre', icon: Users }, // ✅ NOVO
+    { name: 'Contato', to: 'Contato', icon: Phone },
   ];
 
   const whatsappNumber = '5562994045111';
@@ -409,3 +411,52 @@ export default function Layout({ children, currentPageName }) {
     </div>
   );
 }
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>https://boscoimoveis.app/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <lastmod>2025-01-26</lastmod>
+  </url>
+
+  <!-- ✅ NOVO: Página Sobre -->
+  <url>
+    <loc>https://boscoimoveis.app/sobre</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <lastmod>2025-01-26</lastmod>
+  </url>
+
+  <url>
+    <loc>https://boscoimoveis.app/catalogo</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://boscoimoveis.app/promocoes</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://boscoimoveis.app/favoritos</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://boscoimoveis.app/comparar</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://boscoimoveis.app/contato</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+</urlset>
