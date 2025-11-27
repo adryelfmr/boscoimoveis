@@ -480,6 +480,41 @@ export default function GerenciadorImoveis() {
       return;
     }
 
+    // ✅ NOVO: Gerar código automaticamente se não for personalizado e não tiver código
+    if (!formData.codigoPersonalizado && !formData.codigo && formData.tipoImovel && formData.cidade) {
+      toast.loading('🔢 Gerando código...', { id: 'gerar-codigo' });
+      
+      try {
+        const todosImoveis = await appwrite.entities.Imovel.filter({}, '-$createdAt', 1000);
+        
+        const imoveisComCodigo = todosImoveis.filter(i => 
+          i.codigo && i.codigo.match(/^[A-Z]{3}-[A-Z]{3}-\d{4}$/)
+        );
+        
+        let maiorNumero = 0;
+        imoveisComCodigo.forEach(imovel => {
+          const match = imovel.codigo.match(/-(\d{4})$/);
+          if (match) {
+            const numero = parseInt(match[1]);
+            if (numero > maiorNumero) {
+              maiorNumero = numero;
+            }
+          }
+        });
+        
+        const proximoNumero = maiorNumero + 1;
+        const codigoGerado = gerarCodigoAutomatico(formData.tipoImovel, formData.cidade, proximoNumero);
+        
+        formData.codigo = codigoGerado;
+        
+        toast.success(`✅ Código gerado: ${codigoGerado}`, { id: 'gerar-codigo' });
+      } catch (error) {
+        console.error('Erro ao gerar código:', error);
+        toast.dismiss('gerar-codigo');
+      }
+    }
+
+    // Buscar coordenadas automaticamente
     let coordenadas = null;
     
     if (formData.cidade && formData.estado) {
@@ -755,7 +790,7 @@ export default function GerenciadorImoveis() {
                                 <Input
                                   value={formData.codigo}
                                   readOnly
-                                  placeholder="Será gerado automaticamente"
+                                  placeholder="Será gerado automaticamente ao salvar"
                                   className="bg-slate-50"
                                 />
                                 <Button
@@ -772,17 +807,17 @@ export default function GerenciadorImoveis() {
                                   ) : (
                                     <>
                                       <RefreshCw className="w-4 h-4 mr-2" />
-                                      Gerar Código
+                                      Pré-visualizar
                                     </>
                                   )}
                                 </Button>
                               </div>
                               
-                              {/* ✅ NOVO: Preview do código */}
+                              {/* ✅ ATUALIZADO: Preview do código */}
                               {previewCodigoAutomatico && !formData.codigo && (
                                 <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
                                   <p className="text-xs text-blue-700">
-                                    💡 <strong>Preview:</strong> Será gerado algo como{' '}
+                                    💡 <strong>Será gerado algo como:</strong>{' '}
                                     <code className="font-mono font-semibold">
                                       {previewCodigoAutomatico.replace('9999', 'XXXX')}
                                     </code>
@@ -791,7 +826,7 @@ export default function GerenciadorImoveis() {
                               )}
                               
                               <p className="text-xs text-slate-500 mt-1">
-                                💡 O código será gerado no formato: TIPO-CIDADE-NUMERO (ex: CAS-GOI-0001)
+                                ✨ O código será gerado <strong>automaticamente ao salvar</strong> no formato: TIPO-CIDADE-NUMERO
                               </p>
                               {(!formData.tipoImovel || !formData.cidade) && (
                                 <p className="text-xs text-amber-600 mt-1">
@@ -801,7 +836,7 @@ export default function GerenciadorImoveis() {
                             </div>
                           )}
 
-                          {/* Preview do código */}
+                          {/* Preview do código gerado/personalizado */}
                           {formData.codigo && (
                             <div className="bg-green-50 border border-green-200 rounded p-2">
                               <p className="text-xs text-green-700 font-semibold">
