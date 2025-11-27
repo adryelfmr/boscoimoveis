@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import ImovelCard from '@/components/imoveis/ImovelCard'; // ✅ CORRIGIDO: usar @ alias
 import FiltrosImoveis from '@/components/imoveis/FiltrosImoveis'; // ✅ CORRIGIDO: usar @ alias
 import { Building2 } from 'lucide-react';
+import SEO from '@/components/SEO';
 
 export default function Catalogo() {
   const [filtros, setFiltros] = useState({
@@ -99,6 +100,12 @@ export default function Catalogo() {
           </div>
         )}
       </div>
+
+      <SEO
+        title="Catálogo de Imóveis - Bosco Imóveis"
+        description="Explore nosso catálogo completo de imóveis em Goiânia. Casas, apartamentos, terrenos e muito mais."
+        keywords="catálogo imóveis, todos imóveis, goiânia"
+      />
     </div>
   );
 }

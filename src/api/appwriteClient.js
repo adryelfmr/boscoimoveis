@@ -1,4 +1,5 @@
 import { account, databases, storage, DATABASE_ID, BUCKET_ID, ID, Query } from '@/lib/appwrite';
+import { cache } from '@/utils/cache';
 
 export const COLLECTIONS = {
   IMOVEIS: import.meta.env.VITE_APPWRITE_COLLECTION_IMOVEIS,
@@ -106,7 +107,17 @@ export const appwrite = {
 
   entities: {
     Imovel: {
-      filter: async (filters = {}, orderBy = '$createdAt', limit = 100) => {
+      // Método filter otimizado:
+      filter: async (filters = {}, orderBy = '', limit = 100) => {
+        const cacheKey = `imoveis_${JSON.stringify(filters)}_${orderBy}_${limit}`;
+        
+        // Tentar buscar do cache
+        const cached = cache.get(cacheKey);
+        if (cached) {
+          console.log('📦 Dados do cache');
+          return cached;
+        }
+
         const queries = [Query.limit(limit)];
         
         // Ordenação
@@ -131,6 +142,9 @@ export const appwrite = {
             COLLECTIONS.IMOVEIS,
             queries
           );
+          
+          // Salvar no cache
+          cache.set(cacheKey, response.documents);
           
           return response.documents;
         } catch (error) {

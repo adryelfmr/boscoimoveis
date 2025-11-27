@@ -1,24 +1,65 @@
 const sdk = require('node-appwrite');
 const nodemailer = require('nodemailer');
 
+// ✅ NOVO: Armazenamento de rate limit em memória (persiste durante execução da função)
+const rateLimitStore = new Map();
+
+/**
+ * Verifica rate limit no backend
+ */
+function checkRateLimit(email) {
+  const now = Date.now();
+  const key = `contact:${email}`;
+  
+  // Limpar registros antigos (mais de 1 hora)
+  for (const [k, data] of rateLimitStore.entries()) {
+    if (now - data.firstAttempt > 3600000) {
+      rateLimitStore.delete(k);
+    }
+  }
+  
+  const userData = rateLimitStore.get(key) || { attempts: [], firstAttempt: now };
+  
+  // Filtrar apenas tentativas da última hora
+  userData.attempts = userData.attempts.filter(timestamp => now - timestamp < 3600000);
+  
+  // Máximo 3 envios por hora
+  if (userData.attempts.length >= 3) {
+    const oldestAttempt = Math.min(...userData.attempts);
+    const resetTime = oldestAttempt + 3600000;
+    const waitMinutes = Math.ceil((resetTime - now) / 60000);
+    
+    return {
+      allowed: false,
+      reason: 'rate_limit_exceeded',
+      waitMinutes,
+    };
+  }
+  
+  // Registrar tentativa
+  userData.attempts.push(now);
+  rateLimitStore.set(key, userData);
+  
+  return {
+    allowed: true,
+    remainingAttempts: 3 - userData.attempts.length,
+  };
+}
+
 module.exports = async ({ req, res, log, error }) => {
   try {
     log('=== INÍCIO DA EXECUÇÃO ===');
     log('req.body:', JSON.stringify(req.body));
     
-    // ✅ CORRIGIDO: Appwrite envia o body no campo "data"
     let payload;
     
     if (req.body && req.body.data) {
-      // Se vier como JSON string no campo "data"
       payload = typeof req.body.data === 'string' 
         ? JSON.parse(req.body.data) 
         : req.body.data;
     } else if (req.bodyRaw) {
-      // Fallback para bodyRaw
       payload = JSON.parse(req.bodyRaw);
     } else {
-      // Usar req.body diretamente
       payload = req.body;
     }
     
@@ -30,6 +71,20 @@ module.exports = async ({ req, res, log, error }) => {
       throw new Error(`Dados obrigatórios faltando. Recebido: ${JSON.stringify(payload)}`);
     }
 
+    // ✅ NOVO: Verificar rate limit no backend
+    const limitCheck = checkRateLimit(email);
+    
+    if (!limitCheck.allowed) {
+      log(`⚠️ Rate limit excedido para ${email}`);
+      return res.json({
+        success: false,
+        error: 'rate_limit_exceeded',
+        message: `Você excedeu o limite de envios. Aguarde ${limitCheck.waitMinutes} minutos.`,
+        waitMinutes: limitCheck.waitMinutes,
+      }, 429); // HTTP 429 Too Many Requests
+    }
+
+    log(`✅ Rate limit OK para ${email}. Envios restantes: ${limitCheck.remainingAttempts}`);
     log('✅ Dados extraídos:', JSON.stringify({ nome, email, telefone }));
 
     // ✅ Usar variáveis de ambiente
@@ -182,8 +237,7 @@ module.exports = async ({ req, res, log, error }) => {
     return res.json({
       success: true,
       message: 'Emails enviados com sucesso',
-      adminMessageId: infoAdmin.messageId,
-      clienteMessageId: infoCliente.messageId,
+      remainingAttempts: limitCheck.remainingAttempts,
     });
   } catch (err) {
     error('=== ❌ ERRO NA EXECUÇÃO ===');

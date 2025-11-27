@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from './utils';
 import { useAuth } from './contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import InstallPWA from '@/components/InstallPWA'; // ✅ NOVO IMPORT
 import { 
   Building2, 
   Heart, 
@@ -98,6 +99,7 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-slate-200/50 shadow-sm">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
@@ -337,7 +339,10 @@ export default function Layout({ children, currentPageName }) {
 
       <main>{children}</main>
 
-      {/* ✅ ATUALIZADO: WhatsApp Floating Button com mensagem inteligente */}
+      {/* ✅ NOVO: Componente de Instalação PWA */}
+      <InstallPWA />
+
+      {/* WhatsApp Button */}
       <a
         href={`https://wa.me/${whatsappNumber}?text=${getWhatsappMessage()}`}
         target="_blank"

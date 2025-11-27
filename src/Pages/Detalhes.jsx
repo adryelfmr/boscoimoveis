@@ -23,6 +23,7 @@ import {
   CheckCircle,
   Edit, // ✅ NOVO IMPORT
   Settings, // ✅ NOVO IMPORT
+  Download, // ✅ NOVO IMPORT
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom'; // ✅ ADICIONADO useNavigate
 import { createPageUrl } from '../utils';
@@ -30,6 +31,8 @@ import { motion } from 'framer-motion';
 import FavoritoButton from '@/components/imoveis/FavoritoButton';
 import { toast } from 'sonner';
 import MapaLeaflet from '@/components/imoveis/MapaLeaflet'; // ✅ NOVO IMPORT
+import SEO from '@/components/SEO';
+import { gerarPDFImovel } from '@/utils/pdfGenerator';
 
 const TIPO_IMOVEL_LABELS = {
   'house': 'Casa',
@@ -449,6 +452,16 @@ export default function Detalhes() {
                       <Share2 className="w-5 h-5" />
                     </Button>
                   </div>
+
+                  {/* ✅ NOVO: Botão para baixar ficha em PDF */}
+                  <Button
+                    variant="outline"
+                    onClick={() => gerarPDFImovel(imovel)}
+                    className="w-full"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Baixar Ficha (PDF)
+                  </Button>
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-blue-600">
@@ -523,6 +536,13 @@ export default function Detalhes() {
           </div>
         </div>
       </div>
+
+      <SEO
+        title={`${imovel.titulo} - Bosco Imóveis`}
+        description={imovel.descricao}
+        keywords={`${imovel.tipoImovel}, ${imovel.cidade}, ${imovel.bairro}`}
+        image={imovel.imagemPrincipal}
+      />
     </div>
   );
 }

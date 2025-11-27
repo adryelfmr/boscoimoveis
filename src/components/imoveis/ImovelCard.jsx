@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import FavoritoButton from './FavoritoButton';
 import { appwrite } from '@/api/appwriteClient'; // ✅ MUDOU: usar appwrite ao invés de base44
 import { useQuery } from '@tanstack/react-query';
+import LazyImage from '@/components/LazyImage';
 
 export default function ImovelCard({ imovel, index = 0 }) {
   const imagemPrincipal = imovel.imagemPrincipal || imovel.imagens?.[0] || 
@@ -50,7 +51,7 @@ export default function ImovelCard({ imovel, index = 0 }) {
       >
         <Card className="group overflow-hidden hover:shadow-2xl transition-all duration-500 border-0 bg-white">
           <div className="relative overflow-hidden aspect-[4/3]">
-            <img
+            <LazyImage
               src={imagemPrincipal}
               alt={imovel.titulo}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"

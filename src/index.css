@@ -1,4 +1,4 @@
-@import 'leaflet/dist/leaflet.css'; /* ✅ MOVER PARA O TOPO */
+@import 'leaflet/dist/leaflet.css';
 
 @tailwind base;
 @tailwind components;

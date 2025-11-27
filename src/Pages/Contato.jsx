@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { Mail, Phone, MapPin, MessageCircle, Send, Clock } from 'lucide-react';
+import { Mail, Phone, MapPin, MessageCircle, Send, Clock, Shield, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import { Client, Functions } from 'appwrite'; // ✅ ADICIONAR IMPORT
+import { Client, Functions } from 'appwrite';
+import { rateLimits } from '@/utils/rateLimit'; // ✅ NOVO IMPORT
+import SEO from '@/components/SEO';
 
 export default function Contato() {
   const [formData, setFormData] = useState({
@@ -17,9 +19,32 @@ export default function Contato() {
     mensagem: '',
   });
   const [enviando, setEnviando] = useState(false);
+  const [tentativasRestantes, setTentativasRestantes] = useState(3); // ✅ NOVO
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ✅ NOVO: Verificar rate limit ANTES de enviar
+    const limitCheck = rateLimits.contact(formData.email);
+    
+    if (!limitCheck.allowed) {
+      if (limitCheck.reason === 'blocked') {
+        toast.error('🚫 Você está temporariamente bloqueado', {
+          description: `Aguarde ${limitCheck.waitSeconds} segundos antes de tentar novamente.`,
+          duration: 5000,
+        });
+      } else if (limitCheck.reason === 'rate_limit_exceeded') {
+        toast.error('⚠️ Muitas tentativas!', {
+          description: `Você excedeu o limite de envios. Tente novamente em ${Math.ceil(limitCheck.waitSeconds / 60)} minutos.`,
+          duration: 5000,
+        });
+      }
+      return;
+    }
+
+    // ✅ NOVO: Atualizar contador visual
+    setTentativasRestantes(limitCheck.remainingAttempts);
+
     setEnviando(true);
 
     try {
@@ -36,7 +61,6 @@ export default function Contato() {
 
       // 2. Enviar email via Appwrite Function
       try {
-        // ✅ CORRIGIDO: Criar cliente do Appwrite
         const client = new Client()
           .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
           .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
@@ -53,14 +77,13 @@ export default function Contato() {
         console.log('📤 Enviando para função via SDK');
         console.log('📤 Dados:', bodyData);
 
-        // ✅ Usar createExecution do SDK
         const execution = await functions.createExecution(
           import.meta.env.VITE_APPWRITE_FUNCTION_EMAIL,
-          JSON.stringify(bodyData), // Body como string JSON
-          false, // async = false (síncrono)
-          '/', // path
-          'POST', // method
-          {} // headers (opcional)
+          JSON.stringify(bodyData),
+          false,
+          '/',
+          'POST',
+          {}
         );
 
         console.log('📥 Resposta da função:', execution);
@@ -73,14 +96,14 @@ export default function Contato() {
         console.log('✅ Email enviado com sucesso!');
       } catch (emailError) {
         console.error('❌ Erro ao executar função de email:', emailError);
-        // Não bloquear o fluxo se o email falhar
       }
 
       toast.success('Mensagem enviada com sucesso! 🎉', {
-        description: 'Entraremos em contato em breve. Verifique seu email.',
+        description: `Entraremos em contato em breve. Você tem ${limitCheck.remainingAttempts - 1} envios restantes nesta hora.`,
       });
       
       setFormData({ nome: '', email: '', telefone: '', mensagem: '' });
+      setTentativasRestantes(limitCheck.remainingAttempts - 1);
     } catch (error) {
       console.error('❌ Erro ao enviar mensagem:', error);
       toast.error('Erro ao enviar mensagem', {
@@ -200,7 +223,29 @@ export default function Contato() {
               <Card className="border-0 shadow-xl">
                 <CardContent className="p-8">
                   <h2 className="text-2xl font-bold text-slate-900 mb-6">Envie sua Mensagem</h2>
-                  
+
+                  {/* ✅ NOVO: Aviso de Rate Limit */}
+                  {tentativasRestantes <= 1 && (
+                    <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+                      <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-amber-900">Atenção!</p>
+                        <p className="text-xs text-amber-700 mt-1">
+                          Você tem apenas {tentativasRestantes} envio{tentativasRestantes === 1 ? '' : 's'} restante{tentativasRestantes === 1 ? '' : 's'} nesta hora.
+                          Após o limite, será necessário aguardar para enviar novamente.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ✅ NOVO: Indicador de Segurança */}
+                  <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-blue-600" />
+                    <p className="text-xs text-blue-700">
+                      🔒 Formulário protegido contra spam. Seus dados estão seguros.
+                    </p>
+                  </div>
+
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
@@ -282,6 +327,12 @@ export default function Contato() {
           </div>
         </div>
       </div>
+
+      <SEO
+        title="Entre em Contato - Bosco Imóveis"
+        description="Fale conosco! Nossa equipe especializada está pronta para ajudar você a encontrar o imóvel ideal."
+        keywords="contato, falar com corretor, atendimento imóveis goiânia"
+      />
     </div>
   );
 }

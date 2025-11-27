@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import { appwrite } from '@/api/appwriteClient';
@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Building2, Search, Tag, Award } from 'lucide-react';
 import ImovelCard from '@/components/imoveis/ImovelCard';
 import { motion } from 'framer-motion';
+import { notifications } from '@/utils/notifications';
+import SEO from '@/components/SEO';
 
 export default function Home() {
   const { data: destaques = [], isLoading: loadingDestaques } = useQuery({
@@ -30,6 +32,15 @@ export default function Home() {
       return imoveis;
     },
   });
+
+  useEffect(() => {
+    // Pedir permissão após 10 segundos na página
+    const timer = setTimeout(() => {
+      notifications.requestPermission();
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div>
@@ -203,6 +214,12 @@ export default function Home() {
           </div>
         </motion.div>
       </section>
+
+      <SEO
+        title="Bosco Imóveis - Encontre seu imóvel dos sonhos em Goiânia"
+        description="Mais de 10 anos realizando sonhos. Casas, apartamentos e terrenos com as melhores condições."
+        keywords="imóveis goiânia, casas goiânia, apartamentos goiânia, imóveis em destaque"
+      />
     </div>
   );
 }
