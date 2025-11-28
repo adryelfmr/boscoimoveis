@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from './utils';
 import { useAuth } from './contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import InstallPWA from '@/components/InstallPWA';
 import { 
   Building2, 
   Heart, 
@@ -19,35 +18,31 @@ import {
   Phone,
   Tag,
   MapPin,
-  Scale,  // ✅ ADICIONAR ESTA LINHA
-  Users,  // ✅ ADICIONAR ESTA LINHA
-  PlusCircle // ✅ ADICIONAR ESTA LINHA (para "Anunciar Grátis")
+  Scale,
+  Users,
+  PlusCircle
 } from 'lucide-react';
 
 export default function Layout({ children, currentPageName }) {
-  const { user, logout, isAuthenticated, isAdmin } = useAuth();
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const { user, isAuthenticated, logout, isAdmin } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (userMenuOpen && !event.target.closest('.user-menu')) {
-        setUserMenuOpen(false);
-      }
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
     };
+  }, [mobileMenuOpen]);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [userMenuOpen]);
-
-  // ✅ REMOVER "Comparar" da navegação
-  const navigation = [
-    { name: 'Início', to: 'Home', icon: Home, path: 'Home' },
+  const menuItems = [
     { name: 'Catálogo', to: 'Catalogo', icon: Building2, path: 'Catalogo' },
     { name: 'Promoções', to: 'Promocoes', icon: Tag, path: 'Promocoes' },
     { name: 'Anunciar Grátis', to: '/anunciar', icon: PlusCircle, path: '/anunciar' },
     { name: 'Favoritos', to: 'Favoritos', icon: Heart, path: 'Favoritos' },
-    // ❌ REMOVIDO: { name: 'Comparar', to: 'Comparar', icon: Scale, path: 'Comparar' },
     { name: 'Sobre', to: 'Sobre', icon: Users, path: 'Sobre' },
     { name: 'Contato', to: 'Contato', icon: Phone, path: 'Contato' },
   ];
@@ -60,53 +55,31 @@ export default function Layout({ children, currentPageName }) {
     switch(currentPageName) {
       case 'Catalogo':
         return encodeURIComponent(
-          `🏡 *Olá! Vim do catálogo de imóveis.*${userName}\n\n` +
-          `Gostaria de mais informações sobre os imóveis disponíveis.\n\n` +
-          `📱 Estou navegando em: ${window.location.href}`
+          `Olá! Estou navegando pelo catálogo de imóveis.${userName} Gostaria de mais informações sobre os imóveis disponíveis. 🏡`
         );
-      
-      case 'Favoritos':
-        return encodeURIComponent(
-          `❤️ *Olá! Tenho interesse nos imóveis favoritos.*${userName}\n\n` +
-          `Gostaria de agendar visitas ou receber mais informações.\n\n` +
-          `📱 Estou navegando em: ${window.location.href}`
-        );
-      
-      case 'Promocoes':
-        return encodeURIComponent(
-          `🎉 *Olá! Vi os imóveis em promoção.*${userName}\n\n` +
-          `Gostaria de saber mais sobre as ofertas disponíveis.\n\n` +
-          `📱 Estou navegando em: ${window.location.href}`
-        );
-      
-      case 'Contato':
-        return encodeURIComponent(
-          `📞 *Olá! Estou na página de contato.*${userName}\n\n` +
-          `Gostaria de falar com um consultor sobre imóveis.\n\n` +
-          `📱 Estou navegando em: ${window.location.href}`
-        );
-      
       case 'Detalhes':
         return encodeURIComponent(
-          `🏠 *Olá! Estou vendo um imóvel específico.*${userName}\n\n` +
-          `Gostaria de mais informações sobre este imóvel.\n\n` +
-          `📱 Link do imóvel: ${window.location.href}`
+          `Olá! Vi um imóvel no site e gostaria de mais informações.${userName} 🏠`
         );
-      
+      case 'Favoritos':
+        return encodeURIComponent(
+          `Olá! Tenho alguns imóveis salvos como favoritos.${userName} Gostaria de agendar visitas! 📋`
+        );
+      case 'Contato':
+        return encodeURIComponent(
+          `Olá! Vim através da página de contato.${userName} Gostaria de conversar sobre imóveis! 💬`
+        );
       default:
         return encodeURIComponent(
-          `🏡 *Olá! Vim do site Bosco Imóveis.*${userName}\n\n` +
-          `Gostaria de mais informações sobre os imóveis disponíveis.\n\n` +
-          `📍 Tenho interesse em imóveis em Goiânia e região.\n\n` +
-          `📱 Site: ${window.location.origin}`
+          `Olá! Vim através do site Bosco Imóveis.${userName} Gostaria de mais informações! 😊`
         );
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-slate-200/50 shadow-sm">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
         <nav className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
@@ -126,7 +99,7 @@ export default function Layout({ children, currentPageName }) {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-2 flex-1 justify-center px-8">
-              {navigation.map((item) => {
+              {menuItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link
@@ -257,7 +230,7 @@ export default function Layout({ children, currentPageName }) {
           {mobileMenuOpen && (
             <div className="lg:hidden py-4 border-t border-slate-200">
               <div className="space-y-1">
-                {navigation.map((item) => {
+                {menuItems.map((item) => {
                   const Icon = item.icon;
                   return (
                     <Link
@@ -364,8 +337,6 @@ export default function Layout({ children, currentPageName }) {
 
       <main>{children}</main>
 
-      <InstallPWA />
-
       {/* WhatsApp Button */}
       <a
         href={`https://wa.me/${whatsappNumber}?text=${getWhatsappMessage()}`}
@@ -401,7 +372,7 @@ export default function Layout({ children, currentPageName }) {
             <div>
               <h4 className="font-semibold mb-4 text-amber-400">Links Rápidos</h4>
               <ul className="space-y-2">
-                {navigation.map((item) => (
+                {menuItems.map((item) => (
                   <li key={item.name}>
                     <Link
                       to={item.path.startsWith('/') ? item.path : createPageUrl(item.path)}
