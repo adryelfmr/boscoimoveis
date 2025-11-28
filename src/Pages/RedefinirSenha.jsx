@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, ArrowLeft, Home, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import { account } from '@/lib/appwrite';
+import { Client, Functions } from 'appwrite'; // ✅ ADICIONAR Functions
 
 export default function RedefinirSenha() {
   const [email, setEmail] = useState('');
@@ -33,13 +33,31 @@ export default function RedefinirSenha() {
     setLoading(true);
 
     try {
-      // ✅ SIMPLIFICADO: Usar apenas o sistema nativo do Appwrite
+      // ✅ NOVO: Usar sua function customizada
+      const client = new Client()
+        .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
+        .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
+      
+      const functions = new Functions(client);
+
       const resetUrl = import.meta.env.VITE_APP_URL
         ? `${import.meta.env.VITE_APP_URL}/nova-senha`
         : `${window.location.origin}/nova-senha`;
 
-      // O Appwrite cuida de tudo: gera o token, adiciona os parâmetros e envia o email
-      await account.createRecovery(email, resetUrl);
+      const execution = await functions.createExecution(
+        import.meta.env.VITE_APPWRITE_FUNCTION_RESET_PASSWORD,
+        JSON.stringify({ email, resetUrl }),
+        false,
+        '/',
+        'POST',
+        {}
+      );
+
+      console.log('📧 Execution:', execution);
+
+      if (execution.status === 'failed') {
+        throw new Error('Falha ao enviar email');
+      }
 
       setEmailEnviado(true);
       toast.success("Email enviado com sucesso!", {
@@ -47,22 +65,14 @@ export default function RedefinirSenha() {
       });
 
     } catch (err) {
-      console.error("ERRO AO REDEFINIR SENHA:", err);
+      console.error("ERRO:", err);
       
-      if (err.message?.includes('user') || err.code === 404) {
-        toast.error("Email não encontrado", {
-          description: "Não encontramos uma conta com este email.",
-        });
+      if (err.message?.includes('user') || err.message?.includes('não encontrado')) {
+        toast.error("Email não encontrado");
         setError("Email não cadastrado");
-      } else if (err.message?.includes('rate limit')) {
-        toast.error("Muitas tentativas", {
-          description: "Aguarde alguns minutos antes de tentar novamente.",
-        });
       } else {
-        toast.error("Erro ao processar solicitação", {
-          description: "Tente novamente mais tarde.",
-        });
-        setError("Não foi possível enviar o email.");
+        toast.error("Erro ao processar solicitação");
+        setError("Tente novamente mais tarde.");
       }
     } finally {
       setLoading(false);
