@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, ArrowLeft, Home, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import { Client, Functions } from 'appwrite'; // ✅ ADICIONAR Functions
+import { account } from '@/lib/appwrite'; // ✅ USAR account nativo
 
 export default function RedefinirSenha() {
   const [email, setEmail] = useState('');
@@ -33,31 +33,12 @@ export default function RedefinirSenha() {
     setLoading(true);
 
     try {
-      // ✅ NOVO: Usar sua function customizada
-      const client = new Client()
-        .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
-        .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
-      
-      const functions = new Functions(client);
-
+      // ✅ SIMPLES: Usar método nativo do Appwrite
       const resetUrl = import.meta.env.VITE_APP_URL
         ? `${import.meta.env.VITE_APP_URL}/nova-senha`
         : `${window.location.origin}/nova-senha`;
 
-      const execution = await functions.createExecution(
-        import.meta.env.VITE_APPWRITE_FUNCTION_RESET_PASSWORD,
-        JSON.stringify({ email, resetUrl }),
-        false,
-        '/',
-        'POST',
-        {}
-      );
-
-      
-
-      if (execution.status === 'failed') {
-        throw new Error('Falha ao enviar email');
-      }
+      await account.createRecovery(email, resetUrl);
 
       setEmailEnviado(true);
       toast.success("Email enviado com sucesso!", {
@@ -67,12 +48,21 @@ export default function RedefinirSenha() {
     } catch (err) {
       console.error("ERRO:", err);
       
-      if (err.message?.includes('user') || err.message?.includes('não encontrado')) {
-        toast.error("Email não encontrado");
+      if (err.message?.includes('user') || err.code === 404) {
+        toast.error("Email não encontrado", {
+          description: "Não encontramos uma conta com este email.",
+        });
         setError("Email não cadastrado");
+      } else if (err.message?.includes('rate limit')) {
+        toast.error("Muitas tentativas", {
+          description: "Aguarde alguns minutos antes de tentar novamente.",
+        });
+        setError("Aguarde alguns minutos");
       } else {
-        toast.error("Erro ao processar solicitação");
-        setError("Tente novamente mais tarde.");
+        toast.error("Erro ao processar solicitação", {
+          description: "Tente novamente mais tarde.",
+        });
+        setError("Não foi possível enviar o email.");
       }
     } finally {
       setLoading(false);
@@ -82,7 +72,12 @@ export default function RedefinirSenha() {
   if (emailEnviado) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }} className="w-full max-w-md">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }} 
+          animate={{ opacity: 1, scale: 1 }} 
+          transition={{ duration: 0.5 }} 
+          className="w-full max-w-md"
+        >
           <Card className="border-0 shadow-2xl">
             <CardContent className="pt-6 text-center">
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -90,7 +85,9 @@ export default function RedefinirSenha() {
               </div>
 
               <h2 className="text-2xl font-bold text-slate-900 mb-3">Email Enviado!</h2>
-              <p className="text-slate-600 mb-6">Enviamos instruções para redefinir sua senha para:</p>
+              <p className="text-slate-600 mb-6">
+                Enviamos instruções para redefinir sua senha para:
+              </p>
 
               <div className="bg-blue-50 p-4 rounded-lg mb-6">
                 <p className="text-blue-900 font-semibold">{email}</p>
@@ -131,7 +128,12 @@ export default function RedefinirSenha() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 flex items-center justify-center p-4">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ duration: 0.5 }} 
+        className="w-full max-w-md"
+      >
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 text-white hover:text-blue-200 transition-colors mb-6">
             <Home className="w-5 h-5" />
@@ -157,7 +159,9 @@ export default function RedefinirSenha() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-2 block">Email</label>
+                <label className="text-sm font-medium text-slate-700 mb-2 block">
+                  Email
+                </label>
                 <div className="relative">
                   <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${error ? 'text-red-400' : 'text-slate-400'}`} />
                   <Input
