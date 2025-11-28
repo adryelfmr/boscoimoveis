@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Mail, Phone, Lock, Loader2, CheckCircle, Shield } from 'lucide-react';
+import { User, Mail, Phone, Lock, Loader2, CheckCircle, Shield, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { account } from '@/lib/appwrite';
 import { 
@@ -13,16 +13,19 @@ import {
   converterParaBrasileiro 
 } from '@/utils/telefone';
 import { Badge } from '@/components/ui/badge';
-import VerificarTelefone from '@/components/VerificarTelefone'; // ✅ NOVO IMPORT
+import VerificarTelefone from '@/components/VerificarTelefone';
 
 export default function Perfil() {
   const { user, checkUser, isAdmin } = useAuth();
   const [editando, setEditando] = useState(false);
   const [salvando, setSalvando] = useState(false);
-  const [verificandoTelefone, setVerificandoTelefone] = useState(false); // ✅ NOVO
+  const [verificandoTelefone, setVerificandoTelefone] = useState(false);
+  const [aguardandoVerificacaoEmail, setAguardandoVerificacaoEmail] = useState(false); // ✅ NOVO
+  const [emailParaVerificar, setEmailParaVerificar] = useState(''); // ✅ NOVO
   
   const [formData, setFormData] = useState({
     name: user?.name || '',
+    email: user?.email || '',
     telefone: user?.phone ? converterParaBrasileiro(user.phone) : '',
     senhaAtual: '',
     novaSenha: '',
@@ -85,10 +88,8 @@ export default function Perfil() {
     }
   };
 
-  // ✅ NOVO: Handler para telefone verificado
   const handleTelefoneVerificado = async (telefoneE164) => {
     try {
-      // Salvar telefone verificado no Appwrite
       await account.updatePhone(telefoneE164, formData.senhaAtual || 'senha-temporaria');
       
       toast.success('✅ Telefone verificado e salvo!');
@@ -108,29 +109,33 @@ export default function Perfil() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <User className="w-8 h-8 text-blue-900" />
-            <h1 className="text-3xl font-bold text-slate-900">Meu Perfil</h1>
-          </div>
-          {isAdmin && (
-            <Badge className="bg-blue-100 text-blue-900 border-blue-300">
-              <Shield className="w-4 h-4 mr-1" />
-              Administrador
-            </Badge>
-          )}
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Meu Perfil</h1>
+          <p className="text-slate-600">Gerencie suas informações pessoais</p>
         </div>
 
-        {/* Card de Informações */}
-        <Card className="mb-6">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Informações Pessoais</CardTitle>
-              {!editando && !verificandoTelefone && (
-                <Button onClick={() => setEditando(true)} variant="outline">
-                  Editar
-                </Button>
-              )}
+        {/* Modal de Verificação de Telefone */}
+        {verificandoTelefone && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="max-w-md w-full">
+              <VerificarTelefone 
+                onVerified={handleTelefoneVerificado}
+                onCancel={() => setVerificandoTelefone(false)}
+              />
             </div>
+          </div>
+        )}
+
+        {/* ❌ REMOVER: Sistema antigo de verificação de email */}
+        
+        {/* Card de Informações */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Informações Pessoais</CardTitle>
+            {!editando && (
+              <Button onClick={() => setEditando(true)} variant="outline">
+                Editar
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Nome */}
@@ -150,16 +155,32 @@ export default function Perfil() {
               )}
             </div>
 
-            {/* Email (não editável) */}
+            {/* ❌ Email NÃO EDITÁVEL (simplificado) */}
             <div>
               <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                 <Mail className="w-4 h-4" />
                 Email
+                {user?.emailVerification && (
+                  <Badge className="bg-green-100 text-green-800 border-green-300">
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Verificado
+                  </Badge>
+                )}
               </label>
-              <p className="text-slate-600">{user?.email}</p>
-              <p className="text-xs text-slate-500 mt-1">
-                O email não pode ser alterado
-              </p>
+              
+              <div className="space-y-2">
+                <p className="text-slate-900 font-medium">{user?.email}</p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-xs text-blue-800">
+                      <p className="font-semibold mb-1">🔒 Email não pode ser alterado</p>
+                      <p>O email é o identificador único da sua conta e não pode ser modificado por segurança.</p>
+                      <p className="mt-2">💡 <strong>Precisa trocar?</strong> Entre em contato com o suporte: contato@boscoimoveis.app</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Telefone */}
@@ -247,6 +268,7 @@ export default function Perfil() {
                     setEditando(false);
                     setFormData({
                       name: user?.name || '',
+                      email: user?.email || '',
                       telefone: user?.phone ? converterParaBrasileiro(user.phone) : '',
                       senhaAtual: '',
                       novaSenha: '',
@@ -272,33 +294,18 @@ export default function Perfil() {
                 </Button>
               </div>
             )}
+
+            {/* Badge Admin */}
+            {isAdmin && (
+              <div className="border-t pt-6">
+                <Badge className="bg-amber-100 text-amber-900 border-amber-300">
+                  <Shield className="w-4 h-4 mr-1" />
+                  Administrador
+                </Badge>
+              </div>
+            )}
           </CardContent>
         </Card>
-
-        {/* ✅ NOVO: Modal de Verificação */}
-        {verificandoTelefone && (
-          <div className="mb-6">
-            <VerificarTelefone 
-              onVerified={handleTelefoneVerificado}
-              onCancel={() => setVerificandoTelefone(false)}
-            />
-          </div>
-        )}
-
-        {/* Informação sobre anúncios */}
-        {!user?.phone && !verificandoTelefone && (
-          <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <div className="flex items-start gap-2">
-              <Phone className="w-5 h-5 text-amber-600 mt-0.5" />
-              <div className="text-sm text-amber-800">
-                <p className="font-semibold mb-1">Verifique seu telefone</p>
-                <p>
-                  Para anunciar imóveis, você precisa verificar um número de telefone válido via SMS.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

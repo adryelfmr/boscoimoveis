@@ -63,8 +63,7 @@ export default function InstallPWA() {
     const { outcome } = await deferredPrompt.userChoice;
     
     if (outcome === 'accepted') {
-      analytics.installPWA(); // ✅ RASTREAR INSTALAÇÃO
-      console.log('✅ PWA instalado');
+      analytics.installPWA(); 
       setIsInstalled(true);
     }
 
