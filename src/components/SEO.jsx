@@ -4,7 +4,7 @@ export default function SEO({
   title = 'Bosco Imóveis - Encontre seu imóvel dos sonhos',
   description = 'Encontre as melhores casas, apartamentos e terrenos em Goiânia. Mais de 10 anos realizando sonhos.',
   keywords = 'imóveis, casas, apartamentos, terrenos, Goiânia, venda, aluguel',
-  image = '/boscoimoveis.svg',
+  image = 'https://boscoimoveis.app/og-image.png', // ✅ MUDOU: URL absoluta com PNG
   url = typeof window !== 'undefined' ? window.location.href : ''
 }) {
   useEffect(() => {
@@ -22,6 +22,9 @@ export default function SEO({
       { property: 'og:title', content: title },
       { property: 'og:description', content: description },
       { property: 'og:image', content: image },
+      { property: 'og:image:width', content: '1200' }, // ✅ NOVO
+      { property: 'og:image:height', content: '630' }, // ✅ NOVO
+      { property: 'og:image:type', content: 'image/png' }, // ✅ NOVO
       
       // Twitter
       { property: 'twitter:card', content: 'summary_large_image' },
@@ -56,5 +59,5 @@ export default function SEO({
 
   }, [title, description, keywords, image, url]);
 
-  return null; // Não renderiza nada visível
+  return null;
 }

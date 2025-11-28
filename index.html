@@ -5,16 +5,13 @@
     <link rel="icon" type="image/svg+xml" href="/boscoimoveis.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- ✅ Verificação do Google -->
-    <meta name="google-site-verification" content="JNwmCurXwfQLTWqPAatKTC-266gSnIFGj41xtA7CXwI" />
+    <!-- ✅ Cache Control: Forçar revalidação -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     
-    <!-- ❌ REMOVER todas linhas PWA abaixo: -->
-    <!-- <meta name="theme-color" content="#1e3a8a" /> -->
-    <!-- <meta name="apple-mobile-web-app-capable" content="yes" /> -->
-    <!-- <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" /> -->
-    <!-- <meta name="apple-mobile-web-app-title" content="Bosco Imóveis" /> -->
-    <!-- <link rel="apple-touch-icon" href="/icon-192.png" /> -->
-    <!-- <link rel="manifest" href="/manifest.json" /> -->
+    <!-- Verificação do Google -->
+    <meta name="google-site-verification" content="JNwmCurXwfQLTWqPAatKTC-266gSnIFGj41xtA7CXwI" />
     
     <title>Bosco Imóveis - Encontre seu imóvel dos sonhos</title>
     
@@ -25,12 +22,17 @@
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://boscoimoveis.app" />
     
+    <!-- ✅ MUDOU: Imagem PNG ao invés de SVG -->
+    <meta property="og:image" content="https://boscoimoveis.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+    
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://boscoimoveis.app" />
     <meta property="og:title" content="Bosco Imóveis - Corretores em Goiânia" />
     <meta property="og:description" content="Mais de 10 anos realizando sonhos em Goiânia" />
-    <meta property="og:image" content="https://boscoimoveis.app/boscoimoveis.svg" />
     <meta property="og:locale" content="pt_BR" />
     
     <!-- Twitter -->
@@ -38,7 +40,8 @@
     <meta property="twitter:url" content="https://boscoimoveis.app" />
     <meta property="twitter:title" content="Bosco Imóveis - Corretores em Goiânia" />
     <meta property="twitter:description" content="Mais de 10 anos realizando sonhos em Goiânia" />
-    <meta property="twitter:image" content="https://boscoimoveis.app/boscoimoveis.svg" />
+    <!-- ✅ MUDOU: Imagem PNG -->
+    <meta property="twitter:image" content="https://boscoimoveis.app/og-image.png" />
     
     <!-- Schema.org -->
     <script type="application/ld+json">
@@ -50,7 +53,8 @@
       "url": "https://boscoimoveis.app",
       "telephone": "+55-62-99404-5111",
       "priceRange": "$$",
-      "image": "https://boscoimoveis.app/boscoimoveis.svg",
+      "image": "https://boscoimoveis.app/og-image.png",
+      "logo": "https://boscoimoveis.app/og-image.png",
       "areaServed": {
         "@type": "City",
         "name": "Goiânia",
