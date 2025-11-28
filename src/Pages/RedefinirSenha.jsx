@@ -53,7 +53,7 @@ export default function RedefinirSenha() {
         {}
       );
 
-      console.log('📧 Execution:', execution);
+      
 
       if (execution.status === 'failed') {
         throw new Error('Falha ao enviar email');
