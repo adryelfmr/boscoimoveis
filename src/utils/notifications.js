@@ -5,7 +5,7 @@
 export const notifications = {
   async requestPermission() {
     if (!('Notification' in window)) {
-      console.log('Navegador não suporta notificações');
+      
       return false;
     }
 

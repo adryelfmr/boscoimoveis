@@ -21,7 +21,7 @@ class PhoneVerificationService {
     this.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
       size: 'invisible',
       callback: () => {
-        console.log('✅ reCAPTCHA resolvido');
+        
       },
       'expired-callback': () => {
         console.warn('⚠️ reCAPTCHA expirado');
@@ -39,7 +39,7 @@ class PhoneVerificationService {
         throw new Error('reCAPTCHA não inicializado');
       }
 
-      console.log('📤 Enviando SMS para:', phoneNumber);
+      
 
       this.confirmationResult = await signInWithPhoneNumber(
         auth, 
@@ -47,7 +47,7 @@ class PhoneVerificationService {
         this.recaptchaVerifier
       );
 
-      console.log('✅ SMS enviado!');
+      
 
       return { 
         success: true,
@@ -80,11 +80,11 @@ class PhoneVerificationService {
         throw new Error('Nenhuma verificação pendente');
       }
 
-      console.log('🔍 Verificando código:', code);
+      
 
       const result = await this.confirmationResult.confirm(code);
       
-      console.log('✅ Telefone verificado!', result.user.phoneNumber);
+      
 
       return { 
         success: true, 

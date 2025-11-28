@@ -540,7 +540,7 @@ export default function GerenciadorImoveis() {
           formData.longitude = coordenadas.longitude;
           
           if (coordenadas.displayName) {
-            console.log('📍 Local encontrado:', coordenadas.displayName);
+            
           }
         } else {
           toast.warning('⚠️ Não foi possível localizar no mapa. O imóvel será cadastrado sem localização.', { id: 'geocoding' });

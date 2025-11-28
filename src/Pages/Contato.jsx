@@ -58,7 +58,7 @@ export default function Contato() {
         origem: 'formulario',
       });
 
-      console.log('✅ Contato salvo:', contato);
+      
 
       // 2. Enviar email via Appwrite Function
       try {
@@ -75,9 +75,7 @@ export default function Contato() {
           mensagem: formData.mensagem,
         };
 
-        console.log('📤 Enviando para função via SDK');
-        console.log('📤 Dados:', bodyData);
-
+        
         const execution = await functions.createExecution(
           import.meta.env.VITE_APPWRITE_FUNCTION_EMAIL,
           JSON.stringify(bodyData),
@@ -87,14 +85,14 @@ export default function Contato() {
           {}
         );
 
-        console.log('📥 Resposta da função:', execution);
+        
 
         if (execution.status === 'failed') {
           console.error('❌ Erro ao enviar email:', execution);
           throw new Error(execution.responseBody || 'Falha ao enviar email');
         }
 
-        console.log('✅ Email enviado com sucesso!');
+        
       } catch (emailError) {
         console.error('❌ Erro ao executar função de email:', emailError);
       }

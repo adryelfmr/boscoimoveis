@@ -55,7 +55,7 @@ export const base44 = {
   integrations: {
     Core: {
       SendEmail: async (data) => {
-        console.log('Email enviado:', data);
+        
         return { success: true };
       },
     },

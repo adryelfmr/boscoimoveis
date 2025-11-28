@@ -39,7 +39,6 @@ export function AuthProvider({ children }) {
           const userTeams = await teams.list();
           isAdmin = userTeams.teams.some(team => team.$id === ADMIN_TEAM_ID);
         } catch (error) {
-          console.log('Erro ao verificar equipes:', error);
           isAdmin = false;
         }
       }
@@ -70,25 +69,22 @@ export function AuthProvider({ children }) {
       // ✅ 1. FAZER LOGOUT SE HOUVER SESSÃO ATIVA
       try {
         await account.deleteSession('current');
-        console.log('✅ Sessão anterior encerrada');
       } catch (error) {
-        // Ignorar se não houver sessão ativa
-        console.log('ℹ️ Nenhuma sessão ativa para encerrar');
       }
       
       // ✅ 2. Criar conta no Appwrite
       const newUser = await appwrite.auth.register(email, password, name);
-      console.log('✅ Conta criada:', newUser);
+      
       
       // ✅ 3. Fazer login automático
       await login(email, password);
-      console.log('✅ Login automático realizado');
+      
       
       // ✅ 4. Atualizar telefone (se fornecido)
       if (telefone) {
         try {
           await account.updatePhone(telefone, password);
-          console.log('✅ Telefone atualizado:', telefone);
+          
         } catch (phoneError) {
           console.warn('⚠️ Erro ao atualizar telefone (não crítico):', phoneError);
           // Não falhar o registro por causa do telefone

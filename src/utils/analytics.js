@@ -53,7 +53,7 @@ export function trackEvent(eventName, params = {}) {
   if (!window.gtag) return;
   
   window.gtag('event', eventName, params);
-  console.log('📊 Evento rastreado:', eventName, params);
+  
 }
 
 /**

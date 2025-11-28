@@ -21,7 +21,7 @@ export async function buscarEnderecoPorCEP(cep) {
       return null;
     }
 
-    console.log('🔍 Buscando endereço para CEP:', cepLimpo);
+    
 
     const response = await fetch(`${VIACEP_BASE_URL}/${cepLimpo}/json/`);
 
@@ -37,7 +37,7 @@ export async function buscarEnderecoPorCEP(cep) {
       return null;
     }
 
-    console.log('✅ Endereço encontrado:', data);
+    
 
     return {
       cep: data.cep,

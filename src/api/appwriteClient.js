@@ -114,7 +114,7 @@ export const appwrite = {
         // Tentar buscar do cache
         const cached = cache.get(cacheKey);
         if (cached) {
-          console.log('📦 Dados do cache');
+          
           return cached;
         }
 
@@ -232,7 +232,6 @@ export const appwrite = {
       },
 
       create: async (data) => {
-        console.log('Criando favorito no Appwrite:', data); 
         return await databases.createDocument(
           DATABASE_ID,
           COLLECTIONS.FAVORITOS,
