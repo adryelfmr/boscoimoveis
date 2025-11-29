@@ -34,6 +34,8 @@ import MapaLeaflet from '@/components/imoveis/MapaLeaflet';
 import SEO from '@/components/SEO';
 import { gerarPDFImovel } from '@/utils/pdfGenerator';
 import { analytics } from '@/utils/analytics';
+import SchemaOrg from '@/components/SchemaOrg';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 const TIPO_IMOVEL_LABELS = {
   'house': 'Casa',
@@ -217,6 +219,40 @@ export default function Detalhes() {
     setImagemAtual((prev) => (prev - 1 + imagens.length) % imagens.length);
   };
 
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": imovel.titulo,
+    "description": imovel.descricao,
+    "image": imovel.imagemPrincipal || imovel.imagens?.split(',')[0],
+    "offers": {
+      "@type": "Offer",
+      "price": imovel.preco,
+      "priceCurrency": "BRL",
+      "availability": imovel.disponibilidade === 'disponivel' 
+        ? "https://schema.org/InStock" 
+        : "https://schema.org/OutOfStock",
+      "url": window.location.href,
+    },
+    "brand": {
+      "@type": "Organization",
+      "name": "Bosco Imóveis"
+    },
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": `${imovel.endereco}, ${imovel.numero}`,
+      "addressLocality": imovel.cidade,
+      "addressRegion": imovel.estado,
+      "postalCode": imovel.cep,
+      "addressCountry": "BR"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": imovel.latitude,
+      "longitude": imovel.longitude
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white">
       {/* Header */}
@@ -244,6 +280,11 @@ export default function Detalhes() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Breadcrumbs items={[
+          { name: 'Catálogo', url: createPageUrl('Catalogo') },
+          { name: imovel.titulo, url: window.location.pathname }
+        ]} />
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             {/* Galeria de Imagens */}
@@ -557,6 +598,7 @@ export default function Detalhes() {
         keywords={`${imovel.tipoImovel}, ${imovel.cidade}, ${imovel.bairro}`}
         image={imovel.imagemPrincipal}
       />
+      <SchemaOrg data={schemaData} />
     </div>
   );
 }

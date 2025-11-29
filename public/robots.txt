@@ -2,15 +2,23 @@
 User-agent: *
 Allow: /
 Disallow: /gerenciador
+Disallow: /gerenciar-contatos
+Disallow: /meus-anuncios
 Disallow: /meus-dados
+Disallow: /perfil
 
-# Sitemap
+# Sitemaps
 Sitemap: https://boscoimoveis.app/sitemap.xml
 
-# Google
+# Crawl-delay (evitar sobrecarga)
+Crawl-delay: 1
+
+# Bots específicos
 User-agent: Googlebot
 Allow: /
 
-# Bing
+User-agent: Googlebot-Image
+Allow: /
+
 User-agent: Bingbot
 Allow: /
