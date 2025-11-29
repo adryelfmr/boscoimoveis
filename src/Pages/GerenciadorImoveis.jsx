@@ -728,7 +728,7 @@ export default function GerenciadorImoveis() {
                 <ImageUploader
                   images={formData.images}
                   onImagesChange={(images) => setFormData({...formData, images})}
-                  maxImages={10}
+                  maxImages={20} // ✅ MUDANÇA: 10 → 20
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

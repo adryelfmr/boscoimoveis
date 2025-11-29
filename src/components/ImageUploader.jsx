@@ -2,16 +2,37 @@ import React, { useState } from 'react';
 import { appwrite } from '@/api/appwriteClient';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Loader2, Image as ImageIcon, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { ID } from 'appwrite';
+import uploadRateLimiter from '@/utils/uploadRateLimit'; // ✅ ADICIONAR
+import { useAuth } from '@/contexts/AuthContext'; // ✅ ADICIONAR
 
-export default function ImageUploader({ images = [], onImagesChange, maxImages = 10 }) {
+// ✅ MUDANÇA: maxImages padrão 10 → 20
+export default function ImageUploader({ images = [], onImagesChange, maxImages = 20 }) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
+  const { user } = useAuth(); // ✅ ADICIONAR
 
   const handleFileSelect = async (e) => {
     const files = Array.from(e.target.files);
+    
+    // ✅ NOVO: Verificar rate limit
+    if (user) {
+      const limitCheck = uploadRateLimiter.checkLimit(user.$id, 50); // 50 uploads/hora
+      
+      if (!limitCheck.allowed) {
+        toast.error('Limite de uploads atingido', {
+          description: limitCheck.message,
+          duration: 10000,
+        });
+        return;
+      }
+
+      if (limitCheck.remaining <= 5) {
+        toast.warning(`Atenção: Você tem apenas ${limitCheck.remaining} uploads restantes nesta hora.`);
+      }
+    }
     
     if (images.length + files.length > maxImages) {
       toast.error(`Você pode adicionar no máximo ${maxImages} imagens`);
@@ -22,20 +43,32 @@ export default function ImageUploader({ images = [], onImagesChange, maxImages =
     const newImages = [...images];
 
     for (const file of files) {
+      // ✅ VALIDAÇÃO 1: Verificar tipo de arquivo
       if (!file.type.startsWith('image/')) {
         toast.error(`${file.name} não é uma imagem válida`);
         continue;
       }
 
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error(`${file.name} é muito grande (máx 5MB)`);
+      // ✅ VALIDAÇÃO 2: Verificar extensão (segurança extra)
+      const extensoesPermitidas = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+      const extensao = file.name.split('.').pop().toLowerCase();
+      
+      if (!extensoesPermitidas.includes(extensao)) {
+        toast.error(`${file.name} tem extensão não permitida. Use: JPG, PNG, WebP, GIF`);
+        continue;
+      }
+
+      // ✅ VALIDAÇÃO 3: Tamanho máximo 10MB (aumentado de 5MB)
+      const tamanhoMaximo = 10 * 1024 * 1024; // 10MB
+      if (file.size > tamanhoMaximo) {
+        toast.error(`${file.name} é muito grande (máx 10MB)`);
         continue;
       }
 
       try {
         setUploadProgress(prev => ({ ...prev, [file.name]: 0 }));
         
-        // ✅ Upload correto para Appwrite Storage
+        // Upload para Appwrite Storage
         const result = await appwrite.storage.createFile(
           import.meta.env.VITE_APPWRITE_BUCKET_ID,
           ID.unique(),
@@ -57,7 +90,17 @@ export default function ImageUploader({ images = [], onImagesChange, maxImages =
         toast.success(`${file.name} enviado com sucesso!`);
       } catch (error) {
         console.error('Erro ao fazer upload:', error);
-        toast.error(`Erro ao enviar ${file.name}: ${error.message}`);
+        
+        // ✅ NOVO: Mensagens de erro mais específicas
+        if (error.code === 413) {
+          toast.error(`${file.name} excede o tamanho máximo (10MB)`);
+        } else if (error.code === 400) {
+          toast.error(`${file.name} tem formato inválido`);
+        } else if (error.message?.includes('storage')) {
+          toast.error('Storage cheio. Contate o administrador.');
+        } else {
+          toast.error(`Erro ao enviar ${file.name}: ${error.message}`);
+        }
       }
     }
 
@@ -104,7 +147,7 @@ export default function ImageUploader({ images = [], onImagesChange, maxImages =
           <input
             type="file"
             multiple
-            accept="image/*"
+            accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" // ✅ ESPECÍFICO
             onChange={handleFileSelect}
             disabled={uploading || images.length >= maxImages}
             className="hidden"
@@ -136,6 +179,19 @@ export default function ImageUploader({ images = [], onImagesChange, maxImages =
         </div>
       </div>
 
+      {/* ✅ NOVO: Aviso de Limite */}
+      {images.length >= maxImages && (
+        <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-amber-900">Limite atingido</p>
+            <p className="text-xs text-amber-700 mt-1">
+              Você atingiu o limite de {maxImages} imagens. Remova algumas para adicionar novas.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Progress */}
       {Object.keys(uploadProgress).length > 0 && (
         <div className="space-y-2">
@@ -158,7 +214,7 @@ export default function ImageUploader({ images = [], onImagesChange, maxImages =
 
       {/* Grid de Imagens */}
       {images.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {images.map((image, index) => (
             <Card key={index} className="relative group overflow-hidden">
               <div className="aspect-square bg-slate-100">
@@ -217,7 +273,7 @@ export default function ImageUploader({ images = [], onImagesChange, maxImages =
       )}
 
       <p className="text-xs text-slate-500">
-        Formatos aceitos: JPG, PNG, WebP (máx 5MB por imagem). A primeira imagem será usada como principal.
+        Formatos aceitos: JPG, PNG, WebP, GIF (máx 10MB por imagem). A primeira imagem será usada como principal.
       </p>
     </div>
   );

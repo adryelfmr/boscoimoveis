@@ -150,6 +150,20 @@ export const rateLimits = {
     3,       // Máximo 3 tentativas
     3600000  // Por 1 hora
   ),
+
+  // ✅ NOVO: Criar anúncio: 3 anúncios por dia
+  createAd: (userId) => globalRateLimiter.checkLimit(
+    `createAd:${userId}`,
+    3, // Máximo 3 anúncios
+    24 * 60 * 60 * 1000 // Por 24 horas
+  ),
+
+  // ✅ NOVO: Upload de imagens: 50 uploads por hora
+  uploadImage: (userId) => globalRateLimiter.checkLimit(
+    `upload:${userId}`,
+    50, // Máximo 50 uploads
+    60 * 60 * 1000 // Por 1 hora
+  ),
 };
 
 export default globalRateLimiter;

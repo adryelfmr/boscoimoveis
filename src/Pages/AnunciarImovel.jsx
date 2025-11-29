@@ -10,10 +10,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import ImageUploader from '@/components/ImageUploader';
 import { buscarEnderecoPorCEP, formatarCEP, validarCEP } from '@/services/cep';
-import { Home, Loader2, CheckCircle, AlertCircle, Phone, ArrowLeft } from 'lucide-react';
+import { Home, Loader2, CheckCircle, AlertCircle, Phone, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { converterParaBrasileiro } from '@/utils/telefone';
+import { rateLimits } from '@/utils/rateLimit'; // ✅ ADICIONAR
 
 export default function AnunciarImovel() {
   const { user, isAuthenticated } = useAuth();
@@ -180,8 +181,40 @@ export default function AnunciarImovel() {
     },
   });
 
+  // ✅ NOVO: Verificar limite de anúncios
+  const { data: meusAnuncios = [] } = useQuery({
+    queryKey: ['meus-anuncios-count', user?.$id],
+    queryFn: async () => {
+      if (!user?.$id) return [];
+      return await appwrite.entities.Imovel.filterMeusAnuncios(user.$id);
+    },
+    enabled: !!user?.$id,
+  });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ✅ VALIDAÇÃO 1: Limite de anúncios por usuário (ex: 10)
+    const LIMITE_ANUNCIOS_POR_USUARIO = 10;
+    
+    if (!editId && meusAnuncios.length >= LIMITE_ANUNCIOS_POR_USUARIO) {
+      toast.error(`Você atingiu o limite de ${LIMITE_ANUNCIOS_POR_USUARIO} anúncios`, {
+        description: 'Para anunciar mais imóveis, remova alguns anúncios antigos ou entre em contato conosco.',
+        duration: 10000,
+      });
+      return;
+    }
+
+    // ✅ VALIDAÇÃO 2: Rate limit de criação (3 anúncios por dia)
+    const limitCheck = rateLimits.createAd(user.$id);
+    
+    if (!limitCheck.allowed) {
+      toast.error('Limite diário atingido', {
+        description: `Você pode criar no máximo 3 anúncios por dia. Aguarde até ${limitCheck.resetTime.toLocaleString('pt-BR')}.`,
+        duration: 10000,
+      });
+      return;
+    }
 
     if (formData.images.length === 0) {
       toast.error('Adicione pelo menos uma foto do imóvel');
@@ -292,10 +325,10 @@ export default function AnunciarImovel() {
                 <ImageUploader
                   images={formData.images}
                   onImagesChange={(images) => setFormData({...formData, images})}
-                  maxImages={10}
+                  maxImages={20} // ✅ MUDANÇA: 10 → 20
                 />
                 <p className="text-xs text-slate-500 mt-2">
-                  💡 Dica: Fotos de boa qualidade aumentam as chances de aprovação
+                  💡 Dica: Fotos de boa qualidade aumentam as chances de aprovação. Você pode adicionar até 20 fotos.
                 </p>
               </div>
 
@@ -563,6 +596,24 @@ export default function AnunciarImovel() {
             </form>
           </CardContent>
         </Card>
+
+        {/* ✅ NOVO: Mostrar aviso de limite */}
+        {meusAnuncios.length >= 10 && (
+          <Card className="mb-6 border-amber-200 bg-amber-50">
+            <CardContent className="p-4 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-amber-900">
+                  Limite de anúncios atingido
+                </p>
+                <p className="text-xs text-amber-700 mt-1">
+                  Você atingiu o limite de 10 anúncios ativos. 
+                  Para anunciar novos imóveis, remova alguns anúncios antigos em "Meus Anúncios".
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
