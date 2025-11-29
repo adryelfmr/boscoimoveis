@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     
-    <!-- ✅ NOVO: Favicons do RealFaviconGenerator -->
+    <!-- ✅ FAVICONS - RealFaviconGenerator -->
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="shortcut icon" href="/favicon.ico" />
@@ -12,58 +12,65 @@
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- ✅ Cache Control: Forçar revalidação -->
+    <!-- ✅ Cache Control -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     
     <!-- Verificação do Google -->
-    <meta name="google-site-verification" content="JNwmCurXwfQLTWqPAatKTC-266gSnIFGj41xtA7CXwI" />
+    <meta name="google-site-verification" content="SEU_CODIGO_AQUI" />
     
-    <title>Bosco Imóveis - Encontre seu imóvel dos sonhos</title>
-    
-    <!-- Meta Tags SEO -->
-    <meta name="description" content="Encontre as melhores casas, apartamentos e terrenos em Goiânia. Mais de 10 anos realizando sonhos. Imóveis com financiamento facilitado." />
-    <meta name="keywords" content="imóveis goiânia, casas goiânia, apartamentos goiânia, terrenos goiânia, imóveis em goiás, corretora de imóveis" />
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Encontre seu imóvel dos sonhos em Goiânia. Casas, apartamentos e terrenos com as melhores condições. Mais de 10 anos realizando sonhos." />
+    <meta name="keywords" content="imóveis goiânia, casas goiânia, apartamentos goiânia, terrenos goiânia, imóveis para venda, imóveis para aluguel, corretora de imóveis, Bosco Imóveis" />
     <meta name="author" content="Bosco Imóveis" />
     <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://boscoimoveis.app" />
     
-    <!-- ✅ Open Graph Image (para Google/redes sociais) -->
-    <meta property="og:image" content="https://boscoimoveis.app/og-image.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:type" content="image/png" />
-    
-    <!-- Open Graph -->
+    <!-- ✅ ATUALIZAR: Open Graph com PNG -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://boscoimoveis.app" />
     <meta property="og:title" content="Bosco Imóveis - Corretores em Goiânia" />
     <meta property="og:description" content="Mais de 10 anos realizando sonhos em Goiânia" />
     <meta property="og:locale" content="pt_BR" />
+    <meta property="og:image" content="https://boscoimoveis.app/web-app-manifest-512x512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:type" content="image/png" />
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://boscoimoveis.app" />
     <meta property="twitter:title" content="Bosco Imóveis - Corretores em Goiânia" />
     <meta property="twitter:description" content="Mais de 10 anos realizando sonhos em Goiânia" />
-    <meta property="twitter:image" content="https://boscoimoveis.app/og-image.png" />
+    <meta property="twitter:image" content="https://boscoimoveis.app/web-app-manifest-512x512.png" />
     
-    <!-- Schema.org -->
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://boscoimoveis.app" />
+    
+    <title>Bosco Imóveis - Encontre seu imóvel dos sonhos em Goiânia</title>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KG33G5T12D"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-KG33G5T12D');
+    </script>
+
+    <!-- JSON-LD Schema -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "LocalBusiness",
+      "@type": "RealEstateAgent",
       "name": "Bosco Imóveis",
-      "description": "Corretora de imóveis em Goiânia",
+      "description": "Corretora de imóveis especializada em casas, apartamentos e terrenos em Goiânia",
       "url": "https://boscoimoveis.app",
+      "logo": "https://boscoimoveis.app/web-app-manifest-512x512.png",
       "telephone": "+55-62-99404-5111",
-      "priceRange": "$$",
-      "image": "https://boscoimoveis.app/og-image.png",
-      "logo": "https://boscoimoveis.app/og-image.png",
-      "areaServed": {
-        "@type": "City",
-        "name": "Goiânia",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Goiânia",
         "addressRegion": "GO",
         "addressCountry": "BR"
       },
