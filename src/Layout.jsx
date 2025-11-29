@@ -26,6 +26,7 @@ import {
 export default function Layout({ children, currentPageName }) {
   const { user, isAuthenticated, logout, isAdmin } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false); // ✅ ADICIONADO
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -37,6 +38,18 @@ export default function Layout({ children, currentPageName }) {
       document.body.style.overflow = 'unset';
     };
   }, [mobileMenuOpen]);
+
+  // ✅ ADICIONAR: Fechar menu ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuOpen && !event.target.closest('.user-menu')) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [userMenuOpen]);
 
   const menuItems = [
     { name: 'Catálogo', to: 'Catalogo', icon: Building2, path: 'Catalogo' },
@@ -189,17 +202,19 @@ export default function Layout({ children, currentPageName }) {
                           </Link>
                         </>
                       )}
-                      <hr className="my-2" />
-                      <button
-                        onClick={() => {
-                          logout();
-                          setUserMenuOpen(false);
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 w-full text-left"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Sair
-                      </button>
+                      
+                      <div className="border-t border-slate-100 mt-2 pt-2">
+                        <button
+                          onClick={() => {
+                            logout();
+                            setUserMenuOpen(false);
+                          }}
+                          className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 w-full text-left"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Sair
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -342,59 +357,60 @@ export default function Layout({ children, currentPageName }) {
         href={`https://wa.me/${whatsappNumber}?text=${getWhatsappMessage()}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-40 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 group"
+        className="fixed bottom-6 right-6 z-50 bg-green-500 hover:bg-green-600 text-white rounded-full p-4 shadow-2xl hover:scale-110 transition-all duration-300 group"
         aria-label="Falar no WhatsApp"
       >
         <MessageCircle className="w-6 h-6" />
-        <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-slate-900 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-          Fale conosco no WhatsApp
+        <span className="absolute -top-2 -left-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold animate-pulse">
+          1
         </span>
       </a>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-br from-slate-900 to-blue-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+      <footer className="bg-gradient-to-br from-slate-900 to-slate-800 text-white mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <img 
-                  src="/boscoimoveis.svg" 
-                  alt="Bosco Imóveis" 
-                  className="h-12 w-auto"
-                />
-              </div>
-              <h3 className="text-2xl font-bold mb-4 text-amber-400">Bosco Imóveis</h3>
-              <p className="text-slate-300 mb-4">
-                Há mais de 10 anos realizando o sonho da casa própria.
+              <h3 className="text-lg font-bold mb-4">Bosco Imóveis</h3>
+              <p className="text-slate-300 text-sm">
+                Mais de 10 anos realizando sonhos em Goiânia e região.
               </p>
             </div>
-
             <div>
-              <h4 className="font-semibold mb-4 text-amber-400">Links Rápidos</h4>
-              <ul className="space-y-2">
-                {menuItems.map((item) => (
-                  <li key={item.name}>
-                    <Link
-                      to={item.path.startsWith('/') ? item.path : createPageUrl(item.path)}
-                      className="text-slate-300 hover:text-white transition-colors"
-                    >
-                      {item.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <h3 className="text-lg font-bold mb-4">Contato</h3>
+              <div className="space-y-2 text-sm text-slate-300">
+                <p className="flex items-center gap-2">
+                  <Phone className="w-4 h-4" />
+                  (62) 99404-5111
+                </p>
+                <p className="flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  contato@boscoimoveis.app
+                </p>
+                <p className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  Goiânia - GO
+                </p>
+              </div>
             </div>
-
             <div>
-              <h4 className="font-semibold mb-4 text-amber-400">Contato</h4>
-              <ul className="space-y-2 text-sm text-slate-300">
-                <li>📧 contato@boscoimoveis.com.br</li>
-                <li>📱 (62) 99404-5111</li>
-                <li>📍 Goiás, GO</li>
-              </ul>
+              <h3 className="text-lg font-bold mb-4">Links Rápidos</h3>
+              <div className="space-y-2 text-sm">
+                <Link to="/catalogo" className="block text-slate-300 hover:text-white transition-colors">
+                  Catálogo de Imóveis
+                </Link>
+                <Link to="/promocoes" className="block text-slate-300 hover:text-white transition-colors">
+                  Promoções
+                </Link>
+                <Link to="/sobre" className="block text-slate-300 hover:text-white transition-colors">
+                  Sobre Nós
+                </Link>
+                <Link to="/contato" className="block text-slate-300 hover:text-white transition-colors">
+                  Contato
+                </Link>
+              </div>
             </div>
           </div>
-
           <div className="border-t border-slate-700 mt-8 pt-8 text-center text-sm text-slate-400">
             <p>&copy; {new Date().getFullYear()} Bosco Imóveis. Todos os direitos reservados.</p>
           </div>
