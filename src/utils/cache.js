@@ -1,31 +1,19 @@
 /**
- * Sistema de cache local para reduzir requisições
+ * Sistema de cache local DESABILITADO
+ * Motivo: Causava exibição de dados desatualizados
  */
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+const CACHE_DURATION = 0; // ✅ MUDOU: 0 = desabilitado
 
 export const cache = {
   set(key, data) {
-    const item = {
-      data,
-      timestamp: Date.now(),
-    };
-    localStorage.setItem(`cache_${key}`, JSON.stringify(item));
+    // ❌ DESABILITADO: Não fazer cache mais
+    return;
   },
 
   get(key) {
-    const item = localStorage.getItem(`cache_${key}`);
-    if (!item) return null;
-
-    const { data, timestamp } = JSON.parse(item);
-    
-    // Verificar se expirou
-    if (Date.now() - timestamp > CACHE_DURATION) {
-      this.remove(key);
-      return null;
-    }
-
-    return data;
+    // ❌ DESABILITADO: Sempre retornar null (buscar dados frescos)
+    return null;
   },
 
   remove(key) {
@@ -38,3 +26,6 @@ export const cache = {
       .forEach(key => localStorage.removeItem(key));
   },
 };
+
+// ✅ NOVO: Limpar cache antigo ao carregar
+cache.clear();
