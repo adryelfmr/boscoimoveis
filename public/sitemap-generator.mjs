@@ -101,8 +101,7 @@ async function gerarSitemap() {
     console.error('✅ Sitemap gerado com sucesso!');
     console.error(`📊 Total de URLs: ${paginasEstaticas.length + imoveis.length}`);
     
-    // Enviar para stdout (será redirecionado para arquivo)
-    console.log(xml);
+    
     
   } catch (error) {
     console.error('❌ Erro ao gerar sitemap:', error);

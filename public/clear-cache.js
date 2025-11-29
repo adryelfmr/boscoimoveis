@@ -4,7 +4,7 @@
   const STORED_VERSION = localStorage.getItem('app_version');
   
   if (STORED_VERSION !== APP_VERSION) {
-    console.log('🔄 Nova versão detectada, limpando cache...');
+    
     
     // Limpar localStorage
     Object.keys(localStorage)
@@ -30,7 +30,6 @@
     
     // Salvar nova versão
     localStorage.setItem('app_version', APP_VERSION);
-    
-    console.log('✅ Cache limpo! Versão:', APP_VERSION);
+  
   }
 })();
