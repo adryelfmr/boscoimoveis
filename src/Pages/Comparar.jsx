@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import { ArrowLeft, X, MapPin, Maximize, Bed, Bath, Car, TrendingUp, ExternalLink, Award, DollarSign, Home } from 'lucide-react';
 import { motion } from 'framer-motion';
+import LazyImage from '@/components/LazyImage'; // ✅ ADICIONAR
 
 export default function Comparar() {
   const [comparandoIds, setComparandoIds] = useState([]);
@@ -78,7 +79,7 @@ export default function Comparar() {
     if (!imovel) return null;
     return (
       <div className="flex items-center gap-2 mt-2 p-2 bg-white rounded-lg border border-slate-200">
-        <img 
+        <LazyImage
           src={imovel.imagemPrincipal || imovel.imagens?.[0] || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&q=80'}
           alt={imovel.titulo}
           className="w-12 h-12 rounded object-cover"
@@ -275,10 +276,10 @@ export default function Comparar() {
 
                           {/* Imagem */}
                           <div className="relative h-48 bg-slate-200 overflow-hidden rounded-t-xl">
-                            <img
-                              src={imovel.imagemPrincipal || imovel.imagens?.[0] || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&q=80'}
+                            <LazyImage
+                              src={imovel.imagemPrincipal}
                               alt={imovel.titulo}
-                              className="w-full h-full object-cover"
+                              className="w-full h-48 object-cover"
                             />
                             {imovel.promocao && (
                               <Badge className="absolute top-4 left-4 bg-red-500 text-white border-0">

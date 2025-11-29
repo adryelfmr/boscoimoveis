@@ -36,6 +36,7 @@ import { gerarPDFImovel } from '@/utils/pdfGenerator';
 import { analytics } from '@/utils/analytics';
 import SchemaOrg from '@/components/SchemaOrg';
 import Breadcrumbs from '@/components/Breadcrumbs';
+import LazyImage from '@/components/LazyImage'; // ✅ ADICIONAR
 
 const TIPO_IMOVEL_LABELS = {
   'house': 'Casa',
@@ -290,7 +291,10 @@ export default function Detalhes() {
             {/* Galeria de Imagens */}
             <Card className="border-0 shadow-xl overflow-hidden">
               <div className="relative h-[500px] bg-slate-900">
-                <img
+                {/* ❌ REMOVER: <img src={imagens[imagemAtual]} /> */}
+                
+                {/* ✅ ADICIONAR: */}
+                <LazyImage
                   src={imagens[imagemAtual]}
                   alt={imovel.titulo}
                   className="w-full h-full object-cover"
@@ -351,7 +355,12 @@ export default function Detalhes() {
                           index === imagemAtual ? 'border-blue-900' : 'border-transparent opacity-60 hover:opacity-100'
                         }`}
                       >
-                        <img src={img} alt="" className="w-full h-full object-cover" />
+                        {/* ✅ ADICIONAR: */}
+                        <LazyImage
+                          src={img}
+                          alt=""
+                          className="w-20 h-20 object-cover rounded-lg"
+                        />
                       </button>
                     ))}
                   </div>

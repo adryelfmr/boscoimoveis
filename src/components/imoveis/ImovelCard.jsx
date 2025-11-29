@@ -40,17 +40,17 @@ export default function ImovelCard({ imovel, index = 0 }) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.1 }}
-    >
-      <Link 
-        to={createPageUrl(`Detalhes?id=${imovel.$id}`)} // ✅ MUDOU: usar $id
-        className="block"
+    <Link to={createPageUrl(`Detalhes?id=${imovel.$id}`)}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: index * 0.1 }}
       >
-        <Card className="group overflow-hidden hover:shadow-2xl transition-all duration-500 border-0 bg-white">
+        <Card className="group overflow-hidden hover:shadow-2xl transition-all duration-500">
           <div className="relative overflow-hidden aspect-[4/3]">
+            {/* ❌ REMOVER: <img src={...} /> */}
+            
+            {/* ✅ ADICIONAR: */}
             <LazyImage
               src={imagemPrincipal}
               alt={imovel.titulo}
@@ -147,7 +147,7 @@ export default function ImovelCard({ imovel, index = 0 }) {
             </div>
           </div>
         </Card>
-      </Link>
-    </motion.div>
+      </motion.div>
+    </Link>
   );
 }

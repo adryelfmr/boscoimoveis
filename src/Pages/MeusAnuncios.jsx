@@ -19,6 +19,7 @@ import {
   PlusCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import LazyImage from '@/components/LazyImage';
 
 export default function MeusAnuncios() {
   const { user, isAuthenticated } = useAuth();
@@ -168,7 +169,7 @@ export default function MeusAnuncios() {
                 <Card key={anuncio.$id} className="overflow-hidden hover:shadow-xl transition-shadow">
                   {/* Imagem */}
                   <div className="relative h-48 overflow-hidden">
-                    <img
+                    <LazyImage
                       src={imagemPrincipal}
                       alt={anuncio.titulo}
                       className="w-full h-full object-cover"
