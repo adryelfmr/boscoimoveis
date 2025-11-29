@@ -31,6 +31,10 @@
   "theme_color": "#1e40af",
   "background_color": "#ffffff",
   "display": "standalone",
+  "scope": "/",
   "start_url": "/",
-  "scope": "/"
+  "orientation": "portrait-primary",
+  "categories": ["business", "lifestyle"],
+  "lang": "pt-BR",
+  "dir": "ltr"
 }
