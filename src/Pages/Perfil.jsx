@@ -85,10 +85,16 @@ export default function Perfil() {
 
   const handleTelefoneVerificado = async (telefoneE164) => {
     try {
+      console.log('🔄 Salvando telefone no Appwrite:', telefoneE164);
+      
       // ✅ O Appwrite valida automaticamente se o telefone já existe
       await account.updatePhone(telefoneE164, senhaParaTelefone);
       
-      toast.success('✅ Telefone verificado e salvo!');
+      console.log('✅ Telefone salvo com sucesso no Appwrite');
+      
+      toast.success('✅ Telefone verificado e salvo!', {
+        description: 'Seu número foi cadastrado com sucesso.',
+      });
       
       await checkUser();
       setVerificandoTelefone(false);
@@ -102,23 +108,39 @@ export default function Perfil() {
       });
       
     } catch (error) {
-      console.error('Erro ao salvar telefone:', error);
+      console.error('❌ Erro ao salvar telefone:', error);
       
       // ✅ Tratar erro 409 (telefone duplicado)
-      if (error.code === 409 || error.message?.includes('already exists') || error.message?.includes('phone_already_exists')) {
-        toast.error('📱 Telefone já cadastrado', {
-          description: 'Este número já está em uso por outra conta.',
+      if (error.code === 409 || error.message?.includes('already exists')) {
+        toast.error('📱 Este telefone já está cadastrado', {
+          description: 'Este número já está vinculado a outra conta.',
           duration: 5000,
         });
-        setVerificandoTelefone(false);
       } else if (error.message?.includes('password') || error.message?.includes('Invalid')) {
         toast.error('❌ Senha incorreta', {
           description: 'Verifique sua senha e tente novamente.',
         });
-        setVerificandoTelefone(false);
+      } else if (error.message?.includes('same ID')) {
+        // ✅ NOVO: Tratar "target with the same ID already exists"
+        toast.error('📱 Telefone já está cadastrado na sua conta', {
+          description: 'Este número já está associado ao seu perfil.',
+        });
+        
+        // ✅ Atualizar o estado para refletir o telefone atual
+        await checkUser();
+        setFormData({
+          ...formData,
+          telefone: user?.phone ? converterParaBrasileiro(user.phone) : '',
+        });
       } else {
-        toast.error('Erro ao salvar telefone');
+        toast.error('Erro ao salvar telefone', {
+          description: 'Tente novamente mais tarde.',
+        });
       }
+      
+      // ✅ Fechar modal em caso de erro
+      setVerificandoTelefone(false);
+      setSenhaParaTelefone('');
     }
   };
 

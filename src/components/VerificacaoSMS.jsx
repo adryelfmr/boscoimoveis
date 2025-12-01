@@ -152,7 +152,11 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
     setVerificando(true);
 
     try {
+      console.log('🔐 Verificando código SMS...');
+      
       await confirmationResult.confirm(codigo);
+      
+      console.log('✅ Código SMS verificado com sucesso!');
       
       setEtapa('sucesso');
       
@@ -160,21 +164,27 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
         clearInterval(intervaloRef.current);
       }
       
-      toast.success('✅ Telefone verificado com sucesso!');
+      // ✅ REMOVIDO: toast.success aqui (será mostrado após salvar no Appwrite)
       
       const telefoneE164 = converterParaE164(telefone);
       onVerificado(telefoneE164);
       
     } catch (error) {
-      console.error('Erro ao verificar código:', error);
+      console.error('❌ Erro ao verificar código:', error);
       
       if (error.code === 'auth/invalid-verification-code') {
-        toast.error('❌ Código inválido');
+        toast.error('❌ Código inválido', {
+          description: 'Verifique o código e tente novamente.',
+        });
       } else if (error.code === 'auth/code-expired') {
-        toast.error('⏰ Código expirado');
+        toast.error('⏰ Código expirado', {
+          description: 'Solicite um novo código.',
+        });
         setEtapa('enviar');
       } else {
-        toast.error('Erro ao verificar código');
+        toast.error('Erro ao verificar código', {
+          description: 'Tente novamente.',
+        });
       }
     } finally {
       setVerificando(false);
