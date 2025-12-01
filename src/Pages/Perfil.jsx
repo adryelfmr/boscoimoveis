@@ -75,7 +75,7 @@ export default function Perfil() {
     }
   };
 
-  // ✅ SOLUÇÃO DEFINITIVA: Usar variáveis de ambiente da execução
+  // ✅ SINTAXE MAIS SIMPLES (sem parâmetros opcionais)
   const verificarTelefoneExistente = async (telefone) => {
     try {
       const client = new Client()
@@ -87,15 +87,11 @@ export default function Perfil() {
       
       console.log('🔍 Verificando telefone:', telefoneE164);
       
-      // ✅ SOLUÇÃO DEFINITIVA: Passar como variável de ambiente da execução
+      // ✅ SINTAXE MAIS SIMPLES
       const execution = await functions.createExecution(
         'check-phone-exists',
-        '', // ❌ Body vazio (não aceita body em HTTP functions)
-        false, // async = false
-        '/', // path
-        'GET', // ✅ Método GET
-        {}, // headers vazios
-        { 'PHONE_TO_CHECK': telefoneE164 } // ✅ Passar como variável de ambiente
+        JSON.stringify({ PHONE_TO_CHECK: telefoneE164 }), // ✅ Passar no body mesmo
+        false
       );
 
       console.log('✅ Resposta da função:', execution);
