@@ -4,20 +4,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Lock, User, Loader2, Home, AlertCircle, CheckCircle2, Phone } from 'lucide-react'; // ✅ Adicionar Phone
+import { Mail, Lock, User, Loader2, Home, AlertCircle, CheckCircle2 } from 'lucide-react'; // ✅ REMOVIDO: Phone
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import { 
-  formatarTelefoneAoDigitar, 
-  validarTelefone, 
-  converterParaE164 
-} from '@/utils/telefone'; // ✅ IMPORTAR funções de telefone
 
 export default function Registro() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    telefone: '',
+    // ✅ REMOVIDO: telefone
     password: '',
     confirmPassword: '',
   });
@@ -60,37 +55,22 @@ export default function Registro() {
       newErrors.email = 'Email inválido';
     }
 
-    // ✅ ADICIONAR: Validar telefone (OPCIONAL no registro)
-    if (formData.telefone && !validarTelefone(formData.telefone)) {
-      newErrors.telefone = 'Telefone inválido. Use o formato (62) 99999-9999';
-    }
+    // ✅ REMOVIDO: Validação de telefone
 
     // Validar senha
     if (!formData.password) {
       newErrors.password = 'Senha é obrigatória';
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Senha deve ter no mínimo 8 caracteres';
-    } else if (calculatePasswordStrength(formData.password) < 2) {
-      newErrors.password = 'Senha muito fraca. Use letras maiúsculas, minúsculas e números';
+      newErrors.password = 'Senha deve ter pelo menos 8 caracteres';
     }
 
     // Validar confirmação de senha
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Confirme sua senha';
-    } else if (formData.password !== formData.confirmPassword) {
+    if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'As senhas não coincidem';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  const handlePasswordChange = (password) => {
-    setFormData({ ...formData, password });
-    setPasswordStrength(calculatePasswordStrength(password));
-    if (errors.password) {
-      setErrors({ ...errors, password: undefined });
-    }
   };
 
   const getPasswordStrengthColor = () => {
@@ -117,14 +97,13 @@ export default function Registro() {
     setLoading(true);
 
     try {
-      // ✅ ATUALIZADO: Passar telefone convertido para E.164
-      const telefoneE164 = formData.telefone ? converterParaE164(formData.telefone) : null;
+      // ✅ REMOVIDO: conversão de telefone
       
       await register(
         formData.email, 
         formData.password, 
         formData.name,
-        telefoneE164 // ✅ Passar telefone
+        null // ✅ Telefone null
       );
       
       toast.success('Conta criada com sucesso! 🎉', {
@@ -154,15 +133,11 @@ export default function Registro() {
           description: 'A senha não atende aos requisitos mínimos de segurança.',
         });
         setErrors({
-          password: 'Senha não atende aos requisitos de segurança',
-        });
-      } else if (error.message?.includes('network') || error.message?.includes('Failed to fetch')) {
-        toast.error('Erro de conexão', {
-          description: 'Não foi possível conectar ao servidor. Verifique sua internet.',
+          password: 'Senha muito fraca ou inválida',
         });
       } else {
         toast.error('Erro ao criar conta', {
-          description: 'Ocorreu um erro inesperado. Tente novamente.',
+          description: error.message || 'Tente novamente mais tarde.',
         });
       }
     } finally {
@@ -179,26 +154,25 @@ export default function Registro() {
         className="w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 text-white hover:text-blue-200 transition-colors mb-6">
-            <Home className="w-5 h-5" />
-            Voltar para o site
-          </Link>
-          <img 
-            src="/boscoimoveis.svg" 
-            alt="Bosco Imóveis" 
-            className="h-16 w-auto mx-auto mb-4"
-          />
-          <h1 className="text-4xl font-bold text-white mb-2">Bosco Imóveis</h1>
-          <p className="text-blue-200">Crie sua conta</p>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            className="inline-flex items-center justify-center w-16 h-16 bg-amber-400 rounded-full mb-4"
+          >
+            <Home className="w-8 h-8 text-blue-900" />
+          </motion.div>
+          <h1 className="text-3xl font-bold text-white mb-2">Criar Conta</h1>
+          <p className="text-blue-200">Junte-se ao Bosco Imóveis</p>
         </div>
 
         <Card className="border-0 shadow-2xl">
-          <CardHeader className="space-y-1 pb-6">
-            <CardTitle className="text-2xl text-center">Criar Conta</CardTitle>
+          <CardHeader>
+            <CardTitle className="text-center">Cadastro</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Nome */}
+              {/* Nome Completo */}
               <div>
                 <label className="text-sm font-medium text-slate-700 mb-2 block">
                   Nome Completo *
@@ -254,39 +228,7 @@ export default function Registro() {
                 )}
               </div>
 
-              {/* ✅ ADICIONAR ESTE CAMPO DE TELEFONE AQUI */}
-              <div>
-                <label className="text-sm font-medium text-slate-700 mb-2 block">
-                  Telefone (Opcional)
-                </label>
-                <div className="relative">
-                  <Phone className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${errors.telefone ? 'text-red-400' : 'text-slate-400'}`} />
-                  <Input
-                    type="tel"
-                    value={formData.telefone}
-                    onChange={(e) => {
-                      const telefoneFormatado = formatarTelefoneAoDigitar(e.target.value);
-                      setFormData({ ...formData, telefone: telefoneFormatado });
-                      if (errors.telefone) {
-                        setErrors({ ...errors, telefone: undefined });
-                      }
-                    }}
-                    placeholder="(62) 99999-9999"
-                    maxLength={15}
-                    className={`pl-10 h-12 ${errors.telefone ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
-                  />
-                </div>
-                {errors.telefone ? (
-                  <div className="flex items-center gap-1 mt-1 text-red-600 text-sm">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{errors.telefone}</span>
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-500 mt-1">
-                    📱 Necessário para anunciar imóveis. Você pode adicionar depois no seu perfil.
-                  </p>
-                )}
-              </div>
+              {/* ✅ REMOVIDO: Campo de Telefone */}
 
               {/* Senha */}
               <div>
@@ -298,38 +240,42 @@ export default function Registro() {
                   <Input
                     type="password"
                     value={formData.password}
-                    onChange={(e) => handlePasswordChange(e.target.value)}
-                    placeholder="••••••••"
+                    onChange={(e) => {
+                      setFormData({ ...formData, password: e.target.value });
+                      setPasswordStrength(calculatePasswordStrength(e.target.value));
+                      if (errors.password) {
+                        setErrors({ ...errors, password: undefined });
+                      }
+                    }}
+                    placeholder="Mínimo 8 caracteres"
                     className={`pl-10 h-12 ${errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
                   />
                 </div>
-                
-                {/* Barra de força da senha */}
                 {formData.password && (
                   <div className="mt-2">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full transition-all duration-300 ${getPasswordStrengthColor()}`}
-                          style={{ width: `${(passwordStrength / 5) * 100}%` }}
-                        />
-                      </div>
-                      <span className="text-xs font-medium text-slate-600">
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="text-slate-600">Força da senha:</span>
+                      <span className={`font-medium ${
+                        passwordStrength <= 1 ? 'text-red-600' : 
+                        passwordStrength <= 3 ? 'text-yellow-600' : 
+                        'text-green-600'
+                      }`}>
                         {getPasswordStrengthText()}
                       </span>
                     </div>
+                    <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${getPasswordStrengthColor()}`}
+                        style={{ width: `${(passwordStrength / 5) * 100}%` }}
+                      />
+                    </div>
                   </div>
                 )}
-                
-                {errors.password ? (
+                {errors.password && (
                   <div className="flex items-center gap-1 mt-1 text-red-600 text-sm">
                     <AlertCircle className="w-4 h-4" />
                     <span>{errors.password}</span>
                   </div>
-                ) : (
-                  <p className="text-xs text-slate-500 mt-1">
-                    Mínimo 8 caracteres, inclua letras maiúsculas, minúsculas e números
-                  </p>
                 )}
               </div>
 
@@ -349,12 +295,9 @@ export default function Registro() {
                         setErrors({ ...errors, confirmPassword: undefined });
                       }
                     }}
-                    placeholder="••••••••"
+                    placeholder="Repita sua senha"
                     className={`pl-10 h-12 ${errors.confirmPassword ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
                   />
-                  {formData.confirmPassword && formData.password === formData.confirmPassword && (
-                    <CheckCircle2 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-green-500" />
-                  )}
                 </div>
                 {errors.confirmPassword && (
                   <div className="flex items-center gap-1 mt-1 text-red-600 text-sm">
@@ -390,6 +333,13 @@ export default function Registro() {
             </div>
           </CardContent>
         </Card>
+
+        <p className="text-center text-blue-200 text-sm mt-6">
+          Ao criar uma conta, você concorda com nossos{' '}
+          <Link to="/termos" className="underline hover:text-white">
+            Termos de Uso
+          </Link>
+        </p>
       </motion.div>
     </div>
   );
