@@ -75,8 +75,7 @@ export default function Perfil() {
     }
   };
 
-  // ✅ CORRIGIDO: Verificar se telefone já existe
-  // ✅ CORRIGIDO: Passar telefone via PATH em vez de BODY
+  // ✅ CORRIGIDO: Enviar via BODY (como send-contact-email)
   const verificarTelefoneExistente = async (telefone) => {
     try {
       const client = new Client()
@@ -88,13 +87,18 @@ export default function Perfil() {
       
       console.log('🔍 Verificando telefone:', telefoneE164);
       
-      // ✅ SOLUÇÃO: Passar telefone via PATH
+      // ✅ CORRIGIDO: Enviar via BODY
+      const bodyData = {
+        phone: telefoneE164
+      };
+
       const execution = await functions.createExecution(
         'check-phone-exists',
-        '', // ❌ Body vazio
+        JSON.stringify(bodyData), // ✅ Body com dados
         false,
-        `/?phone=${encodeURIComponent(telefoneE164)}`, // ✅ Telefone no PATH
-        'GET' // ✅ Mudar para GET
+        '/',
+        'POST', // ✅ POST (como send-contact-email)
+        {}
       );
 
       console.log('✅ Resposta da função:', execution);

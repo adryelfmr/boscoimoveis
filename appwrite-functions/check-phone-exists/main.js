@@ -4,11 +4,23 @@ module.exports = async ({ req, res, log, error }) => {
   try {
     log('=== 📞 CHECK PHONE EXISTS - INÍCIO ===');
     
-    // ✅ CORRIGIDO: Ler telefone da query string
-    const phone = req.query?.phone || req.path?.split('phone=')[1];
+    // ✅ CORRIGIDO: Ler telefone do BODY (como send-contact-email)
+    let payload;
     
-    log('Query params:', JSON.stringify(req.query));
-    log('Path:', req.path);
+    if (req.body && req.body.data) {
+      payload = typeof req.body.data === 'string' 
+        ? JSON.parse(req.body.data) 
+        : req.body.data;
+    } else if (req.bodyRaw) {
+      payload = JSON.parse(req.bodyRaw);
+    } else {
+      payload = req.body;
+    }
+    
+    log('✅ Payload parseado:', JSON.stringify(payload));
+
+    const { phone } = payload;
+    
     log('Telefone recebido:', phone);
     
     // ✅ Validar telefone
@@ -16,8 +28,7 @@ module.exports = async ({ req, res, log, error }) => {
       error('❌ Telefone não fornecido');
       return res.json({ 
         error: 'Telefone é obrigatório',
-        receivedQuery: req.query,
-        receivedPath: req.path,
+        receivedPayload: payload,
       }, 400);
     }
 
