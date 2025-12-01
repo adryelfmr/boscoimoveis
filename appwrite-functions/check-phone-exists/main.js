@@ -4,55 +4,44 @@ module.exports = async ({ req, res, log, error }) => {
   try {
     log('=== 📞 CHECK PHONE EXISTS - INÍCIO ===');
     
-    // ✅ 1. Parsear payload (funciona com diferentes formatos)
-    let payload;
+    // ✅ CORRIGIDO: Ler telefone da query string
+    const phone = req.query?.phone || req.path?.split('phone=')[1];
     
+    log('Query params:', JSON.stringify(req.query));
+    log('Path:', req.path);
+    log('Telefone recebido:', phone);
     
-    if (req.body && req.body.data) {
-      payload = typeof req.body.data === 'string' 
-        ? JSON.parse(req.body.data) 
-        : req.body.data;
-    } else if (req.bodyRaw) {
-      payload = JSON.parse(req.bodyRaw);
-    } else {
-      payload = req.body;
-    }
-    
-    log('Payload recebido:', JSON.stringify(payload));
-
-    const { phone } = payload;
-    
-    // ✅ 2. Validar telefone
+    // ✅ Validar telefone
     if (!phone) {
       error('❌ Telefone não fornecido');
       return res.json({ 
-        error: 'Telefone é obrigatório' 
+        error: 'Telefone é obrigatório',
+        receivedQuery: req.query,
+        receivedPath: req.path,
       }, 400);
     }
 
-    // ✅ 3. Limpar formato do telefone (remover espaços, parênteses, etc)
+    // ✅ Limpar formato do telefone
     const phoneClean = phone.replace(/\D/g, '');
     log(`📱 Telefone limpo: ${phoneClean}`);
 
-    // ✅ 4. Inicializar SDK do Appwrite com permissões de admin
+    // ✅ Inicializar SDK
     const client = new sdk.Client()
       .setEndpoint(process.env.APPWRITE_ENDPOINT)
       .setProject(process.env.APPWRITE_PROJECT_ID)
-      .setKey(process.env.APPWRITE_API_KEY); // ⚠️ API Key com permissão de leitura
+      .setKey(process.env.APPWRITE_API_KEY);
 
     const users = new sdk.Users(client);
 
     try {
-      // ✅ 5. Buscar usuários por telefone
       log('🔍 Buscando usuários com telefone:', phone);
       
       const userList = await users.list([
-        sdk.Query.equal('phone', phone) // Formato E.164: +5562999999999
+        sdk.Query.equal('phone', phone)
       ]);
 
       log(`📊 Total de usuários encontrados: ${userList.total}`);
 
-      // ✅ 6. Verificar se encontrou algum usuário
       if (userList.total > 0) {
         log('⚠️ TELEFONE JÁ CADASTRADO');
         log(`Usuário: ${userList.users[0].email}`);
@@ -63,7 +52,6 @@ module.exports = async ({ req, res, log, error }) => {
         }, 200);
       }
 
-      // ✅ 7. Telefone disponível
       log('✅ TELEFONE DISPONÍVEL');
       return res.json({
         exists: false,
