@@ -324,9 +324,7 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
                 onChange={(e) => setCodigo(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="000000"
                 maxLength={6}
-                autoComplete="one-time-code" 
-                name="sms-verification-code" 
-                id="sms-code-input" 
+                autoComplete="one-time-code" // ✅ Desabilitar autocomplete
                 className="text-center text-2xl tracking-widest"
                 autoFocus
               />

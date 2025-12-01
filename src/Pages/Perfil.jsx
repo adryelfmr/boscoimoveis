@@ -14,13 +14,15 @@ import {
 } from '@/utils/telefone';
 import { Badge } from '@/components/ui/badge';
 import VerificacaoSMS from '@/components/VerificacaoSMS';
+import { Client, Functions } from 'appwrite'; // ✅ NOVO: Importar Functions
 
 export default function Perfil() {
   const { user, checkUser, isAdmin } = useAuth();
   const [editando, setEditando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [verificandoTelefone, setVerificandoTelefone] = useState(false);
-  const [senhaParaTelefone, setSenhaParaTelefone] = useState(''); // ✅ NOVO: Senha para salvar telefone
+  const [senhaParaTelefone, setSenhaParaTelefone] = useState('');
+  const [verificandoNumero, setVerificandoNumero] = useState(false); // ✅ NOVO
   
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -76,14 +78,68 @@ export default function Perfil() {
     }
   };
 
-  // ✅ ATUALIZADO: Pedir senha ANTES de abrir modal SMS
-  const handleAbrirVerificacaoSMS = () => {
+  // ✅ NOVO: Verificar se telefone já existe
+  const verificarTelefoneExistente = async (telefone) => {
+    try {
+      const client = new Client()
+        .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
+        .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
+      
+      const functions = new Functions(client);
+      const telefoneE164 = converterParaE164(telefone);
+      
+      console.log('🔍 Verificando telefone:', telefoneE164);
+      
+      const execution = await functions.createExecution(
+        import.meta.env.VITE_APPWRITE_FUNCTION_CHECK_PHONE, // ✅ Adicionar no .env
+        JSON.stringify({ phone: telefoneE164 }),
+        false
+      );
+
+      console.log('✅ Resposta da função:', execution);
+
+      if (execution.responseStatusCode === 200) {
+        const response = JSON.parse(execution.responseBody);
+        return response.exists; // true = já existe, false = disponível
+      }
+
+      return false; // Em caso de erro, permitir continuar
+    } catch (error) {
+      console.error('Erro ao verificar telefone:', error);
+      return false; // Em caso de erro, permitir continuar
+    }
+  };
+
+  // ✅ ATUALIZADO: Verificar telefone ANTES de abrir modal
+  const handleAbrirVerificacaoSMS = async () => {
     if (!senhaParaTelefone) {
       toast.error('Digite sua senha para verificar o telefone');
       return;
     }
+
+    // ✅ NOVO: Verificar se o número já está em uso
+    setVerificandoNumero(true);
     
-    setVerificandoTelefone(true);
+    try {
+      const telefoneJaExiste = await verificarTelefoneExistente(formData.telefone);
+      
+      if (telefoneJaExiste) {
+        toast.error('📱 Número já cadastrado', {
+          description: 'Este telefone já está sendo usado por outra conta.',
+          duration: 5000,
+        });
+        setVerificandoNumero(false);
+        return;
+      }
+
+      // ✅ Telefone disponível, continuar com verificação SMS
+      setVerificandoTelefone(true);
+    } catch (error) {
+      console.error('Erro ao verificar telefone:', error);
+      toast.error('Erro ao verificar disponibilidade do número');
+    } finally {
+      setVerificandoNumero(false);
+    }
   };
 
   // ✅ ATUALIZADO: Usar senha fornecida pelo usuário
@@ -97,7 +153,7 @@ export default function Perfil() {
       await checkUser();
       setVerificandoTelefone(false);
       setEditando(false);
-      setSenhaParaTelefone(''); // Limpar senha
+      setSenhaParaTelefone('');
       
       setFormData({
         ...formData,
@@ -108,11 +164,17 @@ export default function Perfil() {
     } catch (error) {
       console.error('Erro ao salvar telefone:', error);
       
-      if (error.message?.includes('password') || error.message?.includes('Invalid')) {
+      // ✅ ATUALIZADO: Mensagem de erro mais específica
+      if (error.code === 409 || error.message?.includes('already exists')) {
+        toast.error('📱 Telefone já está em uso', {
+          description: 'Este número já está cadastrado em outra conta.',
+          duration: 5000,
+        });
+      } else if (error.message?.includes('password') || error.message?.includes('Invalid')) {
         toast.error('❌ Senha incorreta', {
           description: 'Verifique sua senha e tente novamente.',
         });
-        setVerificandoTelefone(false); // Fechar modal para usuário redigitar senha
+        setVerificandoTelefone(false);
       } else {
         toast.error('Erro ao salvar telefone verificado');
       }
@@ -130,33 +192,35 @@ export default function Perfil() {
         
         {/* Card de Informações */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Informações Pessoais</CardTitle>
-            {!editando && (
-              <Button onClick={() => setEditando(true)} variant="outline">
-                Editar
-              </Button>
-            )}
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Informações Pessoais</span>
+              {!editando && (
+                <Button onClick={() => setEditando(true)} variant="outline">
+                  Editar
+                </Button>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Nome */}
             <div>
               <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                 <User className="w-4 h-4" />
-                Nome Completo
+                Nome
               </label>
               {editando ? (
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  placeholder="Seu nome"
+                  placeholder="Seu nome completo"
                 />
               ) : (
                 <p className="text-slate-900 font-medium">{user?.name}</p>
               )}
             </div>
 
-            {/* Email NÃO EDITÁVEL */}
+            {/* Email */}
             <div>
               <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                 <Mail className="w-4 h-4" />
@@ -194,6 +258,9 @@ export default function Perfil() {
                 <div className="space-y-3">
                   <Input
                     type="tel"
+                    inputMode="tel"
+                    autoComplete="off"
+                    name="user-phone"
                     value={formData.telefone}
                     onChange={(e) => {
                       const telefoneFormatado = formatarTelefoneAoDigitar(e.target.value);
@@ -211,7 +278,7 @@ export default function Perfil() {
                     </p>
                   )}
                   
-                  {/* ✅ ATUALIZADO: Campo de senha + Botão de verificar */}
+                  {/* Campo de senha + Botão de verificar */}
                   {validarTelefone(formData.telefone) && formData.telefone !== (user?.phone ? converterParaBrasileiro(user.phone) : '') && (
                     <>
                       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
@@ -225,6 +292,8 @@ export default function Perfil() {
                         
                         <Input
                           type="password"
+                          autoComplete="current-password"
+                          name="verify-password"
                           value={senhaParaTelefone}
                           onChange={(e) => setSenhaParaTelefone(e.target.value)}
                           placeholder="Digite sua senha"
@@ -235,11 +304,20 @@ export default function Perfil() {
                       <Button
                         type="button"
                         onClick={handleAbrirVerificacaoSMS}
-                        disabled={!senhaParaTelefone}
+                        disabled={!senhaParaTelefone || verificandoNumero}
                         className="w-full bg-green-600 hover:bg-green-700"
                       >
-                        <Shield className="w-4 h-4 mr-2" />
-                        Verificar via SMS
+                        {verificandoNumero ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Verificando disponibilidade...
+                          </>
+                        ) : (
+                          <>
+                            <Shield className="w-4 h-4 mr-2" />
+                            Verificar via SMS
+                          </>
+                        )}
                       </Button>
                       
                       <p className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded p-2">
@@ -273,33 +351,22 @@ export default function Perfil() {
             {editando && (
               <>
                 <div className="border-t pt-6">
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
+                  <h3 className="text-sm font-medium mb-4 flex items-center gap-2">
                     <Lock className="w-4 h-4" />
                     Alterar Senha (Opcional)
                   </h3>
-                  
                   <div className="space-y-4">
-                    {formData.novaSenha && (
-                      <div>
-                        <label className="block text-sm font-medium mb-2">
-                          Senha Atual *
-                        </label>
-                        <Input
-                          type="password"
-                          value={formData.senhaAtual}
-                          onChange={(e) => setFormData({...formData, senhaAtual: e.target.value})}
-                          placeholder="Digite sua senha atual"
-                        />
-                        <p className="text-xs text-slate-500 mt-1">
-                          Obrigatório para alterar a senha
-                        </p>
-                      </div>
-                    )}
-
                     <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Nova Senha
-                      </label>
+                      <label className="block text-sm font-medium mb-2">Senha Atual</label>
+                      <Input
+                        type="password"
+                        value={formData.senhaAtual}
+                        onChange={(e) => setFormData({...formData, senhaAtual: e.target.value})}
+                        placeholder="Digite sua senha atual"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Nova Senha</label>
                       <Input
                         type="password"
                         value={formData.novaSenha}
@@ -322,7 +389,7 @@ export default function Perfil() {
                   variant="outline"
                   onClick={() => {
                     setEditando(false);
-                    setSenhaParaTelefone(''); // Limpar senha
+                    setSenhaParaTelefone('');
                     setFormData({
                       name: user?.name || '',
                       email: user?.email || '',
@@ -373,7 +440,7 @@ export default function Perfil() {
                 onVerificado={handleTelefoneVerificado}
                 onCancelar={() => {
                   setVerificandoTelefone(false);
-                  setSenhaParaTelefone(''); // Limpar senha ao cancelar
+                  setSenhaParaTelefone('');
                 }}
               />
             </div>
