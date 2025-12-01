@@ -5,7 +5,7 @@ module.exports = async ({ req, res, log, error }) => {
     log('=== 📞 CHECK PHONE EXISTS - INÍCIO ===');
     log('req.body:', JSON.stringify(req.body));
     
-    // ✅ COPIAR EXATAMENTE DO SEND-EMAIL
+    // ✅ Parser do payload
     let payload;
     
     if (req.body && req.body.data) {
@@ -20,7 +20,7 @@ module.exports = async ({ req, res, log, error }) => {
     
     log('✅ Payload parseado:', JSON.stringify(payload));
 
-    // ✅ Extrair telefone (aceitar ambos os nomes)
+    // ✅ Extrair telefone
     const phone = payload?.phone || payload?.PHONE_TO_CHECK;
     
     log('Telefone recebido:', phone);
@@ -33,9 +33,6 @@ module.exports = async ({ req, res, log, error }) => {
       }, 400);
     }
 
-    const phoneClean = phone.replace(/\D/g, '');
-    log(`📱 Telefone limpo: ${phoneClean}`);
-
     // ✅ Inicializar SDK
     const client = new sdk.Client()
       .setEndpoint(process.env.APPWRITE_ENDPOINT)
@@ -47,9 +44,11 @@ module.exports = async ({ req, res, log, error }) => {
     try {
       log('🔍 Buscando usuários com telefone:', phone);
       
-      const userList = await users.list([
-        sdk.Query.equal('phone', phone)
-      ]);
+      // ✅ CORRIGIDO: Usar queries como parâmetro de opções
+      const userList = await users.list(
+        [sdk.Query.equal('phone', phone)], // queries como array
+        undefined // search (opcional)
+      );
 
       log(`📊 Total de usuários encontrados: ${userList.total}`);
 
@@ -71,6 +70,7 @@ module.exports = async ({ req, res, log, error }) => {
 
     } catch (searchError) {
       error('❌ Erro ao buscar usuários:', searchError.message);
+      error('Stack:', searchError.stack);
       throw searchError;
     }
 
