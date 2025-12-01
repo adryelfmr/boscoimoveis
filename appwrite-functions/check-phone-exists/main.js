@@ -3,17 +3,26 @@ const sdk = require('node-appwrite');
 module.exports = async ({ req, res, log, error }) => {
   try {
     log('=== 📞 CHECK PHONE EXISTS - INÍCIO ===');
+    log('req.body:', JSON.stringify(req.body));
+    log('req.bodyRaw:', req.bodyRaw);
     
-    // ✅ Parser do payload (suporta múltiplos formatos)
+    // ✅ CORRIGIDO: Parser do payload
     let payload;
     
     try {
-      if (typeof req.body === 'string') {
-        payload = JSON.parse(req.body);
-      } else if (req.body && typeof req.body === 'object') {
-        payload = req.body;
-      } else if (req.bodyRaw) {
+      // Tentar bodyRaw primeiro (vem como string)
+      if (req.bodyRaw) {
         payload = JSON.parse(req.bodyRaw);
+        log('✅ Parsed from bodyRaw');
+      }
+      // Fallback para req.body
+      else if (req.body) {
+        if (typeof req.body === 'string') {
+          payload = JSON.parse(req.body);
+        } else {
+          payload = req.body;
+        }
+        log('✅ Parsed from body');
       } else {
         throw new Error('Body não encontrado');
       }
@@ -27,11 +36,11 @@ module.exports = async ({ req, res, log, error }) => {
     
     log('✅ Payload parseado:', JSON.stringify(payload));
 
-    // ✅ Extrair telefone (múltiplas variações de nome)
-    const phone = payload?.phone || payload?.PHONE_TO_CHECK || payload?.telefone;
+    // ✅ Extrair telefone
+    const phone = payload?.phone || payload?.telefone;
     
     if (!phone) {
-      error('❌ Telefone não fornecido no payload');
+      error('❌ Telefone não fornecido');
       return res.json({ 
         error: 'Telefone é obrigatório',
         receivedPayload: payload,
@@ -66,7 +75,7 @@ module.exports = async ({ req, res, log, error }) => {
         return res.json({
           exists: true,
           message: 'Este número já está cadastrado em outra conta',
-          userId: user.$id, // Opcional: retornar ID para debug
+          userId: user.$id,
         }, 200);
       }
 
@@ -80,7 +89,6 @@ module.exports = async ({ req, res, log, error }) => {
       error('❌ Erro ao buscar usuários:', searchError.message);
       error('Stack:', searchError.stack);
       
-      // Retornar false em caso de erro (para não bloquear o cadastro)
       return res.json({
         exists: false,
         message: 'Não foi possível verificar. Prosseguindo...',
@@ -89,12 +97,12 @@ module.exports = async ({ req, res, log, error }) => {
     }
 
   } catch (err) {
-    error('=== ❌ ERRO CRÍTICO NA EXECUÇÃO ===');
+    error('=== ❌ ERRO CRÍTICO ===');
     error('Mensagem:', err.message);
     error('Stack:', err.stack);
     
     return res.json({
-      exists: false, // ✅ Retornar false para não bloquear
+      exists: false,
       error: 'Erro ao verificar telefone',
       details: err.message,
     }, 500);

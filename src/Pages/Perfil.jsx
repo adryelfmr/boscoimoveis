@@ -88,15 +88,13 @@ export default function Perfil() {
       
       const functions = new Functions(client);
       
-      // ✅ CORRIGIDO: Usar ID correto da função
       const FUNCTION_ID = import.meta.env.VITE_APPWRITE_FUNCTION_CHECK_PHONE || 'check-phone-exists';
       
+      // ✅ CORRIGIDO: Passar body como STRING no segundo parâmetro
       const execution = await functions.createExecution(
         FUNCTION_ID,
-        JSON.stringify({ phone: telefoneE164 }), // ✅ Usar "phone" como chave
-        false, // async
-        '/', // path
-        'POST' // method
+        JSON.stringify({ phone: telefoneE164 }), // ✅ Body como string
+        false // ✅ async = false (síncrono)
       );
 
       console.log('✅ Resposta da função:', {
@@ -104,12 +102,6 @@ export default function Perfil() {
         statusCode: execution.responseStatusCode,
         body: execution.responseBody
       });
-
-      // ✅ Aguardar conclusão se estiver async
-      if (execution.status === 'processing' || execution.status === 'waiting') {
-        console.log('⏳ Aguardando conclusão da função...');
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
 
       // ✅ Parsear resposta
       if (execution.responseBody) {
@@ -132,7 +124,6 @@ export default function Perfil() {
     } catch (error) {
       console.error('❌ Erro ao verificar telefone:', error);
       
-      // ✅ Em caso de erro, permitir o cadastro (fail-safe)
       toast.warning('Não foi possível verificar o telefone. Prosseguindo...', {
         description: 'Você ainda pode cadastrar o número.',
       });
