@@ -14,7 +14,7 @@ import {
 } from '@/utils/telefone';
 import { Badge } from '@/components/ui/badge';
 import VerificacaoSMS from '@/components/VerificacaoSMS';
-import { Client, Functions } from 'appwrite'; // ✅ NOVO: Importar Functions
+import { Client, Functions } from 'appwrite';
 
 export default function Perfil() {
   const { user, checkUser, isAdmin } = useAuth();
@@ -22,7 +22,7 @@ export default function Perfil() {
   const [salvando, setSalvando] = useState(false);
   const [verificandoTelefone, setVerificandoTelefone] = useState(false);
   const [senhaParaTelefone, setSenhaParaTelefone] = useState('');
-  const [verificandoNumero, setVerificandoNumero] = useState(false); // ✅ NOVO
+  const [verificandoNumero, setVerificandoNumero] = useState(false);
   
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -36,12 +36,10 @@ export default function Perfil() {
     setSalvando(true);
     
     try {
-      // Atualizar nome
       if (formData.name !== user?.name) {
         await account.updateName(formData.name);
       }
 
-      // Atualizar senha
       if (formData.novaSenha) {
         if (!formData.senhaAtual) {
           toast.error('Digite sua senha atual para alterar a senha');
@@ -53,7 +51,6 @@ export default function Perfil() {
         toast.success('Senha alterada com sucesso!');
       }
 
-      // Nome é atualizado sem senha
       if (formData.name !== user?.name) {
         toast.success('Nome atualizado com sucesso!');
       }
@@ -78,7 +75,8 @@ export default function Perfil() {
     }
   };
 
-  // ✅ NOVO: Verificar se telefone já existe
+  // ✅ CORRIGIDO: Verificar se telefone já existe
+  // ✅ CORRIGIDO: Passar telefone via PATH em vez de BODY
   const verificarTelefoneExistente = async (telefone) => {
     try {
       const client = new Client()
@@ -90,34 +88,36 @@ export default function Perfil() {
       
       console.log('🔍 Verificando telefone:', telefoneE164);
       
+      // ✅ SOLUÇÃO: Passar telefone via PATH
       const execution = await functions.createExecution(
-        import.meta.env.VITE_APPWRITE_FUNCTION_CHECK_PHONE, // ✅ Adicionar no .env
-        JSON.stringify({ phone: telefoneE164 }),
-        false
+        'check-phone-exists',
+        '', // ❌ Body vazio
+        false,
+        `/?phone=${encodeURIComponent(telefoneE164)}`, // ✅ Telefone no PATH
+        'GET' // ✅ Mudar para GET
       );
 
       console.log('✅ Resposta da função:', execution);
 
       if (execution.responseStatusCode === 200) {
         const response = JSON.parse(execution.responseBody);
-        return response.exists; // true = já existe, false = disponível
+        return response.exists;
       }
 
-      return false; // Em caso de erro, permitir continuar
+      console.warn('⚠️ Erro ao verificar telefone:', execution.responseBody);
+      return false;
     } catch (error) {
-      console.error('Erro ao verificar telefone:', error);
-      return false; // Em caso de erro, permitir continuar
+      console.error('❌ Erro ao verificar telefone:', error);
+      return false;
     }
   };
 
-  // ✅ ATUALIZADO: Verificar telefone ANTES de abrir modal
   const handleAbrirVerificacaoSMS = async () => {
     if (!senhaParaTelefone) {
       toast.error('Digite sua senha para verificar o telefone');
       return;
     }
 
-    // ✅ NOVO: Verificar se o número já está em uso
     setVerificandoNumero(true);
     
     try {
@@ -132,7 +132,6 @@ export default function Perfil() {
         return;
       }
 
-      // ✅ Telefone disponível, continuar com verificação SMS
       setVerificandoTelefone(true);
     } catch (error) {
       console.error('Erro ao verificar telefone:', error);
@@ -142,10 +141,8 @@ export default function Perfil() {
     }
   };
 
-  // ✅ ATUALIZADO: Usar senha fornecida pelo usuário
   const handleTelefoneVerificado = async (telefoneE164) => {
     try {
-      // Usar a senha que o usuário digitou
       await account.updatePhone(telefoneE164, senhaParaTelefone);
       
       toast.success('✅ Telefone verificado e salvo!');
@@ -164,7 +161,6 @@ export default function Perfil() {
     } catch (error) {
       console.error('Erro ao salvar telefone:', error);
       
-      // ✅ ATUALIZADO: Mensagem de erro mais específica
       if (error.code === 409 || error.message?.includes('already exists')) {
         toast.error('📱 Telefone já está em uso', {
           description: 'Este número já está cadastrado em outra conta.',
@@ -278,7 +274,6 @@ export default function Perfil() {
                     </p>
                   )}
                   
-                  {/* Campo de senha + Botão de verificar */}
                   {validarTelefone(formData.telefone) && formData.telefone !== (user?.phone ? converterParaBrasileiro(user.phone) : '') && (
                     <>
                       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
