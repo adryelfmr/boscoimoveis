@@ -75,36 +75,68 @@ export default function Perfil() {
     }
   };
 
-  // ✅ SINTAXE MAIS SIMPLES (sem parâmetros opcionais)
+  // ✅ CORRIGIDO: Verificação de telefone
   const verificarTelefoneExistente = async (telefone) => {
     try {
+      const telefoneE164 = converterParaE164(telefone);
+      
+      console.log('🔍 Verificando telefone:', telefoneE164);
+      
       const client = new Client()
         .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
         .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
       
       const functions = new Functions(client);
-      const telefoneE164 = converterParaE164(telefone);
       
-      console.log('🔍 Verificando telefone:', telefoneE164);
+      // ✅ CORRIGIDO: Usar ID correto da função
+      const FUNCTION_ID = import.meta.env.VITE_APPWRITE_FUNCTION_CHECK_PHONE || 'check-phone-exists';
       
-      // ✅ SINTAXE MAIS SIMPLES
       const execution = await functions.createExecution(
-        'check-phone-exists',
-        JSON.stringify({ PHONE_TO_CHECK: telefoneE164 }), // ✅ Passar no body mesmo
-        false
+        FUNCTION_ID,
+        JSON.stringify({ phone: telefoneE164 }), // ✅ Usar "phone" como chave
+        false, // async
+        '/', // path
+        'POST' // method
       );
 
-      console.log('✅ Resposta da função:', execution);
+      console.log('✅ Resposta da função:', {
+        status: execution.status,
+        statusCode: execution.responseStatusCode,
+        body: execution.responseBody
+      });
 
-      if (execution.responseStatusCode === 200) {
-        const response = JSON.parse(execution.responseBody);
-        return response.exists;
+      // ✅ Aguardar conclusão se estiver async
+      if (execution.status === 'processing' || execution.status === 'waiting') {
+        console.log('⏳ Aguardando conclusão da função...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
 
-      console.warn('⚠️ Erro ao verificar telefone:', execution.responseBody);
+      // ✅ Parsear resposta
+      if (execution.responseBody) {
+        try {
+          const response = JSON.parse(execution.responseBody);
+          
+          if (response.exists !== undefined) {
+            console.log(`📊 Telefone ${response.exists ? 'JÁ EXISTE' : 'DISPONÍVEL'}`);
+            return response.exists;
+          }
+        } catch (parseError) {
+          console.error('❌ Erro ao parsear resposta:', parseError);
+        }
+      }
+
+      // ✅ Se houver erro, permitir o cadastro (fail-safe)
+      console.warn('⚠️ Não foi possível verificar. Permitindo cadastro...');
       return false;
+
     } catch (error) {
       console.error('❌ Erro ao verificar telefone:', error);
+      
+      // ✅ Em caso de erro, permitir o cadastro (fail-safe)
+      toast.warning('Não foi possível verificar o telefone. Prosseguindo...', {
+        description: 'Você ainda pode cadastrar o número.',
+      });
+      
       return false;
     }
   };
