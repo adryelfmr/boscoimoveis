@@ -28,6 +28,7 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
     };
   }, []);
 
+  // ✅ ATUALIZADO: reCAPTCHA invisível
   const setupRecaptcha = () => {
     if (window.recaptchaVerifier) {
       try {
@@ -38,9 +39,9 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
     }
 
     window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      size: 'normal',
+      size: 'invisible', // ✅ MUDANÇA PRINCIPAL
       callback: (response) => {
-        console.log('✅ reCAPTCHA resolvido:', response);
+        console.log('✅ reCAPTCHA resolvido automaticamente');
       },
       'expired-callback': () => {
         console.warn('⚠️ reCAPTCHA expirado');
@@ -48,6 +49,7 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
       },
       'error-callback': (error) => {
         console.error('❌ Erro no reCAPTCHA:', error);
+        toast.error('Erro na verificação de segurança');
       }
     });
   };
@@ -64,7 +66,6 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
       console.log('📞 Telefone E.164:', telefoneE164);
 
       await window.recaptchaVerifier.render();
-
       const appVerifier = window.recaptchaVerifier;
       const confirmation = await signInWithPhoneNumber(auth, telefoneE164, appVerifier);
       
@@ -123,7 +124,6 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
       setEtapa('sucesso');
       toast.success('✅ Telefone verificado com sucesso!');
       
-      // ✅ CORRIGIDO: Chamar callback imediatamente sem setTimeout
       const telefoneE164 = converterParaE164(telefone);
       onVerificado(telefoneE164);
       
@@ -177,16 +177,18 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
               <p className="font-bold text-blue-900 mt-2">{telefone}</p>
             </div>
 
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+            {/* ✅ ATUALIZADO: Aviso simplificado */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
               <div className="flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5" />
-                <p className="text-xs text-amber-800">
-                  Complete a verificação de segurança abaixo antes de enviar o SMS.
+                <Shield className="w-4 h-4 text-green-600 mt-0.5" />
+                <p className="text-xs text-green-800">
+                  🔒 Verificação de segurança automática. Clique em "Enviar Código" para continuar.
                 </p>
               </div>
             </div>
 
-            <div id="recaptcha-container" className="flex justify-center"></div>
+            {/* ✅ Container invisível */}
+            <div id="recaptcha-container"></div>
 
             <div className="flex gap-2">
               <Button
@@ -262,6 +264,18 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
               </Button>
             </div>
           </>
+        )}
+
+        {etapa === 'sucesso' && (
+          <div className="text-center py-6">
+            <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
+              ✅ Telefone Verificado!
+            </h3>
+            <p className="text-slate-600">
+              Seu telefone foi verificado com sucesso.
+            </p>
+          </div>
         )}
       </CardContent>
     </Card>
