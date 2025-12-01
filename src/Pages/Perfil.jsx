@@ -14,7 +14,6 @@ import {
 } from '@/utils/telefone';
 import { Badge } from '@/components/ui/badge';
 import VerificacaoSMS from '@/components/VerificacaoSMS';
-import { Client, Functions } from 'appwrite';
 
 export default function Perfil() {
   const { user, checkUser, isAdmin } = useAuth();
@@ -22,7 +21,6 @@ export default function Perfil() {
   const [salvando, setSalvando] = useState(false);
   const [verificandoTelefone, setVerificandoTelefone] = useState(false);
   const [senhaParaTelefone, setSenhaParaTelefone] = useState('');
-  const [verificandoNumero, setVerificandoNumero] = useState(false);
   
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -75,94 +73,19 @@ export default function Perfil() {
     }
   };
 
-  // ✅ CORRIGIDO: Verificação de telefone
-  const verificarTelefoneExistente = async (telefone) => {
-    try {
-      const telefoneE164 = converterParaE164(telefone);
-      
-      console.log('🔍 Verificando telefone:', telefoneE164);
-      
-      const client = new Client()
-        .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
-        .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
-      
-      const functions = new Functions(client);
-      
-      const FUNCTION_ID = import.meta.env.VITE_APPWRITE_FUNCTION_CHECK_PHONE || 'check-phone-exists';
-      
-      // ✅ CORRIGIDO: Passar body como STRING no segundo parâmetro
-      const execution = await functions.createExecution(
-        FUNCTION_ID,
-        JSON.stringify({ phone: telefoneE164 }), // ✅ Body como string
-        false // ✅ async = false (síncrono)
-      );
-
-      console.log('✅ Resposta da função:', {
-        status: execution.status,
-        statusCode: execution.responseStatusCode,
-        body: execution.responseBody
-      });
-
-      // ✅ Parsear resposta
-      if (execution.responseBody) {
-        try {
-          const response = JSON.parse(execution.responseBody);
-          
-          if (response.exists !== undefined) {
-            console.log(`📊 Telefone ${response.exists ? 'JÁ EXISTE' : 'DISPONÍVEL'}`);
-            return response.exists;
-          }
-        } catch (parseError) {
-          console.error('❌ Erro ao parsear resposta:', parseError);
-        }
-      }
-
-      // ✅ Se houver erro, permitir o cadastro (fail-safe)
-      console.warn('⚠️ Não foi possível verificar. Permitindo cadastro...');
-      return false;
-
-    } catch (error) {
-      console.error('❌ Erro ao verificar telefone:', error);
-      
-      toast.warning('Não foi possível verificar o telefone. Prosseguindo...', {
-        description: 'Você ainda pode cadastrar o número.',
-      });
-      
-      return false;
-    }
-  };
-
   const handleAbrirVerificacaoSMS = async () => {
     if (!senhaParaTelefone) {
       toast.error('Digite sua senha para verificar o telefone');
       return;
     }
 
-    setVerificandoNumero(true);
-    
-    try {
-      const telefoneJaExiste = await verificarTelefoneExistente(formData.telefone);
-      
-      if (telefoneJaExiste) {
-        toast.error('📱 Número já cadastrado', {
-          description: 'Este telefone já está sendo usado por outra conta.',
-          duration: 5000,
-        });
-        setVerificandoNumero(false);
-        return;
-      }
-
-      setVerificandoTelefone(true);
-    } catch (error) {
-      console.error('Erro ao verificar telefone:', error);
-      toast.error('Erro ao verificar disponibilidade do número');
-    } finally {
-      setVerificandoNumero(false);
-    }
+    // ✅ Apenas abrir o modal de verificação
+    setVerificandoTelefone(true);
   };
 
   const handleTelefoneVerificado = async (telefoneE164) => {
     try {
+      // ✅ O Appwrite valida automaticamente se o telefone já existe
       await account.updatePhone(telefoneE164, senhaParaTelefone);
       
       toast.success('✅ Telefone verificado e salvo!');
@@ -181,39 +104,42 @@ export default function Perfil() {
     } catch (error) {
       console.error('Erro ao salvar telefone:', error);
       
-      if (error.code === 409 || error.message?.includes('already exists')) {
-        toast.error('📱 Telefone já está em uso', {
-          description: 'Este número já está cadastrado em outra conta.',
+      // ✅ Tratar erro 409 (telefone duplicado)
+      if (error.code === 409 || error.message?.includes('already exists') || error.message?.includes('phone_already_exists')) {
+        toast.error('📱 Telefone já cadastrado', {
+          description: 'Este número já está em uso por outra conta.',
           duration: 5000,
         });
+        setVerificandoTelefone(false);
       } else if (error.message?.includes('password') || error.message?.includes('Invalid')) {
         toast.error('❌ Senha incorreta', {
           description: 'Verifique sua senha e tente novamente.',
         });
         setVerificandoTelefone(false);
       } else {
-        toast.error('Erro ao salvar telefone verificado');
+        toast.error('Erro ao salvar telefone');
       }
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Meu Perfil</h1>
-          <p className="text-slate-600">Gerencie suas informações pessoais</p>
+    <div className="min-h-screen bg-slate-50 p-8">
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center gap-3 mb-8">
+          <User className="w-8 h-8 text-blue-900" />
+          <h1 className="text-3xl font-bold">Meu Perfil</h1>
         </div>
-        
-        {/* Card de Informações */}
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Informações Pessoais</span>
               {!editando && (
-                <Button onClick={() => setEditando(true)} variant="outline">
-                  Editar
+                <Button 
+                  variant="outline" 
+                  onClick={() => setEditando(true)}
+                >
+                  Editar Perfil
                 </Button>
               )}
             </CardTitle>
@@ -319,20 +245,11 @@ export default function Perfil() {
                       <Button
                         type="button"
                         onClick={handleAbrirVerificacaoSMS}
-                        disabled={!senhaParaTelefone || verificandoNumero}
+                        disabled={!senhaParaTelefone}
                         className="w-full bg-green-600 hover:bg-green-700"
                       >
-                        {verificandoNumero ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Verificando disponibilidade...
-                          </>
-                        ) : (
-                          <>
-                            <Shield className="w-4 h-4 mr-2" />
-                            Verificar via SMS
-                          </>
-                        )}
+                        <Shield className="w-4 h-4 mr-2" />
+                        Verificar via SMS
                       </Button>
                       
                       <p className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded p-2">
