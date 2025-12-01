@@ -3,28 +3,25 @@ const sdk = require('node-appwrite');
 module.exports = async ({ req, res, log, error }) => {
   try {
     log('=== 📞 CHECK PHONE EXISTS - INÍCIO ===');
+    log('req.body:', JSON.stringify(req.body));
     
-    let phone;
+    // ✅ COPIAR EXATAMENTE DO SEND-EMAIL
+    let payload;
     
-    // ✅ Tentar ler de variáveis de ambiente primeiro
-    phone = process.env.PHONE_TO_CHECK;
-    
-    // ✅ Se não tiver, tentar ler do body
-    if (!phone) {
-      let payload;
-      
-      if (req.body && req.body.data) {
-        payload = typeof req.body.data === 'string' 
-          ? JSON.parse(req.body.data) 
-          : req.body.data;
-      } else if (req.bodyRaw) {
-        payload = JSON.parse(req.bodyRaw);
-      } else {
-        payload = req.body;
-      }
-      
-      phone = payload?.PHONE_TO_CHECK || payload?.phone;
+    if (req.body && req.body.data) {
+      payload = typeof req.body.data === 'string' 
+        ? JSON.parse(req.body.data) 
+        : req.body.data;
+    } else if (req.bodyRaw) {
+      payload = JSON.parse(req.bodyRaw);
+    } else {
+      payload = req.body;
     }
+    
+    log('✅ Payload parseado:', JSON.stringify(payload));
+
+    // ✅ Extrair telefone (aceitar ambos os nomes)
+    const phone = payload?.phone || payload?.PHONE_TO_CHECK;
     
     log('Telefone recebido:', phone);
     
@@ -32,12 +29,14 @@ module.exports = async ({ req, res, log, error }) => {
       error('❌ Telefone não fornecido');
       return res.json({ 
         error: 'Telefone é obrigatório',
+        receivedPayload: payload,
       }, 400);
     }
 
     const phoneClean = phone.replace(/\D/g, '');
     log(`📱 Telefone limpo: ${phoneClean}`);
 
+    // ✅ Inicializar SDK
     const client = new sdk.Client()
       .setEndpoint(process.env.APPWRITE_ENDPOINT)
       .setProject(process.env.APPWRITE_PROJECT_ID)
