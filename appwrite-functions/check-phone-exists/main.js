@@ -7,6 +7,7 @@ module.exports = async ({ req, res, log, error }) => {
     // ✅ 1. Parsear payload (funciona com diferentes formatos)
     let payload;
     
+    
     if (req.body && req.body.data) {
       payload = typeof req.body.data === 'string' 
         ? JSON.parse(req.body.data) 
