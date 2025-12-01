@@ -4,31 +4,18 @@ module.exports = async ({ req, res, log, error }) => {
   try {
     log('=== 📞 CHECK PHONE EXISTS - INÍCIO ===');
     
-    // ✅ CORRIGIDO: Ler telefone do BODY (como send-contact-email)
-    let payload;
+    // ✅ SOLUÇÃO DEFINITIVA: Ler telefone da variável de ambiente da execução
+    const phone = process.env.PHONE_TO_CHECK;
     
-    if (req.body && req.body.data) {
-      payload = typeof req.body.data === 'string' 
-        ? JSON.parse(req.body.data) 
-        : req.body.data;
-    } else if (req.bodyRaw) {
-      payload = JSON.parse(req.bodyRaw);
-    } else {
-      payload = req.body;
-    }
-    
-    log('✅ Payload parseado:', JSON.stringify(payload));
-
-    const { phone } = payload;
-    
-    log('Telefone recebido:', phone);
+    log('Telefone recebido da variável de ambiente:', phone);
+    log('Todas as variáveis de ambiente:', JSON.stringify(process.env));
     
     // ✅ Validar telefone
     if (!phone) {
       error('❌ Telefone não fornecido');
       return res.json({ 
         error: 'Telefone é obrigatório',
-        receivedPayload: payload,
+        hint: 'Passe o telefone como variável de ambiente PHONE_TO_CHECK',
       }, 400);
     }
 
@@ -60,6 +47,7 @@ module.exports = async ({ req, res, log, error }) => {
         return res.json({
           exists: true,
           message: 'Este número já está cadastrado em outra conta',
+          phone: phone,
         }, 200);
       }
 
@@ -67,6 +55,7 @@ module.exports = async ({ req, res, log, error }) => {
       return res.json({
         exists: false,
         message: 'Telefone disponível para cadastro',
+        phone: phone,
       }, 200);
 
     } catch (searchError) {

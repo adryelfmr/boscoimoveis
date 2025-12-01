@@ -75,7 +75,7 @@ export default function Perfil() {
     }
   };
 
-  // ✅ CORRIGIDO: Enviar via BODY (como send-contact-email)
+  // ✅ SOLUÇÃO DEFINITIVA: Usar variáveis de ambiente da execução
   const verificarTelefoneExistente = async (telefone) => {
     try {
       const client = new Client()
@@ -87,18 +87,15 @@ export default function Perfil() {
       
       console.log('🔍 Verificando telefone:', telefoneE164);
       
-      // ✅ CORRIGIDO: Enviar via BODY
-      const bodyData = {
-        phone: telefoneE164
-      };
-
+      // ✅ SOLUÇÃO DEFINITIVA: Passar como variável de ambiente da execução
       const execution = await functions.createExecution(
         'check-phone-exists',
-        JSON.stringify(bodyData), // ✅ Body com dados
-        false,
-        '/',
-        'POST', // ✅ POST (como send-contact-email)
-        {}
+        '', // ❌ Body vazio (não aceita body em HTTP functions)
+        false, // async = false
+        '/', // path
+        'GET', // ✅ Método GET
+        {}, // headers vazios
+        { 'PHONE_TO_CHECK': telefoneE164 } // ✅ Passar como variável de ambiente
       );
 
       console.log('✅ Resposta da função:', execution);
