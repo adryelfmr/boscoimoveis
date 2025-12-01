@@ -4,7 +4,7 @@ import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Phone, Loader2, CheckCircle, Shield, AlertTriangle } from 'lucide-react';
+import { Phone, Loader2, CheckCircle, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { converterParaE164 } from '@/utils/telefone';
 
@@ -28,7 +28,6 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
     };
   }, []);
 
-  // ✅ ATUALIZADO: reCAPTCHA invisível
   const setupRecaptcha = () => {
     if (window.recaptchaVerifier) {
       try {
@@ -39,7 +38,7 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
     }
 
     window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      size: 'invisible', // ✅ MUDANÇA PRINCIPAL
+      size: 'invisible',
       callback: (response) => {
         console.log('✅ reCAPTCHA resolvido automaticamente');
       },
@@ -143,20 +142,62 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
     }
   };
 
+  // ✅ CORRIGIDO: Reenviar código
   const reenviarCodigo = async () => {
-    setEtapa('enviar');
-    setCodigo('');
-    
-    if (window.recaptchaVerifier) {
-      try {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = null;
-      } catch (error) {
-        console.warn('Erro ao limpar reCAPTCHA');
+    try {
+      setCodigo('');
+      setEnviando(true);
+
+      // Limpar reCAPTCHA anterior
+      if (window.recaptchaVerifier) {
+        try {
+          window.recaptchaVerifier.clear();
+          window.recaptchaVerifier = null;
+        } catch (error) {
+          console.warn('Erro ao limpar reCAPTCHA');
+        }
       }
+
+      // Reconfigurar e reenviar
+      setupRecaptcha();
+      const telefoneE164 = converterParaE164(telefone);
+
+      await window.recaptchaVerifier.render();
+      const appVerifier = window.recaptchaVerifier;
+      const confirmation = await signInWithPhoneNumber(auth, telefoneE164, appVerifier);
+
+      setConfirmationResult(confirmation);
+      
+      toast.success('📱 Novo código enviado!', {
+        description: 'Verifique suas mensagens de texto.',
+      });
+    } catch (error) {
+      console.error('❌ Erro ao reenviar código:', error);
+
+      if (window.recaptchaVerifier) {
+        try {
+          window.recaptchaVerifier.clear();
+          window.recaptchaVerifier = null;
+        } catch (clearError) {
+          console.warn('Erro ao limpar reCAPTCHA');
+        }
+      }
+
+      if (error.code === 'auth/too-many-requests') {
+        toast.error('⚠️ Muitas tentativas', {
+          description: 'Aguarde alguns minutos antes de tentar novamente.',
+        });
+      } else {
+        toast.error('❌ Erro ao reenviar código', {
+          description: 'Tente novamente.',
+        });
+      }
+
+      // Voltar para tela inicial se falhar
+      setEtapa('enviar');
+    } finally {
+      setEnviando(false);
     }
-    
-    await enviarCodigo();
   };
 
   return (
@@ -177,7 +218,6 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
               <p className="font-bold text-blue-900 mt-2">{telefone}</p>
             </div>
 
-            {/* ✅ ATUALIZADO: Aviso simplificado */}
             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
               <div className="flex items-start gap-2">
                 <Shield className="w-4 h-4 text-green-600 mt-0.5" />
@@ -187,7 +227,6 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
               </div>
             </div>
 
-            {/* ✅ Container invisível */}
             <div id="recaptcha-container"></div>
 
             <div className="flex gap-2">
@@ -239,6 +278,9 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
               </p>
             </div>
 
+            {/* ✅ Container invisível para reenvio */}
+            <div id="recaptcha-container"></div>
+
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -246,7 +288,14 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
                 disabled={enviando}
                 className="flex-1"
               >
-                {enviando ? 'Reenviando...' : 'Reenviar Código'}
+                {enviando ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Reenviando...
+                  </>
+                ) : (
+                  'Reenviar Código'
+                )}
               </Button>
               <Button
                 onClick={verificarCodigo}
