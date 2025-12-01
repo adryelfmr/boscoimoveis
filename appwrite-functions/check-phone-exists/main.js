@@ -6,17 +6,14 @@ module.exports = async ({ req, res, log, error }) => {
     log('req.body:', JSON.stringify(req.body));
     log('req.bodyRaw:', req.bodyRaw);
     
-    // ✅ CORRIGIDO: Parser do payload
+    // ✅ Parser do payload
     let payload;
     
     try {
-      // Tentar bodyRaw primeiro (vem como string)
       if (req.bodyRaw) {
         payload = JSON.parse(req.bodyRaw);
         log('✅ Parsed from bodyRaw');
-      }
-      // Fallback para req.body
-      else if (req.body) {
+      } else if (req.body) {
         if (typeof req.body === 'string') {
           payload = JSON.parse(req.body);
         } else {
@@ -60,10 +57,12 @@ module.exports = async ({ req, res, log, error }) => {
     try {
       log('🔍 Buscando usuários com telefone:', phone);
       
-      // ✅ Buscar com Query.equal
-      const userList = await users.list([
-        sdk.Query.equal('phone', phone)
-      ]);
+      // ✅ CORRIGIDO: Usar array de queries
+      const queries = [
+        sdk.Query.equal('phone', [phone]) // ✅ MUDANÇA: passar phone em array
+      ];
+      
+      const userList = await users.list(queries);
 
       log(`📊 Total de usuários encontrados: ${userList.total}`);
 
