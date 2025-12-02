@@ -6,40 +6,49 @@ export default function SEO({
   keywords = 'imóveis, casas, apartamentos, terrenos, Goiânia, venda, aluguel',
   image = 'https://boscoimoveis.app/web-app-manifest-512x512.png',
   url = typeof window !== 'undefined' ? window.location.href : '',
-  type = 'website', // ✅ NOVO
-  price = null, // ✅ NOVO (para imóveis)
-  availability = null, // ✅ NOVO (para imóveis)
+  type = 'website',
+  price = null,
+  availability = null,
 }) {
   useEffect(() => {
     // Atualizar título
     document.title = title;
 
+    // ✅ CORRIGIDO: Normalizar URL canônica (sempre sem www, sempre https)
+    const canonicalUrl = url
+      .replace('https://www.boscoimoveis.app', 'https://boscoimoveis.app')
+      .replace('http://www.boscoimoveis.app', 'https://boscoimoveis.app')
+      .replace('http://boscoimoveis.app', 'https://boscoimoveis.app');
+
     // Meta tags básicas
     const metaTags = [
       { name: 'description', content: description },
       { name: 'keywords', content: keywords },
+      { name: 'author', content: 'Bosco Imóveis' }, // ✅ ADICIONAR
       
       // Open Graph / Facebook
       { property: 'og:type', content: type },
-      { property: 'og:url', content: url },
+      { property: 'og:url', content: canonicalUrl }, // ✅ USAR URL NORMALIZADA
       { property: 'og:title', content: title },
       { property: 'og:description', content: description },
       { property: 'og:image', content: image },
+      { property: 'og:image:secure_url', content: image }, // ✅ ADICIONAR
       { property: 'og:image:width', content: '512' },
       { property: 'og:image:height', content: '512' },
       { property: 'og:image:type', content: 'image/png' },
+      { property: 'og:image:alt', content: title }, // ✅ ADICIONAR
       { property: 'og:locale', content: 'pt_BR' },
       { property: 'og:site_name', content: 'Bosco Imóveis' },
       
       // Twitter
       { property: 'twitter:card', content: 'summary_large_image' },
-      { property: 'twitter:url', content: url },
+      { property: 'twitter:url', content: canonicalUrl }, // ✅ USAR URL NORMALIZADA
       { property: 'twitter:title', content: title },
       { property: 'twitter:description', content: description },
       { property: 'twitter:image', content: image },
     ];
 
-    // ✅ NOVO: Open Graph para imóveis
+    // Open Graph para imóveis
     if (price) {
       metaTags.push({ property: 'og:type', content: 'product' });
       metaTags.push({ property: 'product:price:amount', content: price.toString() });
@@ -65,14 +74,14 @@ export default function SEO({
       tag.setAttribute('content', content);
     });
 
-    // Canonical URL
+    // ✅ Canonical URL (sempre normalizada)
     let canonical = document.querySelector('link[rel="canonical"]');
     if (!canonical) {
       canonical = document.createElement('link');
       canonical.setAttribute('rel', 'canonical');
       document.head.appendChild(canonical);
     }
-    canonical.setAttribute('href', url);
+    canonical.setAttribute('href', canonicalUrl); // ✅ USAR URL NORMALIZADA
 
   }, [title, description, keywords, image, url, type, price, availability]);
 

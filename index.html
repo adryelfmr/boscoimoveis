@@ -60,9 +60,13 @@
     
     <!-- Canonical URL -->
     <link rel="canonical" href="https://boscoimoveis.app" />
-    
-    <!-- ✅ ADICIONAR: hreflang -->
+
+    <!-- ✅ ADICIONAR: Sitemap no <head> -->
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="https://boscoimoveis.app/sitemap.xml" />
+
+    <!-- hreflang -->
     <link rel="alternate" hreflang="pt-br" href="https://boscoimoveis.app" />
+    <link rel="alternate" hreflang="pt" href="https://boscoimoveis.app" />
     <link rel="alternate" hreflang="x-default" href="https://boscoimoveis.app" />
     
     <!-- Google Analytics -->
@@ -106,7 +110,12 @@
       "@type": "Organization",
       "name": "Bosco Imóveis",
       "url": "https://boscoimoveis.app",
-      "logo": "https://boscoimoveis.app/web-app-manifest-512x512.png",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://boscoimoveis.app/web-app-manifest-512x512.png",
+        "width": 512,
+        "height": 512
+      },
       "image": "https://boscoimoveis.app/web-app-manifest-512x512.png",
       "description": "Corretora de imóveis em Goiânia com mais de 10 anos de experiência",
       "address": {

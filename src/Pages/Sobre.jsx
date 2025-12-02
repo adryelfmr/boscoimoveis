@@ -6,15 +6,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import SEO from '@/components/SEO';
+import Breadcrumbs from '@/components/Breadcrumbs'; // ✅ ADICIONAR
 
 export default function Sobre() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white">
-      <SEO
-        title="Sobre Nós - Bosco Imóveis | Corretores Especializados em Goiânia"
-        description="Conheça a história da Bosco Imóveis. Há mais de 10 anos ajudando famílias a realizarem o sonho da casa própria em Goiânia e região. Corretores autônomos com atendimento personalizado."
-        keywords="sobre bosco imóveis, corretores goiânia, história, experiência, atendimento personalizado"
-      />
+      {/* ✅ ADICIONAR: Breadcrumbs */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <Breadcrumbs items={[
+          { name: 'Sobre', url: '/sobre' }
+        ]} />
+      </div>
 
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-16">
@@ -163,6 +165,13 @@ export default function Sobre() {
           </div>
         </motion.div>
       </div>
+
+      <SEO
+        title="Sobre Nós - Bosco Imóveis | Mais de 10 anos realizando sonhos"
+        description="Conheça a Bosco Imóveis: mais de 10 anos de experiência no mercado imobiliário de Goiânia. Realizamos o sonho da casa própria."
+        keywords="sobre bosco imóveis, corretora goiânia, história, missão, valores"
+        url="https://boscoimoveis.app/sobre" // ✅ ADICIONAR URL
+      />
     </div>
   );
 }

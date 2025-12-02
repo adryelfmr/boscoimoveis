@@ -7,12 +7,19 @@ Disallow: /admin
 Disallow: /meus-anuncios
 Disallow: /meus-dados
 
-# ✅ NOVO: Permitir explicitamente páginas importantes
+# ✅ Permitir explicitamente páginas importantes
 Allow: /catalogo
 Allow: /promocoes
 Allow: /detalhes
 Allow: /sobre
 Allow: /contato
+
+# ✅ NOVO: Permitir crawl de imagens
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.jpeg$
+Allow: /*.webp$
+Allow: /*.svg$
 
 # ✅ Evitar indexação de rotas dinâmicas com parâmetros sensíveis
 Disallow: /*?edit=*

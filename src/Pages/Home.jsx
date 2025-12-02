@@ -66,7 +66,7 @@ export default function Home() {
             >
               <img 
                 src="/boscoimoveis.svg" 
-                alt="Bosco Imóveis" 
+                alt="Bosco Imóveis - Corretores de Imóveis em Goiânia" 
                 className="h-24 md:h-32 w-auto drop-shadow-2xl"
               />
             </motion.div>

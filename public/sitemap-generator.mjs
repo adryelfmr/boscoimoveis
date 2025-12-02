@@ -66,11 +66,16 @@ async function gerarSitemap() {
     
     // Adicionar imóveis
     imoveis.forEach(imovel => {
-      const lastmod = imovel.$updatedAt ? imovel.$updatedAt.split('T')[0] : hoje;
+      // ✅ CORRIGIDO: Usar data de atualização real ou criação
+      const lastmod = imovel.$updatedAt 
+        ? imovel.$updatedAt.split('T')[0] 
+        : imovel.$createdAt 
+        ? imovel.$createdAt.split('T')[0] 
+        : hoje;
       
       xml += '  <url>\n';
       xml += `    <loc>${escapeXml(baseUrl + '/detalhes?id=' + imovel.$id)}</loc>\n`; // ✅ ESCAPAR URL
-      xml += `    <lastmod>${lastmod}</lastmod>\n`;
+      xml += `    <lastmod>${lastmod}</lastmod>\n`; // ✅ DATA DINÂMICA
       xml += '    <changefreq>weekly</changefreq>\n';
       xml += '    <priority>0.8</priority>\n';
       

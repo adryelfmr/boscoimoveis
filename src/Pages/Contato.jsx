@@ -8,9 +8,10 @@ import { Mail, Phone, MapPin, MessageCircle, Send, Clock, Shield, AlertTriangle 
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Client, Functions } from 'appwrite';
-import { rateLimits } from '@/utils/rateLimit'; // ✅ NOVO IMPORT
-import { analytics } from '@/utils/analytics'; // ✅ NOVO IMPORT
+import { rateLimits } from '@/utils/rateLimit';
+import { analytics } from '@/utils/analytics';
 import SEO from '@/components/SEO';
+import Breadcrumbs from '@/components/Breadcrumbs'; // ✅ ADICIONAR
 
 export default function Contato() {
   const [formData, setFormData] = useState({
@@ -134,6 +135,13 @@ export default function Contato() {
             </p>
           </motion.div>
         </div>
+      </div>
+
+      {/* ✅ ADICIONAR: Breadcrumbs */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <Breadcrumbs items={[
+          { name: 'Contato', url: '/contato' }
+        ]} />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -332,6 +340,7 @@ export default function Contato() {
         title="Entre em Contato - Bosco Imóveis"
         description="Fale conosco! Nossa equipe especializada está pronta para ajudar você a encontrar o imóvel ideal."
         keywords="contato, falar com corretor, atendimento imóveis goiânia"
+        url="https://boscoimoveis.app/contato" // ✅ ADICIONAR URL
       />
     </div>
   );

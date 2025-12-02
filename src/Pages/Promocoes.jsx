@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import ImovelCard from '@/components/imoveis/ImovelCard'; // ✅ CORRIGIDO
 import { Tag, Building2 } from 'lucide-react';
 import SEO from '@/components/SEO';
+import Breadcrumbs from '@/components/Breadcrumbs'; // ✅ ADICIONAR
 
 export default function Promocoes() {
   const { data: promocoes = [], isLoading } = useQuery({
@@ -17,7 +18,14 @@ export default function Promocoes() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white">
+      {/* ✅ ADICIONAR: Breadcrumbs */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <Breadcrumbs items={[
+          { name: 'Promoções', url: '/promocoes' }
+        ]} />
+      </div>
+
       <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 mb-4">
