@@ -23,7 +23,7 @@ import MeusAnuncios from './Pages/MeusAnuncios';
 import { trackPageView } from './utils/analytics';
 import AceitarConvite from '@/Pages/AceitarConvite';
 
-// ✅ NOVO: Wrapper para rastrear navegação
+
 const PageWrapper = ({ Component, pageName }) => {
   React.useEffect(() => {
     trackPageView(window.location.pathname);
