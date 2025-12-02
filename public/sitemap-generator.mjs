@@ -50,14 +50,14 @@ async function gerarSitemap() {
     
     const imoveis = response.documents;
     
-    // ✅ CORRIGIDO: Iniciar XML com declaração e namespace em UMA linha
+    // ✅ Iniciar XML
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n';
     
     // Adicionar páginas estáticas
     paginasEstaticas.forEach(pagina => {
       xml += '  <url>\n';
-      xml += `    <loc>${baseUrl}${pagina.url}</loc>\n`;
+      xml += `    <loc>${escapeXml(baseUrl + pagina.url)}</loc>\n`; // ✅ ESCAPAR URL
       xml += `    <lastmod>${hoje}</lastmod>\n`;
       xml += `    <changefreq>${pagina.frequencia}</changefreq>\n`;
       xml += `    <priority>${pagina.prioridade}</priority>\n`;
@@ -69,7 +69,7 @@ async function gerarSitemap() {
       const lastmod = imovel.$updatedAt ? imovel.$updatedAt.split('T')[0] : hoje;
       
       xml += '  <url>\n';
-      xml += `    <loc>${baseUrl}/detalhes?id=${imovel.$id}</loc>\n`;
+      xml += `    <loc>${escapeXml(baseUrl + '/detalhes?id=' + imovel.$id)}</loc>\n`; // ✅ ESCAPAR URL
       xml += `    <lastmod>${lastmod}</lastmod>\n`;
       xml += '    <changefreq>weekly</changefreq>\n';
       xml += '    <priority>0.8</priority>\n';
@@ -80,8 +80,8 @@ async function gerarSitemap() {
         
         todasImagens.forEach((imagemUrl) => {
           xml += '    <image:image>\n';
-          xml += `      <image:loc>${escapeXml(imagemUrl)}</image:loc>\n`;
-          xml += `      <image:title>${escapeXml(imovel.titulo)}</image:title>\n`;
+          xml += `      <image:loc>${escapeXml(imagemUrl)}</image:loc>\n`; // ✅ JÁ ESCAPADO
+          xml += `      <image:title>${escapeXml(imovel.titulo || '')}</image:title>\n`; // ✅ JÁ ESCAPADO
           xml += '    </image:image>\n';
         });
       }
@@ -105,9 +105,10 @@ async function gerarSitemap() {
   }
 }
 
+// ✅ Função de escape XML (já existente, mas melhorada)
 function escapeXml(str) {
   if (!str) return '';
-  return str
+  return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
