@@ -221,10 +221,21 @@ export default function Detalhes() {
 
   const schemaData = {
     "@context": "https://schema.org",
-    "@type": "Product",
+    "@type": "RealEstateAgent", // ✅ MUDEI: de Product para RealEstateAgent
     "name": imovel.titulo,
     "description": imovel.descricao,
     "image": imovel.imagemPrincipal || imovel.imagens?.split(',')[0],
+    
+    // ✅ NOVO: Informações do imóvel
+    "numberOfRooms": imovel.numeroQuartos || 0,
+    "numberOfBathroomsTotal": imovel.numeroBanheiros || 0,
+    "floorSize": {
+      "@type": "QuantitativeValue",
+      "value": imovel.areaTotal || imovel.areaUtil,
+      "unitCode": "MTK" // metros quadrados
+    },
+    
+    // ✅ Ofertas
     "offers": {
       "@type": "Offer",
       "price": imovel.preco,
@@ -233,23 +244,54 @@ export default function Detalhes() {
         ? "https://schema.org/InStock" 
         : "https://schema.org/OutOfStock",
       "url": window.location.href,
+      "priceValidUntil": new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString().split('T')[0], // ✅ NOVO: 3 meses
     },
-    "brand": {
-      "@type": "Organization",
-      "name": "Bosco Imóveis"
-    },
+    
+    // ✅ Endereço completo
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": `${imovel.endereco}, ${imovel.numero}`,
+      "streetAddress": imovel.endereco ? `${imovel.endereco}, ${imovel.numero || 'S/N'}` : imovel.bairro,
       "addressLocality": imovel.cidade,
       "addressRegion": imovel.estado,
       "postalCode": imovel.cep,
       "addressCountry": "BR"
     },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": imovel.latitude,
-      "longitude": imovel.longitude
+    
+    // ✅ Geolocalização (NOVO)
+    ...(imovel.latitude && imovel.longitude && {
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": imovel.latitude,
+        "longitude": imovel.longitude
+      }
+    }),
+    
+    // ✅ Características extras (NOVO)
+    "amenityFeature": [
+      ...(imovel.diferenciais || []).map(item => ({
+        "@type": "LocationFeatureSpecification",
+        "name": item,
+        "value": true
+      })),
+      ...(imovel.lazerCondominio || []).map(item => ({
+        "@type": "LocationFeatureSpecification",
+        "name": item,
+        "value": true
+      }))
+    ],
+    
+    // ✅ Agente imobiliário
+    "broker": {
+      "@type": "RealEstateAgent",
+      "name": "Bosco Imóveis",
+      "url": "https://boscoimoveis.app",
+      "telephone": "+55-62-99404-5111",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Goiânia",
+        "addressRegion": "GO",
+        "addressCountry": "BR"
+      }
     }
   };
 

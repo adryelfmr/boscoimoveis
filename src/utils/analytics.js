@@ -179,4 +179,30 @@ export const analytics = {
       conversion_type: type, // 'contact', 'visit_schedule', 'proposal'
     });
   },
+
+  // ✅ NOVO: Rastrear conversões importantes
+  trackConversion(type, value) {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'conversion', {
+        'send_to': 'AW-CONVERSION_ID/CONVERSION_LABEL', // ⚠️ Adicionar seu ID do Google Ads
+        'value': value,
+        'currency': 'BRL',
+        'transaction_id': `${Date.now()}_${Math.random()}`
+      });
+    }
+  },
+
+  // ✅ Rastrear leads (quando alguém clicar em WhatsApp)
+  trackLead(imovelId, tipo) {
+    this.trackConversion('lead', 0);
+    
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'generate_lead', {
+        'currency': 'BRL',
+        'value': 0,
+        'event_category': 'engagement',
+        'event_label': `${tipo}_${imovelId}`
+      });
+    }
+  }
 };

@@ -1,24 +1,25 @@
 # Bosco Imóveis - Robots.txt
 User-agent: *
 Allow: /
+Disallow: /perfil
 Disallow: /gerenciador
-Disallow: /gerenciar-contatos
+Disallow: /admin
 Disallow: /meus-anuncios
 Disallow: /meus-dados
-Disallow: /perfil
 
-# Sitemaps
-Sitemap: https://boscoimoveis.app/sitemap.xml
+# ✅ NOVO: Permitir explicitamente páginas importantes
+Allow: /catalogo
+Allow: /promocoes
+Allow: /detalhes
+Allow: /sobre
+Allow: /contato
 
-# Crawl-delay (evitar sobrecarga)
+# ✅ Evitar indexação de rotas dinâmicas com parâmetros sensíveis
+Disallow: /*?edit=*
+Disallow: /*?token=*
+
+# ✅ Crawl-delay para evitar sobrecarga
 Crawl-delay: 1
 
-# Bots específicos
-User-agent: Googlebot
-Allow: /
-
-User-agent: Googlebot-Image
-Allow: /
-
-User-agent: Bingbot
-Allow: /
+# ✅ Sitemap
+Sitemap: https://boscoimoveis.app/sitemap.xml

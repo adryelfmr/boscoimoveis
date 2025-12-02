@@ -4,7 +4,8 @@ import { Loader2 } from 'lucide-react';
 export default function LazyImage({ 
   src, 
   alt, 
-  className = ''
+  className = '',
+  priority = false
 }) {
   const [imageSrc, setImageSrc] = useState(null);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -51,6 +52,8 @@ export default function LazyImage({
     };
   }, [src]);
 
+  const shouldLoad = imageLoaded || imageError;
+
   return (
     <div ref={imgRef} className="relative w-full h-full">
       {/* Loading State */}
@@ -75,12 +78,14 @@ export default function LazyImage({
       {/* Image */}
       {imageSrc && (
         <img
-          src={imageSrc}
-          alt={alt}
-          className={`transition-opacity duration-300 ${
-            imageLoaded ? 'opacity-100' : 'opacity-0'
-          } ${className}`}
-          loading="lazy"
+          ref={imgRef}
+          src={shouldLoad ? src : undefined}
+          alt={alt || 'Imóvel'}
+          className={className}
+          loading={priority ? 'eager' : 'lazy'}
+          decoding="async"
+          width={priority ? 1200 : undefined}
+          height={priority ? 800 : undefined}
         />
       )}
     </div>

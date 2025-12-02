@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { appwrite } from '@/api/appwriteClient';
 import { useQuery } from '@tanstack/react-query';
-import ImovelCard from '@/components/imoveis/ImovelCard'; // ✅ CORRIGIDO: usar @ alias
-import FiltrosImoveis from '@/components/imoveis/FiltrosImoveis'; // ✅ CORRIGIDO: usar @ alias
+import ImovelCard from '@/components/imoveis/ImovelCard';
+import FiltrosImoveis from '@/components/imoveis/FiltrosImoveis';
 import { Building2 } from 'lucide-react';
 import SEO from '@/components/SEO';
+import SchemaOrg from '@/components/SchemaOrg'; // ✅ CORRIGIDO: era SemanticSchemaOrg
 
 export default function Catalogo() {
   const [filtros, setFiltros] = useState({
@@ -57,6 +58,30 @@ export default function Catalogo() {
     });
   };
 
+  // ✅ ADICIONAR Schema.org para página de listagem
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Catálogo de Imóveis - Bosco Imóveis",
+    "description": "Confira todos os imóveis disponíveis em Goiânia e região",
+    "numberOfItems": imoveisFiltrados.length,
+    "itemListElement": imoveisFiltrados.slice(0, 10).map((imovel, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": "RealEstateAgent",
+        "name": imovel.titulo,
+        "url": `https://boscoimoveis.app/detalhes?id=${imovel.$id}`,
+        "image": imovel.imagemPrincipal,
+        "offers": {
+          "@type": "Offer",
+          "price": imovel.preco,
+          "priceCurrency": "BRL"
+        }
+      }
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white">
       <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-12">
@@ -102,10 +127,11 @@ export default function Catalogo() {
       </div>
 
       <SEO
-        title="Catálogo de Imóveis - Bosco Imóveis"
-        description="Explore nosso catálogo completo de imóveis em Goiânia. Casas, apartamentos, terrenos e muito mais."
-        keywords="catálogo imóveis, todos imóveis, goiânia"
+        title="Catálogo de Imóveis - Bosco Imóveis | Casas e Apartamentos em Goiânia"
+        description={`Confira ${imoveisFiltrados.length} imóveis disponíveis em Goiânia. Casas, apartamentos, terrenos e muito mais.`}
+        keywords="catálogo imóveis, imóveis goiânia, comprar casa, alugar apartamento"
       />
+      <SchemaOrg data={schemaData} /> {/* ✅ ADICIONAR */}
     </div>
   );
 }

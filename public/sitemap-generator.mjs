@@ -26,11 +26,11 @@ async function gerarSitemap() {
     
     // Páginas estáticas
     const paginasEstaticas = [
-      { url: '/', prioridade: '1.0', frequencia: 'daily' },
-      { url: '/catalogo', prioridade: '0.9', frequencia: 'daily' },
-      { url: '/promocoes', prioridade: '0.8', frequencia: 'weekly' },
+      { url: '/', prioridade: '1.0', frequencia: 'daily' }, // ✅ MUDEI: weekly → daily
+      { url: '/catalogo', prioridade: '0.9', frequencia: 'daily' }, // ✅ MUDEI
+      { url: '/promocoes', prioridade: '0.8', frequencia: 'daily' }, // ✅ MUDEI
       { url: '/sobre', prioridade: '0.7', frequencia: 'monthly' },
-      { url: '/contato', prioridade: '0.8', frequencia: 'monthly' },
+      { url: '/contato', prioridade: '0.7', frequencia: 'monthly' },
       { url: '/favoritos', prioridade: '0.6', frequencia: 'monthly' },
       { url: '/comparar', prioridade: '0.6', frequencia: 'monthly' },
       { url: '/login', prioridade: '0.5', frequencia: 'yearly' },
@@ -76,17 +76,20 @@ async function gerarSitemap() {
   <url>
     <loc>${baseUrl}/detalhes?id=${imovel.$id}</loc>
     <lastmod>${lastmod}</lastmod>
-    <changefreq>weekly</changefreq>
+    <changefreq>weekly</changefreq> 
     <priority>0.8</priority>`;
       
-      // Adicionar imagem principal
-      if (imovel.imagemPrincipal) {
-        const titulo = imovel.titulo || 'Imóvel';
-        xml += `
+      // ✅ ADICIONAR: Imagens TODAS (não só principal)
+      if (imovel.imagens) {
+        const todasImagens = imovel.imagens.split(',').map(url => url.trim());
+        todasImagens.forEach((imagemUrl, index) => {
+          xml += `
     <image:image>
-      <image:loc>${imovel.imagemPrincipal}</image:loc>
-      <image:title>${escapeXml(titulo)}</image:title>
+      <image:loc>${imagemUrl}</image:loc>
+      <image:title>${escapeXml(imovel.titulo)} - Foto ${index + 1}</image:title>
+      <image:caption>${escapeXml(imovel.descricao || imovel.titulo)}</image:caption>
     </image:image>`;
+        });
       }
       
       xml += `

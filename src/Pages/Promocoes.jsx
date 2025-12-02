@@ -3,6 +3,7 @@ import { appwrite } from '@/api/appwriteClient';
 import { useQuery } from '@tanstack/react-query';
 import ImovelCard from '@/components/imoveis/ImovelCard'; // ✅ CORRIGIDO
 import { Tag, Building2 } from 'lucide-react';
+import SEO from '@/components/SEO';
 
 export default function Promocoes() {
   const { data: promocoes = [], isLoading } = useQuery({
@@ -56,6 +57,14 @@ export default function Promocoes() {
           </div>
         )}
       </div>
+
+      {/* ✅ ADICIONAR SEO */}
+      <SEO
+        title="Promoções Imperdíveis - Bosco Imóveis | Descontos Exclusivos"
+        description={`${promocoes.length} imóveis em promoção com descontos especiais. Não perca essas oportunidades!`}
+        keywords="promoção imóveis, descontos imóveis goiânia, ofertas especiais"
+        image={promocoes[0]?.imagemPrincipal || '/web-app-manifest-512x512.png'}
+      />
     </div>
   );
 }
