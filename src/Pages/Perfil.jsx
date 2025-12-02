@@ -21,6 +21,8 @@ export default function Perfil() {
   const [salvando, setSalvando] = useState(false);
   const [verificandoTelefone, setVerificandoTelefone] = useState(false);
   const [senhaParaTelefone, setSenhaParaTelefone] = useState('');
+  const [modalErroTelefone, setModalErroTelefone] = useState(false);
+  const [mensagemErroTelefone, setMensagemErroTelefone] = useState('');
   
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -87,7 +89,6 @@ export default function Perfil() {
     try {
       console.log('🔄 Salvando telefone no Appwrite:', telefoneE164);
       
-      // ✅ O Appwrite valida automaticamente se o telefone já existe
       await account.updatePhone(telefoneE164, senhaParaTelefone);
       
       console.log('✅ Telefone salvo com sucesso no Appwrite');
@@ -110,35 +111,26 @@ export default function Perfil() {
     } catch (error) {
       console.error('❌ Erro ao salvar telefone:', error);
       
-      // ✅ Tratar erro 409 (telefone duplicado)
       if (error.code === 409 || error.message?.includes('already exists')) {
-        toast.error('📱 Este telefone já está cadastrado', {
-          description: 'Este número já está vinculado a outra conta.',
-          duration: 5000,
-        });
+        setMensagemErroTelefone('Este número já está cadastrado em outra conta.');
+        setModalErroTelefone(true);
       } else if (error.message?.includes('password') || error.message?.includes('Invalid')) {
-        toast.error('❌ Senha incorreta', {
-          description: 'Verifique sua senha e tente novamente.',
-        });
+        setMensagemErroTelefone('Senha incorreta. Verifique sua senha e tente novamente.');
+        setModalErroTelefone(true);
       } else if (error.message?.includes('same ID')) {
-        // ✅ NOVO: Tratar "target with the same ID already exists"
-        toast.error('📱 Telefone já está cadastrado na sua conta', {
-          description: 'Este número já está associado ao seu perfil.',
-        });
+        setMensagemErroTelefone('Este número já está associado ao seu perfil.');
+        setModalErroTelefone(true);
         
-        // ✅ Atualizar o estado para refletir o telefone atual
         await checkUser();
         setFormData({
           ...formData,
           telefone: user?.phone ? converterParaBrasileiro(user.phone) : '',
         });
       } else {
-        toast.error('Erro ao salvar telefone', {
-          description: 'Tente novamente mais tarde.',
-        });
+        setMensagemErroTelefone('Erro ao salvar telefone. Tente novamente.');
+        setModalErroTelefone(true);
       }
       
-      // ✅ Fechar modal em caso de erro
       setVerificandoTelefone(false);
       setSenhaParaTelefone('');
     }
@@ -234,11 +226,11 @@ export default function Perfil() {
                     maxLength={15}
                   />
                   <p className="text-xs text-slate-500">
-                    📱 Formato: (DD) 9XXXX-XXXX ou (DD) XXXX-XXXX
+                    📱 Formato: (DD) 9XXXX-XXXX <strong>(apenas celular)</strong>
                   </p>
                   {!validarTelefone(formData.telefone) && formData.telefone.length > 0 && (
                     <p className="text-xs text-red-600">
-                      ⚠️ Telefone inválido
+                      ⚠️ Telefone inválido. Use apenas números de celular com 9 dígitos.
                     </p>
                   )}
                   
@@ -384,6 +376,45 @@ export default function Perfil() {
             )}
           </CardContent>
         </Card>
+
+        {/* ✅ Modal de Erro de Telefone */}
+        {modalErroTelefone && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className="max-w-md w-full">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                    <AlertTriangle className="w-8 h-8 text-red-600" />
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-slate-900">
+                    ❌ Telefone já cadastrado
+                  </h3>
+                  
+                  <p className="text-slate-600">
+                    {mensagemErroTelefone}
+                  </p>
+                  
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 w-full">
+                    <p className="text-xs text-amber-800">
+                      💡 <strong>Dica:</strong> Se você possui outra conta, faça login nela ou entre em contato conosco.
+                    </p>
+                  </div>
+                  
+                  <Button
+                    onClick={() => {
+                      setModalErroTelefone(false);
+                      setMensagemErroTelefone('');
+                    }}
+                    className="w-full bg-blue-900 hover:bg-blue-800"
+                  >
+                    Entendi
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Modal de Verificação SMS */}
         {verificandoTelefone && (

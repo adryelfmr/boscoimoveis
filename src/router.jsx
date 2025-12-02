@@ -21,6 +21,7 @@ import Sobre from './Pages/Sobre';
 import AnunciarImovel from './Pages/AnunciarImovel';
 import MeusAnuncios from './Pages/MeusAnuncios';
 import { trackPageView } from './utils/analytics';
+import AceitarConvite from '@/Pages/AceitarConvite';
 
 // ✅ NOVO: Wrapper para rastrear navegação
 const PageWrapper = ({ Component, pageName }) => {
@@ -136,6 +137,10 @@ export const router = createBrowserRouter([
   {
     path: '/nova-senha',
     element: <NovaSenha />,
+  },
+  {
+    path: '/aceitar-convite',
+    element: <AceitarConvite />,
   },
   {
     path: '*',

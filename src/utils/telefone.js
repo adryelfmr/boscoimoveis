@@ -33,29 +33,16 @@ export function converterParaE164(telefone) {
  * @returns {string} (62) 99999-9999
  */
 export function converterParaBrasileiro(telefone) {
-  // Remover tudo que não é número
   const numeros = telefone.replace(/\D/g, '');
-  
-  // Remover código do país (55)
   const semPais = numeros.startsWith('55') ? numeros.substring(2) : numeros;
-  
-  // Extrair DDD e número
   const ddd = semPais.substring(0, 2);
   const numero = semPais.substring(2);
   
-  // Formatar baseado no tamanho (celular tem 9 dígitos, fixo tem 8)
+  // ✅ APENAS celular (9 dígitos)
   if (numero.length === 11) {
-    // Celular: (62) 99999-9999
     return `(${ddd}) ${numero.substring(0, 5)}-${numero.substring(5)}`;
-  } else if (numero.length === 10) {
-    // Celular sem 9: (62) 9999-9999
-    return `(${ddd}) ${numero.substring(0, 4)}-${numero.substring(4)}`;
   } else if (numero.length === 9) {
-    // Celular: 99999-9999
     return `(${ddd}) ${numero.substring(0, 5)}-${numero.substring(5)}`;
-  } else if (numero.length === 8) {
-    // Fixo: 9999-9999
-    return `(${ddd}) ${numero.substring(0, 4)}-${numero.substring(4)}`;
   }
   
   return telefone; // Retornar original se formato inválido
@@ -81,15 +68,15 @@ export function formatarTelefoneAoDigitar(value) {
 }
 
 /**
- * Valida telefone brasileiro
+ * Valida telefone brasileiro (APENAS CELULAR)
  * @param {string} telefone
  * @returns {boolean}
  */
 export function validarTelefone(telefone) {
   const numeros = telefone.replace(/\D/g, '');
   
-  // Deve ter 10 (fixo) ou 11 (celular) dígitos
-  if (numeros.length < 10 || numeros.length > 11) {
+  // ✅ APENAS celular: deve ter 11 dígitos (DDD + 9 dígitos)
+  if (numeros.length !== 11) {
     return false;
   }
   
@@ -99,8 +86,8 @@ export function validarTelefone(telefone) {
     return false;
   }
   
-  // Celular deve começar com 9
-  if (numeros.length === 11 && numeros[2] !== '9') {
+  // ✅ OBRIGATÓRIO: Celular deve começar com 9
+  if (numeros[2] !== '9') {
     return false;
   }
   
