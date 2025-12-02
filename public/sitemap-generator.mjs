@@ -50,51 +50,46 @@ async function gerarSitemap() {
     
     const imoveis = response.documents;
     
-    // ✅ CORRIGIDO: XML com namespace correto
-    let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">`;
+    // ✅ CORRIGIDO: Iniciar XML com declaração e namespace em UMA linha
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n';
     
     // Adicionar páginas estáticas
     paginasEstaticas.forEach(pagina => {
-      xml += `
-  <url>
-    <loc>${baseUrl}${pagina.url}</loc>
-    <lastmod>${hoje}</lastmod>
-    <changefreq>${pagina.frequencia}</changefreq>
-    <priority>${pagina.prioridade}</priority>
-  </url>`;
+      xml += '  <url>\n';
+      xml += `    <loc>${baseUrl}${pagina.url}</loc>\n`;
+      xml += `    <lastmod>${hoje}</lastmod>\n`;
+      xml += `    <changefreq>${pagina.frequencia}</changefreq>\n`;
+      xml += `    <priority>${pagina.prioridade}</priority>\n`;
+      xml += '  </url>\n';
     });
     
     // Adicionar imóveis
     imoveis.forEach(imovel => {
       const lastmod = imovel.$updatedAt ? imovel.$updatedAt.split('T')[0] : hoje;
       
-      xml += `
-  <url>
-    <loc>${baseUrl}/detalhes?id=${imovel.$id}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>`;
+      xml += '  <url>\n';
+      xml += `    <loc>${baseUrl}/detalhes?id=${imovel.$id}</loc>\n`;
+      xml += `    <lastmod>${lastmod}</lastmod>\n`;
+      xml += '    <changefreq>weekly</changefreq>\n';
+      xml += '    <priority>0.8</priority>\n';
       
-      // ✅ ADICIONAR: Apenas se tiver imagens
+      // Adicionar imagens
       if (imovel.imagens && imovel.imagens.trim()) {
         const todasImagens = imovel.imagens.split(',').map(url => url.trim()).filter(url => url);
         
         todasImagens.forEach((imagemUrl) => {
-          xml += `
-    <image:image>
-      <image:loc>${escapeXml(imagemUrl)}</image:loc>
-      <image:title>${escapeXml(imovel.titulo)}</image:title>
-    </image:image>`;
+          xml += '    <image:image>\n';
+          xml += `      <image:loc>${escapeXml(imagemUrl)}</image:loc>\n`;
+          xml += `      <image:title>${escapeXml(imovel.titulo)}</image:title>\n`;
+          xml += '    </image:image>\n';
         });
       }
       
-      xml += `
-  </url>`;
+      xml += '  </url>\n';
     });
     
-    xml += `
-</urlset>`;
+    xml += '</urlset>';
     
     // Salvar arquivo
     fs.writeFileSync(resolve(__dirname, 'sitemap.xml'), xml, 'utf8');
