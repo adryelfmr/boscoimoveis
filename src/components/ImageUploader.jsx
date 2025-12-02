@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { appwrite } from '@/api/appwriteClient';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Upload, X, Loader2, Image as ImageIcon, AlertTriangle } from 'lucide-react';
+import { Upload, X, Loader2, Star, Image as ImageIcon, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { ID } from 'appwrite';
 import uploadRateLimiter from '@/utils/uploadRateLimit'; // ✅ ADICIONAR
@@ -212,59 +212,61 @@ export default function ImageUploader({ images = [], onImagesChange, maxImages =
         </div>
       )}
 
-      {/* Grid de Imagens */}
       {images.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {images.map((image, index) => (
-            <Card key={index} className="relative group overflow-hidden">
-              <div className="aspect-square bg-slate-100">
+            <Card key={index} className="group relative overflow-hidden">
+              <div className="aspect-square relative">
                 <img
                   src={image.url}
-                  alt={`Imagem ${index + 1}`}
+                  alt={`Upload ${index + 1}`}
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/400?text=Erro';
-                  }}
                 />
-              </div>
-
-              {/* Badge de Principal */}
-              {index === 0 && (
-                <div className="absolute top-2 left-2 bg-blue-900 text-white px-2 py-1 rounded text-xs font-semibold">
-                  Principal
-                </div>
-              )}
-
-              {/* Ações */}
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                {index !== 0 && (
+                
+                {/* Overlay com ações */}
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                  {index === 0 ? (
+                    <div className="bg-amber-500 text-white px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
+                      <Star className="w-3 h-3 fill-current" />
+                      Principal
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => handleSetPrincipal(index)}
+                      className="text-xs"
+                    >
+                      <Star className="w-3 h-3 mr-1" />
+                      Tornar Principal
+                    </Button>
+                  )}
+                  
                   <Button
                     type="button"
                     size="sm"
-                    variant="secondary"
-                    onClick={() => setAsPrincipal(index)}
-                    className="text-xs"
+                    variant="destructive"
+                    onClick={() => handleRemove(index)}
                   >
-                    Definir como Principal
+                    <X className="w-3 h-3 mr-1" />
+                    Remover
                   </Button>
-                )}
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => removeImage(index)}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
+                </div>
+
+                {/* Badge de posição */}
+                <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                  {index + 1}
+                </div>
               </div>
             </Card>
           ))}
         </div>
       ) : (
         <Card className="border-2 border-dashed border-slate-300">
-          <div className="p-12 text-center">
-            <ImageIcon className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-            <p className="text-slate-600 mb-2">Nenhuma imagem adicionada</p>
+          <div className="p-8 text-center">
+            <ImageIcon className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+            <p className="text-slate-600 mb-1 font-medium">Nenhuma imagem adicionada</p>
             <p className="text-sm text-slate-500">
               Clique em "Adicionar Imagens" para fazer upload
             </p>
@@ -273,7 +275,7 @@ export default function ImageUploader({ images = [], onImagesChange, maxImages =
       )}
 
       <p className="text-xs text-slate-500">
-        Formatos aceitos: JPG, PNG, WebP, GIF (máx 10MB por imagem). A primeira imagem será usada como principal.
+        📸 Formatos: JPG, PNG, WebP, GIF | 📏 Máx: 10MB por imagem | ⭐ A primeira imagem será a principal
       </p>
     </div>
   );

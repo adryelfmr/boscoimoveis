@@ -82,7 +82,11 @@ export default function MeusAnuncios() {
           </Badge>
         );
       default:
-        return null;
+        return (
+          <Badge className="bg-slate-100 text-slate-800">
+            {status}
+          </Badge>
+        );
     }
   };
 
@@ -118,20 +122,13 @@ export default function MeusAnuncios() {
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-2">Meus Anúncios</h1>
-              <p className="text-xl text-blue-100">
-                {meusAnuncios.length} {meusAnuncios.length === 1 ? 'anúncio cadastrado' : 'anúncios cadastrados'}
-              </p>
-            </div>
-            <Link to="/anunciar">
-              <Button className="bg-amber-400 hover:bg-amber-500 text-blue-900 font-semibold">
-                <PlusCircle className="w-5 h-5 mr-2" />
-                Novo Anúncio
-              </Button>
-            </Link>
-          </div>
+          <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
+            <Home className="w-10 h-10" />
+            Meus Anúncios
+          </h1>
+          <p className="text-xl text-blue-100">
+            {meusAnuncios.length} {meusAnuncios.length === 1 ? 'anúncio' : 'anúncios'}
+          </p>
         </div>
       </div>
 
@@ -139,14 +136,14 @@ export default function MeusAnuncios() {
         {/* Informativo */}
         <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-blue-800">
               <p className="font-semibold mb-1">Como funciona?</p>
               <ul className="space-y-1 text-blue-700">
                 <li>• Seus anúncios ficam <strong>pendentes</strong> até um administrador aprovar</li>
                 <li>• Após aprovação, seu imóvel aparece no catálogo público</li>
                 <li>• Você pode editar ou excluir seus anúncios a qualquer momento</li>
-                <li>• Se rejeitado, você verá o motivo e poderá reenviar</li>
+                <li>• Se rejeitado, você verá o motivo e poderá reenviar após correção</li>
               </ul>
             </div>
           </div>
@@ -163,17 +160,25 @@ export default function MeusAnuncios() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {meusAnuncios.map((anuncio) => {
               const imagemPrincipal = anuncio.imagemPrincipal || 
-                (anuncio.imagens ? anuncio.imagens.split(',')[0] : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80');
+                (anuncio.imagens ? anuncio.imagens.split(',')[0] : null);
 
               return (
                 <Card key={anuncio.$id} className="overflow-hidden hover:shadow-xl transition-shadow">
                   {/* Imagem */}
-                  <div className="relative h-48 overflow-hidden">
-                    <LazyImage
-                      src={imagemPrincipal}
-                      alt={anuncio.titulo}
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="relative h-48 bg-slate-200">
+                    {imagemPrincipal ? (
+                      <LazyImage
+                        src={imagemPrincipal}
+                        alt={anuncio.titulo}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Home className="w-16 h-16 text-slate-400" />
+                      </div>
+                    )}
+                    
+                    {/* Status Badge */}
                     <div className="absolute top-3 left-3">
                       {getStatusBadge(anuncio.statusAprovacao)}
                     </div>
@@ -203,14 +208,80 @@ export default function MeusAnuncios() {
                       📍 {anuncio.bairro}, {anuncio.cidade} - {anuncio.estado}
                     </p>
 
-                    {/* Motivo de Rejeição */}
-                    {anuncio.statusAprovacao === 'rejeitado' && anuncio.motivoRejeicao && (
-                      <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="text-xs font-semibold text-red-800 mb-1">
-                          Motivo da Rejeição:
+                    {/* ✅ NOVO: Informações de Aprovação */}
+                    {anuncio.statusAprovacao === 'aprovado' && anuncio.dataAprovacao && (
+                      <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-xs font-semibold text-green-800 flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" />
+                          Aprovado!
                         </p>
-                        <p className="text-xs text-red-700">
-                          {anuncio.motivoRejeicao}
+                        <p className="text-xs text-green-700 mt-1">
+                          Aprovado em {new Date(anuncio.dataAprovacao).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                        {anuncio.aprovadoPorNome && (
+                          <p className="text-xs text-green-600 mt-1">
+                            por {anuncio.aprovadoPorNome}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* ✅ ATUALIZADO: Motivo de Rejeição com mais detalhes */}
+                    {anuncio.statusAprovacao === 'rejeitado' && (
+                      <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-xs font-semibold text-red-800 mb-1 flex items-center gap-1">
+                          <XCircle className="w-3 h-3" />
+                          Anúncio Rejeitado
+                        </p>
+                        
+                        {anuncio.dataRejeicao && (
+                          <p className="text-xs text-red-700 mb-2">
+                            Rejeitado em {new Date(anuncio.dataRejeicao).toLocaleString('pt-BR', {
+                              day: '2-digit',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        )}
+                        
+                        {anuncio.rejeitadoPorNome && (
+                          <p className="text-xs text-red-600 mb-2">
+                            por {anuncio.rejeitadoPorNome}
+                          </p>
+                        )}
+                        
+                        {anuncio.motivoRejeicao && (
+                          <>
+                            <p className="text-xs font-semibold text-red-800 mb-1">
+                              Motivo:
+                            </p>
+                            <p className="text-xs text-red-700 bg-red-100 p-2 rounded">
+                              "{anuncio.motivoRejeicao}"
+                            </p>
+                          </>
+                        )}
+                        
+                        <p className="text-xs text-red-600 mt-2 font-medium">
+                          💡 Você pode editar e reenviar
+                        </p>
+                      </div>
+                    )}
+
+                    {/* ✅ NOVO: Aviso de Pendente */}
+                    {anuncio.statusAprovacao === 'pendente' && (
+                      <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p className="text-xs font-semibold text-amber-800 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          Aguardando Aprovação
+                        </p>
+                        <p className="text-xs text-amber-700 mt-1">
+                          Seu anúncio será revisado em breve por um administrador
                         </p>
                       </div>
                     )}

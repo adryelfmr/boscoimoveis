@@ -23,14 +23,23 @@ import {
   Search, 
   Loader2,
   X,
-  Save,
-  MapPin,
+  CheckCircle,
+  XCircle,
+  Clock,
   AlertCircle,
+  MapPin,
+  Home,
+  DollarSign,
+  Eye,
+  Tag,
+  FileText,
   Hash,
   RefreshCw,
+  Save,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLocation } from 'react-router-dom';
+import { ConfirmModal, PromptModal } from '@/components/ConfirmModal'; // ✅ NOVO
 
 // Mapeamento de tipos de imóvel
 const TIPO_IMOVEL_MAP = {
@@ -64,7 +73,7 @@ const DISPONIBILIDADE_REVERSE_MAP = {
 };
 
 export default function GerenciadorImoveis() {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const location = useLocation();
   const [busca, setBusca] = useState('');
@@ -72,6 +81,9 @@ export default function GerenciadorImoveis() {
   const [imovelEditando, setImovelEditando] = useState(null);
   const [buscandoCEP, setBuscandoCEP] = useState(false);
   const [gerandoCodigo, setGerandoCodigo] = useState(false);
+  const [modalAprovar, setModalAprovar] = useState({ isOpen: false, id: null });
+  const [modalReprovar, setModalReprovar] = useState({ isOpen: false, id: null });
+  const [modalDeletar, setModalDeletar] = useState({ isOpen: false, imovel: null });
   
   const [formData, setFormData] = useState({
     codigo: '',
@@ -323,16 +335,64 @@ export default function GerenciadorImoveis() {
     },
   });
 
-  // Mutation de deletar imóvel
+  // ✅ MUTATION: Aprovar imóvel (ATUALIZADO)
+  const aprovarImovelMutation = useMutation({
+    mutationFn: async (id) => {
+      return await appwrite.entities.Imovel.update(id, {
+        statusAprovacao: 'aprovado',
+        disponibilidade: 'disponivel',
+        dataAprovacao: new Date().toISOString(),
+        aprovadoPor: user.$id, // ✅ Salvar quem aprovou
+        aprovadoPorNome: user.name, // ✅ Salvar nome de quem aprovou
+      });
+    },
+    onSuccess: () => {
+      toast.success('✅ Imóvel aprovado!');
+      queryClient.invalidateQueries(['admin-imoveis']);
+    },
+    onError: (error) => {
+      console.error('Erro ao aprovar:', error);
+      toast.error('❌ Erro ao aprovar imóvel', {
+        description: error.message || 'Verifique suas permissões',
+      });
+    },
+  });
+
+  // ✅ MUTATION: Reprovar imóvel (ATUALIZADO)
+  const reprovarImovelMutation = useMutation({
+    mutationFn: async ({ id, motivo }) => {
+      return await appwrite.entities.Imovel.update(id, {
+        statusAprovacao: 'rejeitado',
+        disponibilidade: 'indisponivel',
+        motivoRejeicao: motivo,
+        dataRejeicao: new Date().toISOString(), // ✅ Data da rejeição
+        rejeitadoPor: user.$id, // ✅ Quem rejeitou
+        rejeitadoPorNome: user.name, // ✅ Nome de quem rejeitou
+      });
+    },
+    onSuccess: () => {
+      toast.success('❌ Imóvel rejeitado');
+      queryClient.invalidateQueries(['admin-imoveis']);
+    },
+    onError: (error) => {
+      console.error('Erro ao reprovar:', error);
+      toast.error('❌ Erro ao reprovar imóvel', {
+        description: error.message,
+      });
+    },
+  });
+
+  // ✅ MUTATION: Deletar imóvel
   const deletarImovelMutation = useMutation({
     mutationFn: async (imovel) => {
+      // Deletar imagens primeiro
       if (imovel.images && imovel.images.length > 0) {
         for (const image of imovel.images) {
           if (image.fileId) {
             try {
               await appwrite.storage.deleteFile(image.fileId);
             } catch (error) {
-              console.error('Erro ao deletar imagem:', error);
+              console.warn('Aviso ao deletar imagem:', error);
             }
           }
         }
@@ -341,13 +401,47 @@ export default function GerenciadorImoveis() {
       return await appwrite.entities.Imovel.delete(imovel.$id);
     },
     onSuccess: () => {
-      toast.success('Imóvel deletado com sucesso!');
+      toast.success('🗑️ Imóvel deletado!');
       queryClient.invalidateQueries(['admin-imoveis']);
     },
-    onError: () => {
-      toast.error('Erro ao deletar imóvel');
+    onError: (error) => {
+      console.error('Erro ao deletar:', error);
+      toast.error('❌ Erro ao deletar', {
+        description: error.message,
+      });
     },
   });
+
+  // ✅ ADICIONAR: Handlers para as ações
+  const handleAprovar = (id) => {
+    setModalAprovar({ isOpen: true, id });
+  };
+
+  const confirmarAprovacao = () => {
+    if (modalAprovar.id) {
+      aprovarImovelMutation.mutate(modalAprovar.id);
+    }
+  };
+
+  const handleReprovar = (id) => {
+    setModalReprovar({ isOpen: true, id });
+  };
+
+  const confirmarRejeicao = (motivo) => {
+    if (modalReprovar.id && motivo.trim()) {
+      reprovarImovelMutation.mutate({ id: modalReprovar.id, motivo });
+    }
+  };
+
+  const handleDeletar = (imovel) => {
+    setModalDeletar({ isOpen: true, imovel });
+  };
+
+  const confirmarDelecao = () => {
+    if (modalDeletar.imovel) {
+      deletarImovelMutation.mutate(modalDeletar.imovel);
+    }
+  };
 
   const abrirModalNovo = () => {
     setImovelEditando(null);
@@ -591,122 +685,255 @@ export default function GerenciadorImoveis() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
               <Building2 className="w-8 h-8 text-blue-900" />
               Gerenciar Imóveis
             </h1>
-            <p className="text-slate-600 mt-2">
-              {imoveis.length} {imoveis.length === 1 ? 'imóvel cadastrado' : 'imóveis cadastrados'}
-            </p>
+            <p className="text-slate-600 mt-1">{imoveis.length} imóveis cadastrados</p>
           </div>
-          <Button
-            onClick={abrirModalNovo}
-            className="bg-blue-900 hover:bg-blue-800"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Novo Imóvel
-          </Button>
         </div>
 
-        {/* Busca */}
-        <Card className="mb-8">
-          <CardContent className="pt-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-              <Input
-                type="text"
-                placeholder="Buscar por título, bairro ou cidade..."
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Filtros e Busca */}
+        <div className="mb-6 flex gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+            <Input
+              placeholder="Buscar por título, código ou cidade..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
 
         {/* Lista de Imóveis */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex justify-center py-12">
             <Loader2 className="w-12 h-12 text-blue-900 animate-spin" />
           </div>
-        ) : imoveisFiltrados.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {imoveisFiltrados.map((imovel) => (
-              <Card key={imovel.$id} className="overflow-hidden">
-                <div className="relative h-48 bg-slate-200">
-                  <img
-                    src={imovel.imagemPrincipal || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&q=80'}
-                    alt={imovel.titulo}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                    {/* ✅ NOVO: Badge com código */}
-                    {imovel.codigo && (
-                      <Badge className="bg-white/90 text-blue-900 border-0 shadow-md font-mono text-xs">
-                        #{imovel.codigo}
-                      </Badge>
-                    )}
-                    {imovel.destaque && (
-                      <Badge className="bg-amber-400 text-blue-900">Destaque</Badge>
-                    )}
-                    {imovel.promocao && (
-                      <Badge className="bg-red-500 text-white">Promoção</Badge>
-                    )}
-                    <Badge className={
-                      imovel.disponibilidade === 'disponivel' ? 'bg-green-500' :
-                      imovel.disponibilidade === 'reservado' ? 'bg-yellow-500' :
-                      'bg-slate-500'
-                    }>
-                      {getDisponibilidadeLabel(imovel.disponibilidade)}
-                    </Badge>
-                  </div>
-                </div>
-                <CardContent className="p-4">
-                  <Badge variant="outline" className="mb-2">{getTipoImovelLabel(imovel.tipoImovel)}</Badge>
-                  <h3 className="font-bold text-lg text-slate-900 mb-2 line-clamp-2">
-                    {imovel.titulo}
-                  </h3>
-                  <p className="text-2xl font-bold text-blue-900 mb-4">
-                    {formatPrice(imovel.preco)}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => abrirModalEditar(imovel)}
-                      className="flex-1"
-                    >
-                      <Edit className="w-4 h-4 mr-1" />
-                      Editar
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (confirm('Deseja realmente deletar este imóvel?')) {
-                          deletarImovelMutation.mutate(imovel);
-                        }
-                      }}
-                      className="text-red-600 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
+        ) : imoveisFiltrados.length === 0 ? (
           <Card>
-            <CardContent className="py-12 text-center">
-              <Building2 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <CardContent className="text-center py-12">
+              <AlertCircle className="w-16 h-16 text-slate-400 mx-auto mb-4" />
               <p className="text-slate-600">Nenhum imóvel encontrado</p>
             </CardContent>
           </Card>
+        ) : (
+          <div className="grid gap-4">
+            {imoveisFiltrados.map((imovel) => {
+              const imagemPrincipal = imovel.imagemPrincipal || 
+                (imovel.imagens ? imovel.imagens.split(',')[0] : null);
+
+              return (
+                <Card key={imovel.$id} className="overflow-hidden">
+                  <div className="flex flex-col md:flex-row">
+                    {/* Imagem */}
+                    {imagemPrincipal && (
+                      <div className="w-full md:w-48 h-48 md:h-auto bg-slate-200 flex-shrink-0">
+                        <img
+                          src={imagemPrincipal}
+                          alt={imovel.titulo}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+
+                    {/* Conteúdo */}
+                    <div className="flex-1 p-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold text-slate-900 mb-1">
+                            {imovel.titulo}
+                          </h3>
+                          <p className="text-sm text-slate-600">
+                            📍 {imovel.bairro}, {imovel.cidade} - {imovel.estado}
+                          </p>
+                          
+                          {/* ✅ NOVO: Mostrar quem criou */}
+                          <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
+                            <span>
+                              Criado em {new Date(imovel.$createdAt).toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                              })}
+                            </span>
+                            {imovel.tipoAnuncio === 'cliente' && (
+                              <>
+                                <span>•</span>
+                                <Badge variant="outline" className="text-xs">
+                                  👤 Cliente: {imovel.criadoPorNome || 'Usuário'}
+                                </Badge>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Badge de Status */}
+                        <div className="flex flex-col gap-2 items-end">
+                          {imovel.statusAprovacao === 'aprovado' && (
+                            <Badge className="bg-green-100 text-green-800 border-green-300">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Aprovado
+                            </Badge>
+                          )}
+                          {imovel.statusAprovacao === 'pendente' && (
+                            <Badge className="bg-amber-100 text-amber-800 border-amber-300">
+                              <Clock className="w-3 h-3 mr-1" />
+                              Pendente
+                            </Badge>
+                          )}
+                          {imovel.statusAprovacao === 'rejeitado' && (
+                            <Badge className="bg-red-100 text-red-800 border-red-300">
+                              <XCircle className="w-3 h-3 mr-1" />
+                              Rejeitado
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      <p className="text-2xl font-bold text-blue-900 mb-3">
+                        {formatPrice(imovel.preco)}
+                      </p>
+
+                      <div className="flex gap-4 text-sm text-slate-600 mb-4">
+                        <span>🏠 {getTipoImovelLabel(imovel.tipoImovel)}</span>
+                        {imovel.area && <span>📐 {imovel.area}m²</span>}
+                        {imovel.numeroQuartos && <span>🛏️ {imovel.numeroQuartos} quartos</span>}
+                      </div>
+
+                      {/* ✅ NOVO: Informações de Aprovação */}
+                      {imovel.statusAprovacao === 'aprovado' && imovel.dataAprovacao && (
+                        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex items-start gap-2">
+                            <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
+                            <div className="flex-1">
+                              <p className="text-xs font-semibold text-green-800">
+                                ✅ Aprovado por {imovel.aprovadoPorNome || 'Administrador'}
+                              </p>
+                              <p className="text-xs text-green-700">
+                                em {new Date(imovel.dataAprovacao).toLocaleString('pt-BR', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ✅ ATUALIZADO: Motivo de Rejeição com mais informações */}
+                      {imovel.statusAprovacao === 'rejeitado' && (
+                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <div className="flex items-start gap-2">
+                            <XCircle className="w-4 h-4 text-red-600 mt-0.5" />
+                            <div className="flex-1">
+                              <p className="text-xs font-semibold text-red-800 mb-1">
+                                ❌ Rejeitado por {imovel.rejeitadoPorNome || 'Administrador'}
+                              </p>
+                              {imovel.dataRejeicao && (
+                                <p className="text-xs text-red-700 mb-2">
+                                  em {new Date(imovel.dataRejeicao).toLocaleString('pt-BR', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </p>
+                              )}
+                              {imovel.motivoRejeicao && (
+                                <>
+                                  <p className="text-xs font-semibold text-red-800 mb-1">
+                                    Motivo:
+                                  </p>
+                                  <p className="text-xs text-red-700 bg-red-100 p-2 rounded">
+                                    "{imovel.motivoRejeicao}"
+                                  </p>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Ações */}
+                      <div className="flex gap-2 flex-wrap">
+                        {imovel.statusAprovacao === 'pendente' && (
+                          <>
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700"
+                              onClick={() => handleAprovar(imovel.$id)}
+                              disabled={aprovarImovelMutation.isPending}
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Aprovar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 border-red-300 hover:bg-red-50"
+                              onClick={() => handleReprovar(imovel.$id)}
+                              disabled={reprovarImovelMutation.isPending}
+                            >
+                              <XCircle className="w-4 h-4 mr-1" />
+                              Reprovar
+                            </Button>
+                          </>
+                        )}
+
+                        {imovel.statusAprovacao === 'aprovado' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => window.open(`/detalhes?id=${imovel.$id}`, '_blank')}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            Ver no Site
+                          </Button>
+                        )}
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => abrirModalEditar(imovel)}
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Editar
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 border-red-300 hover:bg-red-50"
+                          onClick={() => handleDeletar(imovel)}
+                          disabled={deletarImovelMutation.isPending}
+                        >
+                          {deletarImovelMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Trash2 className="w-4 h-4 mr-1" />
+                              Deletar
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
         )}
       </div>
 
@@ -1270,6 +1497,40 @@ export default function GerenciadorImoveis() {
           </Card>
         </div>
       )}
+
+      {/* ✅ NOVO: Modais de Confirmação */}
+      <ConfirmModal
+        isOpen={modalAprovar.isOpen}
+        onClose={() => setModalAprovar({ isOpen: false, id: null })}
+        onConfirm={confirmarAprovacao}
+        title="Aprovar Imóvel"
+        message="Tem certeza que deseja aprovar este imóvel? Ele ficará visível no catálogo público."
+        confirmText="Sim, Aprovar"
+        cancelText="Cancelar"
+        type="success"
+      />
+
+      <PromptModal
+        isOpen={modalReprovar.isOpen}
+        onClose={() => setModalReprovar({ isOpen: false, id: null })}
+        onConfirm={confirmarRejeicao}
+        title="Rejeitar Imóvel"
+        message="Por favor, informe o motivo da rejeição. O usuário verá esta mensagem."
+        placeholder="Ex: Fotos de baixa qualidade, informações incompletas..."
+        confirmText="Rejeitar"
+        cancelText="Cancelar"
+      />
+
+      <ConfirmModal
+        isOpen={modalDeletar.isOpen}
+        onClose={() => setModalDeletar({ isOpen: false, imovel: null })}
+        onConfirm={confirmarDelecao}
+        title="Deletar Imóvel"
+        message={`Tem certeza que deseja deletar permanentemente:\n"${modalDeletar.imovel?.titulo}"?\n\nEsta ação não pode ser desfeita.`}
+        confirmText="Sim, Deletar"
+        cancelText="Cancelar"
+        type="danger"
+      />
     </div>
   );
 }
