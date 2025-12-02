@@ -7,7 +7,7 @@ import fs from 'fs';
 // Carregar .env
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-dotenv.config({ path: resolve(__dirname, '../.env'), override: false }); // ✅ MUDANÇA: sem logs
+dotenv.config({ path: resolve(__dirname, '../.env'), override: false });
 
 // Configurar Appwrite
 const client = new Client()
@@ -50,7 +50,7 @@ async function gerarSitemap() {
     
     const imoveis = response.documents;
     
-    // ✅ INÍCIO DO XML (SEM LOGS)
+    // ✅ CORRIGIDO: XML com namespace correto
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
@@ -78,13 +78,14 @@ async function gerarSitemap() {
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>`;
       
-      // Adicionar imagens
-      if (imovel.imagens) {
-        const todasImagens = imovel.imagens.split(',').map(url => url.trim());
+      // ✅ ADICIONAR: Apenas se tiver imagens
+      if (imovel.imagens && imovel.imagens.trim()) {
+        const todasImagens = imovel.imagens.split(',').map(url => url.trim()).filter(url => url);
+        
         todasImagens.forEach((imagemUrl) => {
           xml += `
     <image:image>
-      <image:loc>${imagemUrl}</image:loc>
+      <image:loc>${escapeXml(imagemUrl)}</image:loc>
       <image:title>${escapeXml(imovel.titulo)}</image:title>
     </image:image>`;
         });
@@ -95,10 +96,9 @@ async function gerarSitemap() {
     });
     
     xml += `
-</urlset>
-`;
+</urlset>`;
     
-    // ✅ SALVAR ARQUIVO (SEM LOGS)
+    // Salvar arquivo
     fs.writeFileSync(resolve(__dirname, 'sitemap.xml'), xml, 'utf8');
     
     console.log(`✅ Sitemap gerado com sucesso!`);
