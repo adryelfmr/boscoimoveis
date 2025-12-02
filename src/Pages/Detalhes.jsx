@@ -623,15 +623,10 @@ export default function Detalhes() {
             )}
 
             {/* Mapa */}
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold text-slate-900">📍 Localização</h2>
-              
-              <MapaLeaflet
-                cep={imovel.cep}
-                titulo={imovel.titulo}
-                endereco={imovel.endereco || `${imovel.bairro}, ${imovel.cidade} - ${imovel.estado}`}
-                cidade={imovel.cidade}
-                estado={imovel.estado}
+            <div className="lg:col-span-2">
+              <h2 className="text-2xl font-bold text-slate-900 mb-4">Localização</h2>
+              <MapaLeaflet 
+                imovel={imovel} // ✅ PASSAR O OBJETO COMPLETO
               />
             </div>
           </div>

@@ -168,7 +168,23 @@ export default function GerenciadorImoveis() {
       const imagensUrls = data.images.map(img => img.url);
       const imagemPrincipal = imagensUrls.length > 0 ? imagensUrls[0] : '';
 
-      // ❌ REMOVIDO: Toda lógica de geocoding
+      // ✅ BUSCAR COORDENADAS AUTOMATICAMENTE
+      let latitude = null;
+      let longitude = null;
+      let precision = null;
+
+      if (data.cep) {
+        try {
+          const dadosCEP = await buscarEnderecoPorCEP(data.cep);
+          if (dadosCEP?.latitude && dadosCEP?.longitude) {
+            latitude = dadosCEP.latitude;
+            longitude = dadosCEP.longitude;
+            precision = dadosCEP.precision;
+          }
+        } catch (error) {
+          // Coordenadas opcionais
+        }
+      }
 
       const imovelData = {
         codigo: data.codigo ? formatarCodigo(data.codigo) : null,
@@ -178,7 +194,7 @@ export default function GerenciadorImoveis() {
         finalidade: data.finalidade,
         tipoNegocio: data.tipoNegocio,
         preco: parseFloat(data.preco),
-        cep: data.cep || null, // ✅ APENAS CEP
+        cep: data.cep || null,
         endereco: data.endereco,
         numero: data.numero || null,
         bairro: data.bairro || '',
@@ -200,7 +216,10 @@ export default function GerenciadorImoveis() {
         garagemDisponivel: data.garagemDisponivel,
         documentacaoRegular: data.documentacaoRegular,
         acessibilidade: data.acessibilidade,
-        // ❌ REMOVIDO: latitude e longitude
+        // ✅ SALVAR COORDENADAS
+        latitude: latitude,
+        longitude: longitude,
+        precisaoLocalizacao: precision,
       };
 
       return await appwrite.entities.Imovel.create(imovelData);

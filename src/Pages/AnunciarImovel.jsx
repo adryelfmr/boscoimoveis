@@ -191,7 +191,23 @@ export default function AnunciarImovel() {
       const imagensUrls = data.images.map(img => img.url);
       const imagemPrincipal = imagensUrls[0] || '';
 
-      // ❌ REMOVER: Toda a lógica de buscar coordenadas
+      // ✅ BUSCAR COORDENADAS AUTOMATICAMENTE (se tiver CEP)
+      let latitude = null;
+      let longitude = null;
+      let precision = null;
+
+      if (data.cep) {
+        try {
+          const dadosCEP = await buscarEnderecoPorCEP(data.cep);
+          if (dadosCEP?.latitude && dadosCEP?.longitude) {
+            latitude = dadosCEP.latitude;
+            longitude = dadosCEP.longitude;
+            precision = dadosCEP.precision;
+          }
+        } catch (error) {
+          // Silenciar erro - coordenadas são opcionais
+        }
+      }
 
       const imovelData = {
         titulo: data.titulo,
@@ -201,7 +217,7 @@ export default function AnunciarImovel() {
         categoria: data.categoria || null,
         tipoNegocio: data.tipoNegocio,
         preco: parseFloat(data.preco),
-        cep: data.cep || null, // ✅ APENAS CEP
+        cep: data.cep || null,
         endereco: data.endereco,
         numero: data.numero || null,
         bairro: data.bairro,
@@ -223,7 +239,10 @@ export default function AnunciarImovel() {
         segurancaCondominio: data.condominio ? data.segurancaCondominio : [],
         imagens: imagensUrls.join(','),
         imagemPrincipal: imagemPrincipal,
-        // ❌ REMOVIDO: latitude e longitude
+        // ✅ SALVAR COORDENADAS AUTOMATICAMENTE
+        latitude: latitude,
+        longitude: longitude,
+        precisaoLocalizacao: precision, // 'street', 'neighborhood', 'city'
         criadoPor: user.$id,
         criadoPorNome: user.name,
         tipoAnuncio: 'cliente',
@@ -296,7 +315,8 @@ export default function AnunciarImovel() {
 
     if (!telefone) {
       toast.error('Atualize seu perfil com um telefone para anunciar', {
-        action: {
+        action:
+        {
           label: 'Ir para Perfil',
           onClick: () => navigate('/perfil'),
         },
