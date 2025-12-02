@@ -22,7 +22,6 @@ import {
   FileText,
   CheckCircle,
   Edit,
-  Download,
   Home as HomeIcon,
   Building2,
   Waves,
@@ -40,12 +39,11 @@ import FavoritoButton from '@/components/imoveis/FavoritoButton';
 import { toast } from 'sonner';
 import MapaLeaflet from '@/components/imoveis/MapaLeaflet';
 import SEO from '@/components/SEO';
-import { gerarPDFImovel } from '@/utils/pdfGenerator';
 import { analytics } from '@/utils/analytics';
 import SchemaOrg from '@/components/SchemaOrg';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import LazyImage from '@/components/LazyImage';
-import { getTipoImovelLabel } from '@/config/imovelConfig'; // ✅ ADICIONAR
+import { getTipoImovelLabel } from '@/config/imovelConfig';
 
 export default function Detalhes() {
   const { isAdmin } = useAuth();
@@ -681,15 +679,6 @@ export default function Detalhes() {
                       <Share2 className="w-5 h-5" />
                     </Button>
                   </div>
-
-                  <Button
-                    variant="outline"
-                    onClick={() => gerarPDFImovel(imovel)}
-                    className="w-full bg-white/10 border-white/30 text-white hover:bg-white/20"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Baixar Ficha (PDF)
-                  </Button>
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-blue-600">
