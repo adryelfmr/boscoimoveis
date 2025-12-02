@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Shield, UserPlus, Trash2, Loader2, Crown, RefreshCw, Mail, Check, AlertTriangle } from 'lucide-react';
+import { Shield, UserPlus, Trash2, Loader2, Crown, RefreshCw, Mail, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function GerenciarAdmins() {
@@ -23,9 +23,7 @@ export default function GerenciarAdmins() {
         const response = await teams.listMemberships(ADMIN_TEAM_ID);
         const myMembership = response.memberships.find(m => m.userId === user.$id);
         
-        console.log('📋 Meu membership:', myMembership);
-        console.log('👑 Minhas roles:', myMembership?.roles);
-        
+       
         if (myMembership?.roles?.includes('owner')) {
           setUserRole('owner');
         } else if (myMembership?.confirm) {
@@ -50,7 +48,6 @@ export default function GerenciarAdmins() {
     queryFn: async () => {
       try {
         const response = await teams.listMemberships(ADMIN_TEAM_ID);
-        console.log('📋 Membros do time:', response.memberships);
         
         // ✅ Enriquecer com dados dos usuários
         const membersWithUserData = await Promise.all(
@@ -117,31 +114,44 @@ export default function GerenciarAdmins() {
     mutationFn: async (email) => {
       const redirectUrl = `${import.meta.env.VITE_APP_URL || window.location.origin}/aceitar-convite`;
       
-      // ✅ IMPORTANTE: Passar email como último parâmetro
-      // teams.createMembership(teamId, roles, email?, userId?, phone?, url?, name?)
-      return await teams.createMembership(
-        ADMIN_TEAM_ID,
-        ['admin'],      // roles
-        email,          // ✅ email do novo admin
-        undefined,      // userId (deixar undefined para criar convite por email)
-        undefined,      // phone
-        redirectUrl,    // url de redirecionamento
-        undefined       // name
-      );
+      
+      
+      try {
+        const membership = await teams.createMembership(
+          ADMIN_TEAM_ID,    // 1. teamId
+          ['admin'],        // 2. roles
+          email,            // 3. ✅ email (TERCEIRO parâmetro!)
+          undefined,        // 4. userId (opcional)
+          undefined,        // 5. phone (opcional)
+          redirectUrl       // 6. ✅ url (SEXTO parâmetro!)
+        );
+        return membership;
+      } catch (error) {
+        console.error('❌ Erro detalhado:', {
+          code: error.code,
+          message: error.message,
+          type: error.type,
+        });
+        throw error;
+      }
     },
     onSuccess: (data) => {
-      console.log('✅ Convite criado:', data);
+      if (data.userEmail && data.userEmail !== newAdminEmail) {
+        toast.error('⚠️ Erro: Convite enviado para email incorreto', {
+          description: `Foi enviado para ${data.userEmail} ao invés de ${newAdminEmail}`,
+          duration: 10000,
+        });
+        return;
+      }
+      
       toast.success('✅ Convite enviado com sucesso!', {
-        description: 'O usuário receberá um email com instruções.',
+        description: `Email enviado para ${newAdminEmail}. O usuário deve aceitar o convite.`,
+        duration: 5000,
       });
       setNewAdminEmail('');
       queryClient.invalidateQueries(['adminMembers']);
     },
     onError: (error) => {
-      console.error('❌ Erro ao adicionar admin:', error);
-      console.error('❌ Código do erro:', error.code);
-      console.error('❌ Mensagem:', error.message);
-      console.error('❌ Type:', error.type);
       
       if (error.code === 401) {
         toast.error('❌ Sem permissão para enviar convites', {
@@ -156,12 +166,12 @@ export default function GerenciarAdmins() {
         toast.error('❌ Usuário já é membro', {
           description: 'Este email já está cadastrado como administrador.',
         });
-      } else if (error.message?.includes('User (role: guests) missing scope') || error.message?.includes('user_target_not_found')) {
+      } else if (error.message?.includes('User (role: guests)') || error.message?.includes('user_target_not_found')) {
         toast.error('❌ Usuário não encontrado', {
           description: 'Este email não possui uma conta no sistema. Peça para o usuário criar uma conta primeiro em /registro.',
           duration: 10000,
         });
-      } else if (error.message?.includes('Invalid email')) {
+      } else if (error.message?.includes('Invalid') && error.message?.includes('email')) {
         toast.error('❌ Email inválido', {
           description: 'Digite um endereço de email válido.',
         });
@@ -214,7 +224,6 @@ export default function GerenciarAdmins() {
       return;
     }
 
-    // ✅ NOVO: Verificar se não está tentando adicionar a si mesmo
     if (newAdminEmail.toLowerCase() === user.email.toLowerCase()) {
       toast.error('❌ Você já é administrador', {
         description: 'Não é possível enviar convite para si mesmo.',
@@ -222,7 +231,6 @@ export default function GerenciarAdmins() {
       return;
     }
 
-    // ✅ NOVO: Verificar se o email já existe na lista
     const emailJaExiste = members.some(
       m => m.userEmail.toLowerCase() === newAdminEmail.toLowerCase()
     );
@@ -234,7 +242,6 @@ export default function GerenciarAdmins() {
       return;
     }
 
-    console.log('📧 Enviando convite para:', newAdminEmail);
     addAdminMutation.mutate(newAdminEmail);
   };
 
@@ -297,16 +304,6 @@ export default function GerenciarAdmins() {
           )}
         </div>
 
-        {/* ✅ NOVO: Card de debug (remover depois) */}
-        {process.env.NODE_ENV === 'development' && (
-          <Card className="mb-4 border-amber-200 bg-amber-50">
-            <CardContent className="pt-4">
-              <p className="text-xs text-amber-900">
-                <strong>🐛 Debug:</strong> Seu email: {user?.email}
-              </p>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Adicionar novo admin */}
         <Card className="mb-8 border-0 shadow-lg">
