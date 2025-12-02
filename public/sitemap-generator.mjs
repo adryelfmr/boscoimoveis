@@ -93,14 +93,9 @@ async function gerarSitemap() {
     
     // Salvar arquivo
     fs.writeFileSync(resolve(__dirname, 'sitemap.xml'), xml, 'utf8');
-    
-    console.log(`✅ Sitemap gerado com sucesso!`);
-    console.log(`📄 ${paginasEstaticas.length} páginas estáticas`);
-    console.log(`🏠 ${imoveis.length} imóveis`);
-    console.log(`📍 Localização: public/sitemap.xml`);
+  
     
   } catch (error) {
-    console.error('❌ Erro ao gerar sitemap:', error.message);
     process.exit(1);
   }
 }
