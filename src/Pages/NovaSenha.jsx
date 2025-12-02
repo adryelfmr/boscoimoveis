@@ -109,7 +109,6 @@ export default function NovaSenha() {
 
       navigate('/login');
     } catch (error) {
-      console.error('Erro ao redefinir senha:', error);
 
       if (error.message?.includes('expired')) {
         toast.error('Link expirado', {

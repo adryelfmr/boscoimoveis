@@ -17,77 +17,8 @@ import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { converterParaBrasileiro } from '@/utils/telefone';
 import { rateLimits } from '@/utils/rateLimit';
+import {TIPOS_RESIDENCIAL,TIPOS_COMERCIAL,DIFERENCIAIS_IMOVEL,LAZER_CONDOMINIO,COMODIDADES_CONDOMINIO,SEGURANCA_CONDOMINIO,} from '@/config/imovelConfig';
 
-// ✅ CONFIGURAÇÕES DE TIPOS E CATEGORIAS
-const TIPOS_RESIDENCIAL = [
-  { value: 'apartamento', label: 'Apartamento', categorias: ['Padrão', 'Duplex', 'Triplex', 'Cobertura'] },
-  { value: 'casa', label: 'Casa', categorias: ['Padrão', 'Sobrado'] },
-  { value: 'casa_condominio', label: 'Casa de Condomínio', categorias: ['Padrão', 'Sobrado'] },
-  { value: 'lote_terreno', label: 'Lote/Terreno', categorias: [] },
-  { value: 'fazenda_sitio_chacara', label: 'Fazenda/Sítio/Chácara', categorias: [] },
-  { value: 'kitnet', label: 'Kitnet', categorias: [] },
-  { value: 'loft', label: 'Loft', categorias: ['Padrão', 'Duplex', 'Triplex', 'Cobertura'] },
-];
-
-const TIPOS_COMERCIAL = [
-  { value: 'casa', label: 'Casa', categorias: ['Padrão', 'Sobrado'] },
-  { value: 'escritorio', label: 'Escritório', categorias: ['Padrão', 'Escritório', 'Consultório', 'Andar'] },
-  { value: 'galpao', label: 'Galpão', categorias: [] },
-  { value: 'lote_terreno', label: 'Lote/Terreno', categorias: [] },
-  { value: 'ponto_comercial_loja', label: 'Ponto Comercial/Loja', categorias: ['Padrão', 'Shopping', 'Galeria'] },
-];
-
-// ✅ DIFERENCIAIS DO IMÓVEL
-const DIFERENCIAIS_IMOVEL = [
-  'Aceita animais',
-  'Ar-condicionado',
-  'Closet',
-  'Cozinha americana',
-  'Lareira',
-  'Mobiliado',
-  'Varanda gourmet',
-  'Armários embutidos',
-  'Box despejeiro',
-  'Sala de jantar',
-  'Lavabo',
-];
-
-// ✅ LAZER DO CONDOMÍNIO
-const LAZER_CONDOMINIO = [
-  'Academia',
-  'Churrasqueira',
-  'Cinema',
-  'Espaço gourmet',
-  'Jardim',
-  'Piscina',
-  'Playground',
-  'Quadra de squash',
-  'Quadra de tênis',
-  'Quadra poliesportiva',
-  'Salão de festas',
-  'Salão de jogos',
-];
-
-// ✅ COMODIDADES DO CONDOMÍNIO
-const COMODIDADES_CONDOMINIO = [
-  'Acesso para deficientes',
-  'Bicicletário',
-  'Coworking',
-  'Elevador',
-  'Estacionamento',
-  'Lavanderia',
-  'Sauna',
-  'Spa',
-];
-
-// ✅ SEGURANÇA DO CONDOMÍNIO
-const SEGURANCA_CONDOMINIO = [
-  'Condomínio fechado',
-  'Portão eletrônico',
-  'Portaria 24h',
-  'Sistema de alarme',
-  'Câmeras de segurança',
-];
 
 export default function AnunciarImovel() {
   const { user, isAuthenticated } = useAuth();
@@ -227,17 +158,23 @@ export default function AnunciarImovel() {
       if (endereco) {
         setFormData({
           ...formData,
-          endereco: endereco.logradouro || '',
+          endereco: endereco.endereco || '', // ✅ CORRIGIDO: usar 'endereco' em vez de 'logradouro'
           bairro: endereco.bairro || '',
-          cidade: endereco.localidade || '',
-          estado: endereco.uf || 'GO',
+          cidade: endereco.cidade || '', // ✅ CORRIGIDO: usar 'cidade' em vez de 'localidade'
+          estado: endereco.estado || 'GO', // ✅ CORRIGIDO: usar 'estado' em vez de 'uf'
         });
-        toast.success('Endereço encontrado!');
+        
+        if (endereco.latitude && endereco.longitude) {
+          toast.success('Endereço e localização encontrados!');
+        } else {
+          toast.success('Endereço encontrado!', {
+            description: 'Localização aproximada será usada'
+          });
+        }
       } else {
         toast.error('CEP não encontrado');
       }
     } catch (error) {
-      console.error('Erro ao buscar CEP:', error);
       toast.error('Erro ao buscar CEP');
     } finally {
       setBuscandoCep(false);
@@ -254,6 +191,8 @@ export default function AnunciarImovel() {
       const imagensUrls = data.images.map(img => img.url);
       const imagemPrincipal = imagensUrls[0] || '';
 
+      // ❌ REMOVER: Toda a lógica de buscar coordenadas
+
       const imovelData = {
         titulo: data.titulo,
         descricao: data.descricao,
@@ -262,7 +201,7 @@ export default function AnunciarImovel() {
         categoria: data.categoria || null,
         tipoNegocio: data.tipoNegocio,
         preco: parseFloat(data.preco),
-        cep: data.cep || null,
+        cep: data.cep || null, // ✅ APENAS CEP
         endereco: data.endereco,
         numero: data.numero || null,
         bairro: data.bairro,
@@ -284,6 +223,7 @@ export default function AnunciarImovel() {
         segurancaCondominio: data.condominio ? data.segurancaCondominio : [],
         imagens: imagensUrls.join(','),
         imagemPrincipal: imagemPrincipal,
+        // ❌ REMOVIDO: latitude e longitude
         criadoPor: user.$id,
         criadoPorNome: user.name,
         tipoAnuncio: 'cliente',
@@ -310,7 +250,6 @@ export default function AnunciarImovel() {
       navigate('/meus-anuncios');
     },
     onError: (error) => {
-      console.error('Erro ao salvar anúncio:', error);
       toast.error(error.message || 'Erro ao salvar anúncio');
     },
   });
@@ -918,7 +857,7 @@ export default function AnunciarImovel() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate('/meus-anuncios')}
+              onClick={() => navigate('/meus_anuncios')}
               className="flex-1"
             >
               Cancelar

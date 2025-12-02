@@ -46,7 +46,6 @@ export default function RedefinirSenha() {
       });
 
     } catch (err) {
-      console.error("ERRO:", err);
       
       if (err.message?.includes('user') || err.code === 404) {
         toast.error("Email não encontrado", {

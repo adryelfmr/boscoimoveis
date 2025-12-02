@@ -29,7 +29,6 @@ export default function LazyImage({
               };
               
               img.onerror = () => {
-                console.error('Erro ao carregar imagem:', src);
                 setImageError(true);
                 setImageLoaded(false);
                 setImageSrc('https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80');

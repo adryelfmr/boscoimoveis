@@ -33,7 +33,6 @@ export default function GerenciarAdmins() {
         
         return myMembership;
       } catch (error) {
-        console.error('Erro ao verificar membership:', error);
         return null;
       }
     },
@@ -78,7 +77,6 @@ export default function GerenciarAdmins() {
         
         return processedMembers;
       } catch (error) {
-        console.error('Erro ao buscar membros:', error);
         return [];
       }
     },

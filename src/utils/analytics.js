@@ -10,7 +10,6 @@ const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
  */
 export function initGA() {
   if (!GA_MEASUREMENT_ID || typeof window === 'undefined') {
-    console.warn('⚠️ Google Analytics ID não configurado');
     return;
   }
 

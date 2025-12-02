@@ -64,7 +64,6 @@ export function AuthProvider({ children }) {
       });
     } catch (error) {
       if (error.message !== 'Not authenticated') {
-        console.error('Erro ao verificar usuário:', error);
       }
       setUser(null);
     } finally {
@@ -99,7 +98,6 @@ export function AuthProvider({ children }) {
         try {
           await account.updatePhone(telefone, password);
         } catch (phoneError) {
-          console.warn('⚠️ Erro ao atualizar telefone (não crítico):', phoneError);
         }
       }
       
@@ -108,7 +106,6 @@ export function AuthProvider({ children }) {
       
       return newUser;
     } catch (error) {
-      console.error('❌ Erro ao registrar:', error);
       throw error;
     }
   };

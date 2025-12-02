@@ -23,12 +23,20 @@ import {
   CheckCircle,
   Edit,
   Download,
+  Home as HomeIcon,
+  Building2,
+  Waves,
+  Shield,
+  Sparkles,
+  Dumbbell,
+  UtensilsCrossed,
+  TreePine,
+  DollarSign,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import { motion } from 'framer-motion';
 import FavoritoButton from '@/components/imoveis/FavoritoButton';
-import ComparadorButton from '@/components/imoveis/ComparadorButton';
 import { toast } from 'sonner';
 import MapaLeaflet from '@/components/imoveis/MapaLeaflet';
 import SEO from '@/components/SEO';
@@ -36,15 +44,8 @@ import { gerarPDFImovel } from '@/utils/pdfGenerator';
 import { analytics } from '@/utils/analytics';
 import SchemaOrg from '@/components/SchemaOrg';
 import Breadcrumbs from '@/components/Breadcrumbs';
-import LazyImage from '@/components/LazyImage'; // ✅ ADICIONAR
-
-const TIPO_IMOVEL_LABELS = {
-  'house': 'Casa',
-  'apartment': 'Apartamento',
-  'land': 'Terreno',
-  'comercial': 'Comercial',
-  'rural': 'Rural',
-};
+import LazyImage from '@/components/LazyImage';
+import { getTipoImovelLabel } from '@/config/imovelConfig'; // ✅ ADICIONAR
 
 export default function Detalhes() {
   const { isAdmin } = useAuth();
@@ -189,7 +190,7 @@ export default function Detalhes() {
     `💰 *Valor:* ${formatPrice(imovel.preco)}\n` +
     `📍 *Localização:* ${imovel.bairro}, ${imovel.cidade} - ${imovel.estado}\n` +
     `🔑 *Código:* ${imovel.$id}\n\n` +
-    `${imovel.area ? `📐 *Área:* ${imovel.area}m²\n` : ''}` +
+    `${imovel.areaTotal ? `📐 *Área Total:* ${imovel.areaTotal}m²\n` : ''}` +
     `${imovel.numeroQuartos ? `🛏️ *Quartos:* ${imovel.numeroQuartos}\n` : ''}` +
     `${imovel.numeroBanheiros ? `🚿 *Banheiros:* ${imovel.numeroBanheiros}\n` : ''}` +
     `${imovel.vagas ? `🚗 *Vagas:* ${imovel.vagas}\n` : ''}` +
@@ -291,9 +292,6 @@ export default function Detalhes() {
             {/* Galeria de Imagens */}
             <Card className="border-0 shadow-xl overflow-hidden">
               <div className="relative h-[500px] bg-slate-900">
-                {/* ❌ REMOVER: <img src={imagens[imagemAtual]} /> */}
-                
-                {/* ✅ ADICIONAR: */}
                 <LazyImage
                   src={imagens[imagemAtual]}
                   alt={imovel.titulo}
@@ -341,6 +339,11 @@ export default function Detalhes() {
                       Promoção
                     </Badge>
                   )}
+                  {imovel.categoria && (
+                    <Badge className="bg-blue-500 text-white border-0 shadow-lg">
+                      {imovel.categoria}
+                    </Badge>
+                  )}
                 </div>
               </div>
 
@@ -355,7 +358,6 @@ export default function Detalhes() {
                           index === imagemAtual ? 'border-blue-900' : 'border-transparent opacity-60 hover:opacity-100'
                         }`}
                       >
-                        {/* ✅ ADICIONAR: */}
                         <LazyImage
                           src={img}
                           alt=""
@@ -373,9 +375,14 @@ export default function Detalhes() {
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <Badge className="bg-blue-100 text-blue-900 mb-2">
-                      {TIPO_IMOVEL_LABELS[imovel.tipoImovel] || imovel.tipoImovel}
-                    </Badge>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge className="bg-blue-100 text-blue-900">
+                        {getTipoImovelLabel(imovel.tipoImovel)} {/* ✅ CORRIGIDO */}
+                      </Badge>
+                      <Badge variant="outline">
+                        {imovel.tipoNegocio}
+                      </Badge>
+                    </div>
                     <h1 className="text-3xl font-bold text-slate-900 mb-2">{imovel.titulo}</h1>
                     <div className="flex items-center gap-2 text-slate-600">
                       <MapPin className="w-5 h-5" />
@@ -384,15 +391,27 @@ export default function Detalhes() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 py-4 border-y border-slate-200 my-6">
-                  {imovel.area && (
+                {/* Características Principais */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-y border-slate-200 my-6">
+                  {imovel.areaTotal && (
                     <div className="flex items-center gap-2">
                       <div className="bg-blue-100 p-2 rounded-lg">
                         <Maximize className="w-5 h-5 text-blue-900" />
                       </div>
                       <div>
-                        <p className="text-sm text-slate-600">Área</p>
-                        <p className="font-semibold text-slate-900">{imovel.area}m²</p>
+                        <p className="text-sm text-slate-600">Área Total</p>
+                        <p className="font-semibold text-slate-900">{imovel.areaTotal}m²</p>
+                      </div>
+                    </div>
+                  )}
+                  {imovel.areaUtil && (
+                    <div className="flex items-center gap-2">
+                      <div className="bg-green-100 p-2 rounded-lg">
+                        <Maximize className="w-5 h-5 text-green-900" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-600">Área Útil</p>
+                        <p className="font-semibold text-slate-900">{imovel.areaUtil}m²</p>
                       </div>
                     </div>
                   )}
@@ -404,6 +423,17 @@ export default function Detalhes() {
                       <div>
                         <p className="text-sm text-slate-600">Quartos</p>
                         <p className="font-semibold text-slate-900">{imovel.numeroQuartos}</p>
+                      </div>
+                    </div>
+                  )}
+                  {imovel.numeroSuites > 0 && (
+                    <div className="flex items-center gap-2">
+                      <div className="bg-purple-100 p-2 rounded-lg">
+                        <Bed className="w-5 h-5 text-purple-900" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-600">Suítes</p>
+                        <p className="font-semibold text-slate-900">{imovel.numeroSuites}</p>
                       </div>
                     </div>
                   )}
@@ -431,6 +461,7 @@ export default function Detalhes() {
                   )}
                 </div>
 
+                {/* Descrição */}
                 <div>
                   <h2 className="text-xl font-bold text-slate-900 mb-3">Descrição</h2>
                   <p className="text-slate-700 leading-relaxed whitespace-pre-line">
@@ -438,6 +469,7 @@ export default function Detalhes() {
                   </p>
                 </div>
 
+                {/* Visualizações */}
                 {visualizacoesHoje > 0 && (
                   <div className="mt-6 pt-6 border-t border-slate-200">
                     <div className="flex items-center gap-2 text-slate-600">
@@ -451,19 +483,157 @@ export default function Detalhes() {
               </CardContent>
             </Card>
 
-            {/* ✅ ATUALIZADO: Mapa com aviso */}
-            {imovel.latitude && imovel.longitude && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-bold text-slate-900">📍 Localização</h2>
-                
-                <MapaLeaflet
-                  latitude={imovel.latitude}
-                  longitude={imovel.longitude}
-                  titulo={imovel.titulo}
-                  endereco={imovel.endereco || `${imovel.bairro}, ${imovel.cidade} - ${imovel.estado}`}
-                />
-              </div>
+            {/* ✅ NOVO: Diferenciais do Imóvel */}
+            {imovel.diferenciais && imovel.diferenciais.length > 0 && (
+              <Card className="border-0 shadow-lg">
+                <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-white">
+                  <CardTitle className="flex items-center gap-2 text-blue-900">
+                    <Sparkles className="w-5 h-5" />
+                    Diferenciais do Imóvel
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {imovel.diferenciais.map((item, index) => (
+                      <div key={index} className="flex items-center gap-2 text-slate-700">
+                        <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        <span className="text-sm">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             )}
+
+            {/* ✅ NOVO: Características do Condomínio */}
+            {imovel.condominio && (
+              <Card className="border-0 shadow-lg">
+                <CardHeader className="border-b bg-gradient-to-r from-green-50 to-white">
+                  <CardTitle className="flex items-center gap-2 text-green-900">
+                    <Building2 className="w-5 h-5" />
+                    Condomínio
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-6">
+                  {/* Valor do Condomínio */}
+                  {imovel.valorCondominio && (
+                    <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                      <span className="text-slate-700 font-medium">Valor do Condomínio</span>
+                      <span className="text-lg font-bold text-blue-900">
+                        {formatPrice(imovel.valorCondominio)}/mês
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Lazer */}
+                  {imovel.lazerCondominio && imovel.lazerCondominio.length > 0 && (
+                    <div>
+                      <h3 className="flex items-center gap-2 font-semibold text-slate-900 mb-3">
+                        <Waves className="w-5 h-5 text-blue-600" />
+                        Lazer e Esporte
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {imovel.lazerCondominio.map((item, index) => (
+                          <Badge key={index} variant="outline" className="justify-start">
+                            {item}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Comodidades */}
+                  {imovel.comodidadesCondominio && imovel.comodidadesCondominio.length > 0 && (
+                    <div>
+                      <h3 className="flex items-center gap-2 font-semibold text-slate-900 mb-3">
+                        <UtensilsCrossed className="w-5 h-5 text-amber-600" />
+                        Comodidades e Serviços
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {imovel.comodidadesCondominio.map((item, index) => (
+                          <Badge key={index} variant="outline" className="justify-start">
+                            {item}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Segurança */}
+                  {imovel.segurancaCondominio && imovel.segurancaCondominio.length > 0 && (
+                    <div>
+                      <h3 className="flex items-center gap-2 font-semibold text-slate-900 mb-3">
+                        <Shield className="w-5 h-5 text-red-600" />
+                        Segurança
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {imovel.segurancaCondominio.map((item, index) => (
+                          <Badge key={index} variant="outline" className="justify-start">
+                            {item}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* ✅ NOVO: Custos Adicionais */}
+            {(imovel.valorCondominio || imovel.valorIptu) && (
+              <Card className="border-0 shadow-lg">
+                <CardHeader className="border-b bg-gradient-to-r from-amber-50 to-white">
+                  <CardTitle className="flex items-center gap-2 text-amber-900">
+                    <DollarSign className="w-5 h-5" />
+                    Custos Mensais
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="space-y-3">
+                    {imovel.valorCondominio && (
+                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                        <span className="text-slate-700">Condomínio</span>
+                        <span className="font-semibold text-slate-900">
+                          {formatPrice(imovel.valorCondominio)}/mês
+                        </span>
+                      </div>
+                    )}
+                    {imovel.valorIptu && (
+                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                        <span className="text-slate-700">IPTU</span>
+                        <span className="font-semibold text-slate-900">
+                          {formatPrice(imovel.valorIptu)}/{imovel.tipoIptu || 'anual'}
+                        </span>
+                      </div>
+                    )}
+                    {imovel.valorCondominio && imovel.valorIptu && (
+                      <div className="flex items-center justify-between p-3 bg-blue-100 rounded-lg border-2 border-blue-300">
+                        <span className="font-semibold text-blue-900">Total Mensal</span>
+                        <span className="font-bold text-blue-900">
+                          {formatPrice(
+                            imovel.valorCondominio + 
+                            (imovel.tipoIptu === 'mensal' ? imovel.valorIptu : imovel.valorIptu / 12)
+                          )}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Mapa */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold text-slate-900">📍 Localização</h2>
+              
+              <MapaLeaflet
+                cep={imovel.cep}
+                titulo={imovel.titulo}
+                endereco={imovel.endereco || `${imovel.bairro}, ${imovel.cidade} - ${imovel.estado}`}
+                cidade={imovel.cidade}
+                estado={imovel.estado}
+              />
+            </div>
           </div>
 
           {/* Sidebar */}
@@ -595,8 +765,6 @@ export default function Detalhes() {
                 </div>
               </CardContent>
             </Card>
-
-            <ComparadorButton imovelId={imovel.$id} />
           </div>
         </div>
       </div>

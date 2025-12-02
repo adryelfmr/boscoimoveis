@@ -89,9 +89,6 @@ export default function ImageUploader({ images = [], onImagesChange, maxImages =
         setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
         toast.success(`${file.name} enviado com sucesso!`);
       } catch (error) {
-        console.error('Erro ao fazer upload:', error);
-        
-        // ✅ NOVO: Mensagens de erro mais específicas
         if (error.code === 413) {
           toast.error(`${file.name} excede o tamanho máximo (10MB)`);
         } else if (error.code === 400) {
@@ -124,7 +121,6 @@ export default function ImageUploader({ images = [], onImagesChange, maxImages =
       onImagesChange(newImages);
       toast.success('Imagem removida');
     } catch (error) {
-      console.error('Erro ao remover imagem:', error);
       toast.error('Erro ao remover imagem');
     }
   };

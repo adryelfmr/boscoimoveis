@@ -63,7 +63,6 @@ export default function Perfil() {
         novaSenha: '',
       });
     } catch (error) {
-      console.error('Erro ao atualizar perfil:', error);
       
       if (error.message?.includes('Invalid `password`')) {
         toast.error('Senha atual incorreta');
@@ -87,11 +86,9 @@ export default function Perfil() {
 
   const handleTelefoneVerificado = async (telefoneE164) => {
     try {
-      console.log('🔄 Salvando telefone no Appwrite:', telefoneE164);
       
       await account.updatePhone(telefoneE164, senhaParaTelefone);
       
-      console.log('✅ Telefone salvo com sucesso no Appwrite');
       
       toast.success('✅ Telefone verificado e salvo!', {
         description: 'Seu número foi cadastrado com sucesso.',
@@ -109,7 +106,6 @@ export default function Perfil() {
       });
       
     } catch (error) {
-      console.error('❌ Erro ao salvar telefone:', error);
       
       if (error.code === 409 || error.message?.includes('already exists')) {
         setMensagemErroTelefone('Este número já está cadastrado em outra conta.');

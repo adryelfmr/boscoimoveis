@@ -54,7 +54,6 @@ export default function FavoritoButton({ imovelId, size = "default", variant = "
       queryClient.invalidateQueries(['favoritos']);
     },
     onError: (error) => {
-      console.error('Erro ao favoritar:', error);
       toast.error('Erro ao favoritar imóvel');
     }
   });

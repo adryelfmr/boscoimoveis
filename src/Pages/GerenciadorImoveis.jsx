@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom'; // ✅ ADICIONAR
 import { appwrite } from '@/api/appwriteClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,69 +9,38 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import ImageUploader from '@/components/ImageUploader';
-import { geocodeEndereco } from '@/services/geocoding';
-import { buscarEnderecoPorCEP, formatarCEP, validarCEP } from '@/services/cep';
+import { buscarEnderecoPorCEP, formatarCEP, validarCEP } from '@/services/cep'; // ✅ REMOVER geocodeEndereco
 import { 
   gerarCodigoAutomatico, 
   validarCodigoPersonalizado, 
   formatarCodigo 
 } from '@/utils/gerarCodigo';
 import { 
+  TIPO_IMOVEL_ADMIN_MAP, 
+  TIPO_IMOVEL_ADMIN_REVERSE_MAP, 
+  DISPONIBILIDADE_MAP, 
+  DISPONIBILIDADE_REVERSE_MAP, 
+  getTipoImovelLabel,
+} from '@/config/imovelConfig';
+import { 
   Building2, 
-  Plus, 
+  Search, 
   Edit, 
   Trash2, 
-  Search, 
-  Loader2,
-  X,
-  CheckCircle,
-  XCircle,
-  Clock,
+  Eye, 
+  Loader2, 
+  X, 
+  CheckCircle, 
+  XCircle, 
+  Clock, 
   AlertCircle,
-  MapPin,
-  Home,
-  DollarSign,
-  Eye,
-  Tag,
-  FileText,
+  Save,
   Hash,
   RefreshCw,
-  Save,
+  MapPin
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useLocation } from 'react-router-dom';
-import { ConfirmModal, PromptModal } from '@/components/ConfirmModal'; // ✅ NOVO
-
-// Mapeamento de tipos de imóvel
-const TIPO_IMOVEL_MAP = {
-  'Casa': 'casa',
-  'Apartamento': 'apartamento',
-  'Terreno': 'terreno',
-  'Comercial': 'comercial',
-  'Rural': 'rural',
-};
-
-const TIPO_IMOVEL_REVERSE_MAP = {
-  'casa': 'Casa',
-  'apartamento': 'Apartamento',
-  'terreno': 'Terreno',
-  'comercial': 'Comercial',
-  'rural': 'Rural',
-};
-
-const DISPONIBILIDADE_MAP = {
-  'Disponível': 'disponivel',
-  'Indisponível': 'indisponivel',
-  'Reservado': 'reservado',
-  'Vendido': 'indisponivel',
-  'Alugado': 'indisponivel',
-};
-
-const DISPONIBILIDADE_REVERSE_MAP = {
-  'disponivel': 'Disponível',
-  'indisponivel': 'Indisponível',
-  'reservado': 'Reservado',
-};
+import { ConfirmModal, PromptModal } from '@/components/ConfirmModal';
 
 export default function GerenciadorImoveis() {
   const { user, isAdmin } = useAuth();
@@ -114,8 +84,6 @@ export default function GerenciadorImoveis() {
     garagemDisponivel: false,
     documentacaoRegular: true,
     acessibilidade: true,
-    latitude: '',
-    longitude: '',
   });
 
   // ✅ MOVIDO PARA CIMA: useQuery ANTES do useEffect
@@ -188,7 +156,6 @@ export default function GerenciadorImoveis() {
       
       toast.success(`Código gerado: ${codigoGerado}`);
     } catch (error) {
-      console.error('Erro ao gerar código:', error);
       toast.error('Erro ao gerar código automático');
     } finally {
       setGerandoCodigo(false);
@@ -201,30 +168,17 @@ export default function GerenciadorImoveis() {
       const imagensUrls = data.images.map(img => img.url);
       const imagemPrincipal = imagensUrls.length > 0 ? imagensUrls[0] : '';
 
-      if (data.codigoPersonalizado) {
-        if (!validarCodigoPersonalizado(data.codigo)) {
-          throw new Error('Código inválido. Use apenas letras, números e hífens (ex: CAS-001)');
-        }
-        
-        const imoveisExistentes = await appwrite.entities.Imovel.filter({}, '-$createdAt', 1000);
-        const codigoExiste = imoveisExistentes.some(i => 
-          i.codigo && i.codigo.toLowerCase() === data.codigo.toLowerCase()
-        );
-        
-        if (codigoExiste) {
-          throw new Error('Este código já está em uso. Escolha outro.');
-        }
-      }
+      // ❌ REMOVIDO: Toda lógica de geocoding
 
       const imovelData = {
         codigo: data.codigo ? formatarCodigo(data.codigo) : null,
         titulo: data.titulo,
         descricao: data.descricao || '',
-        tipoImovel: TIPO_IMOVEL_MAP[data.tipoImovel] || 'house',
+        tipoImovel: TIPO_IMOVEL_ADMIN_MAP[data.tipoImovel] || 'house',
         finalidade: data.finalidade,
         tipoNegocio: data.tipoNegocio,
         preco: parseFloat(data.preco),
-        cep: data.cep || null,
+        cep: data.cep || null, // ✅ APENAS CEP
         endereco: data.endereco,
         numero: data.numero || null,
         bairro: data.bairro || '',
@@ -246,10 +200,7 @@ export default function GerenciadorImoveis() {
         garagemDisponivel: data.garagemDisponivel,
         documentacaoRegular: data.documentacaoRegular,
         acessibilidade: data.acessibilidade,
-        dataDisponivel: new Date().toISOString(),
-        ultimaVisualizacao: new Date().toISOString(),
-        latitude: data.latitude || null,
-        longitude: data.longitude || null,
+        // ❌ REMOVIDO: latitude e longitude
       };
 
       return await appwrite.entities.Imovel.create(imovelData);
@@ -260,7 +211,6 @@ export default function GerenciadorImoveis() {
       fecharModal();
     },
     onError: (error) => {
-      console.error('Erro ao criar imóvel:', error);
       toast.error(error.message || 'Erro ao criar imóvel');
     },
   });
@@ -292,7 +242,7 @@ export default function GerenciadorImoveis() {
         codigo: data.codigo ? formatarCodigo(data.codigo) : null,
         titulo: data.titulo,
         descricao: data.descricao || '',
-        tipoImovel: TIPO_IMOVEL_MAP[data.tipoImovel] || 'house',
+        tipoImovel: TIPO_IMOVEL_ADMIN_MAP[data.tipoImovel] || 'house',
         finalidade: data.finalidade,
         tipoNegocio: data.tipoNegocio,
         preco: parseFloat(data.preco),
@@ -318,8 +268,7 @@ export default function GerenciadorImoveis() {
         garagemDisponivel: data.garagemDisponivel,
         documentacaoRegular: data.documentacaoRegular,
         acessibilidade: data.acessibilidade,
-        latitude: data.latitude || null,
-        longitude: data.longitude || null,
+        // ❌ REMOVIDO: latitude e longitude
       };
 
       return await appwrite.entities.Imovel.update(id, imovelData);
@@ -330,7 +279,6 @@ export default function GerenciadorImoveis() {
       fecharModal();
     },
     onError: (error) => {
-      console.error('Erro ao atualizar imóvel:', error);
       toast.error(error.message || 'Erro ao atualizar imóvel');
     },
   });
@@ -351,7 +299,6 @@ export default function GerenciadorImoveis() {
       queryClient.invalidateQueries(['admin-imoveis']);
     },
     onError: (error) => {
-      console.error('Erro ao aprovar:', error);
       toast.error('❌ Erro ao aprovar imóvel', {
         description: error.message || 'Verifique suas permissões',
       });
@@ -375,7 +322,6 @@ export default function GerenciadorImoveis() {
       queryClient.invalidateQueries(['admin-imoveis']);
     },
     onError: (error) => {
-      console.error('Erro ao reprovar:', error);
       toast.error('❌ Erro ao reprovar imóvel', {
         description: error.message,
       });
@@ -392,7 +338,6 @@ export default function GerenciadorImoveis() {
             try {
               await appwrite.storage.deleteFile(image.fileId);
             } catch (error) {
-              console.warn('Aviso ao deletar imagem:', error);
             }
           }
         }
@@ -405,7 +350,6 @@ export default function GerenciadorImoveis() {
       queryClient.invalidateQueries(['admin-imoveis']);
     },
     onError: (error) => {
-      console.error('Erro ao deletar:', error);
       toast.error('❌ Erro ao deletar', {
         description: error.message,
       });
@@ -474,8 +418,6 @@ export default function GerenciadorImoveis() {
       garagemDisponivel: false,
       documentacaoRegular: true,
       acessibilidade: true,
-      latitude: '',
-      longitude: '',
     });
     setModalAberto(true);
   };
@@ -520,8 +462,6 @@ export default function GerenciadorImoveis() {
       garagemDisponivel: imovel.garagemDisponivel || false,
       documentacaoRegular: imovel.documentacaoRegular !== false,
       acessibilidade: imovel.acessibilidade !== false,
-      latitude: imovel.latitude || '',
-      longitude: imovel.longitude || '',
     });
     setModalAberto(true);
   };
@@ -552,6 +492,7 @@ export default function GerenciadorImoveis() {
           bairro: dadosEndereco.bairro,
           cidade: dadosEndereco.cidade,
           estado: dadosEndereco.estado,
+          // ❌ REMOVIDO: latitude e longitude
         }));
 
         toast.success('✅ Endereço encontrado!', { id: 'buscar-cep' });
@@ -559,7 +500,6 @@ export default function GerenciadorImoveis() {
         toast.error('❌ CEP não encontrado', { id: 'buscar-cep' });
       }
     } catch (error) {
-      console.error('Erro ao buscar CEP:', error);
       toast.error('❌ Erro ao buscar CEP', { id: 'buscar-cep' });
     } finally {
       setBuscandoCEP(false);
@@ -574,7 +514,7 @@ export default function GerenciadorImoveis() {
       return;
     }
 
-    // ✅ NOVO: Gerar código automaticamente se não for personalizado e não tiver código
+    // ✅ Gerar código automaticamente se necessário
     if (!formData.codigoPersonalizado && !formData.codigo && formData.tipoImovel && formData.cidade) {
       toast.loading('🔢 Gerando código...', { id: 'gerar-codigo' });
       
@@ -603,47 +543,12 @@ export default function GerenciadorImoveis() {
         
         toast.success(`✅ Código gerado: ${codigoGerado}`, { id: 'gerar-codigo' });
       } catch (error) {
-        console.error('Erro ao gerar código:', error);
         toast.dismiss('gerar-codigo');
       }
     }
 
-    // Buscar coordenadas automaticamente
-    let coordenadas = null;
-    
-    if (formData.cidade && formData.estado) {
-      toast.loading('🗺️ Buscando localização no mapa...', { id: 'geocoding' });
-      
-      try {
-        coordenadas = await geocodeEndereco({
-          cep: formData.cep,
-          endereco: formData.endereco,
-          numero: formData.numero,
-          bairro: formData.bairro,
-          cidade: formData.cidade,
-          estado: formData.estado,
-        });
-
-        if (coordenadas) {
-          toast.success('✅ Localização encontrada!', { 
-            id: 'geocoding',
-            description: '⚠️ Localização aproximada baseada no endereço fornecido'
-          });
-          
-          formData.latitude = coordenadas.latitude;
-          formData.longitude = coordenadas.longitude;
-          
-          if (coordenadas.displayName) {
-            
-          }
-        } else {
-          toast.warning('⚠️ Não foi possível localizar no mapa. O imóvel será cadastrado sem localização.', { id: 'geocoding' });
-        }
-      } catch (error) {
-        console.error('Erro ao buscar coordenadas:', error);
-        toast.dismiss('geocoding');
-      }
-    }
+    // ✅ REMOVIDO: Toda a lógica de geocoding
+    // As coordenadas já vêm do CEP
     
     if (imovelEditando) {
       atualizarImovelMutation.mutate({ id: imovelEditando.$id, data: formData });
@@ -660,9 +565,11 @@ export default function GerenciadorImoveis() {
     }).format(price);
   };
 
-  const getTipoImovelLabel = (tipo) => {
-    return TIPO_IMOVEL_REVERSE_MAP[tipo] || tipo;
-  };
+  // ✅ CORRIGIR: Usar a função importada
+  // Remover essas linhas (783-785):
+  // const getTipoImovelLabel = (tipo) => {
+  //   return TIPO_IMOVEL_REVERSE_MAP[tipo] || tipo;
+  // };
 
   const getDisponibilidadeLabel = (disponibilidade) => {
     return DISPONIBILIDADE_REVERSE_MAP[disponibilidade] || disponibilidade;
@@ -1361,39 +1268,6 @@ export default function GerenciadorImoveis() {
                       disabled={buscandoCEP}
                     />
                   </div>
-
-                  {/* Coordenadas (readonly) */}
-                  {(formData.latitude && formData.longitude) && (
-                    <div className="md:col-span-2 space-y-2">
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <div className="flex items-center gap-2 text-green-800 mb-2">
-                          <MapPin className="w-5 h-5" />
-                          <span className="font-semibold">Localização no mapa configurada</span>
-                        </div>
-                        <p className="text-xs text-green-700">
-                          📍 Coordenadas: {formData.latitude.toFixed(6)}, {formData.longitude.toFixed(6)}
-                        </p>
-                      </div>
-
-                      {/* ✅ NOVO: Aviso sobre precisão */}
-                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                        <div className="flex items-start gap-2">
-                          <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5" />
-                          <div className="flex-1">
-                            <p className="text-xs text-amber-800 font-semibold mb-1">
-                              ⚠️ Importante sobre a Localização:
-                            </p>
-                            <ul className="text-xs text-amber-700 space-y-1">
-                              <li>• A localização é aproximada, baseada no CEP e endereço</li>
-                              <li>• Pode haver variação de 50-200 metros</li>
-                              <li>• O marcador será exibido na página de detalhes</li>
-                              <li>• Endereço exato é informado apenas após agendamento</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
                   {/* OPÇÕES */}
                   <div className="md:col-span-2 mt-4">

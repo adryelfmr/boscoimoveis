@@ -68,10 +68,8 @@ export async function geocodeEndereco({ cep, endereco, numero, bairro, cidade, e
       return await geocodeCidade(cidade, estado);
     }
 
-    console.warn('⚠️ Nenhuma coordenada encontrada');
     return null;
   } catch (error) {
-    console.error('❌ Erro ao buscar coordenadas:', error);
     return null;
   }
 }
@@ -95,7 +93,6 @@ async function buscarPorCEP(cep, cidade, estado) {
     
     return await buscarPorQuery(query);
   } catch (error) {
-    console.error('❌ Erro ao buscar por CEP:', error);
     return null;
   }
 }
@@ -145,7 +142,6 @@ async function buscarPorQuery(query) {
 
     return null;
   } catch (error) {
-    console.error('❌ Erro ao buscar por query:', error);
     return null;
   }
 }
@@ -163,7 +159,6 @@ export async function geocodeCidade(cidade, estado) {
 
     return await buscarPorQuery(query);
   } catch (error) {
-    console.error('❌ Erro ao buscar coordenadas da cidade:', error);
     return null;
   }
 }

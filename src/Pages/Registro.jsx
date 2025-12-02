@@ -111,7 +111,6 @@ export default function Registro() {
       });
       navigate('/');
     } catch (error) {
-      console.error('Erro ao criar conta:', error);
       
       // Mensagens de erro específicas
       if (error.message?.includes('already exists') || error.message?.includes('user_already_exists')) {

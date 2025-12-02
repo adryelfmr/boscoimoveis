@@ -15,7 +15,6 @@ export async function testImageUpload() {
     
     return { success: true, fileId: result.$id, url };
   } catch (error) {
-    console.error('Upload failed:', error);
     return { success: false, error: error.message };
   }
 }

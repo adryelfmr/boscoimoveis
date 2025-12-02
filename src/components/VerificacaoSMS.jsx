@@ -28,7 +28,6 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
           window.recaptchaVerifier.clear();
           window.recaptchaVerifier = null;
         } catch (error) {
-          console.warn('Erro ao limpar reCAPTCHA:', error);
         }
       }
       if (intervaloRef.current) {
@@ -62,7 +61,6 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
       try {
         window.recaptchaVerifier.clear();
       } catch (error) {
-        console.warn('Erro ao limpar reCAPTCHA:', error);
       }
       window.recaptchaVerifier = null;
     }
@@ -84,12 +82,10 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
         setRecaptchaResolved(true);
       },
       'expired-callback': () => {
-        console.warn('⚠️ reCAPTCHA expirado');
         setRecaptchaResolved(false);
         toast.error('Verificação expirou. Tente novamente.');
       },
       'error-callback': (error) => {
-        console.error('❌ Erro no reCAPTCHA:', error);
         setRecaptchaResolved(false);
         toast.error('Erro na verificação de segurança');
       }
@@ -117,7 +113,6 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
         description: 'Verifique suas mensagens de texto.',
       });
     } catch (error) {
-      console.error('❌ Erro completo:', error);
       
       limparRecaptcha();
       
@@ -152,11 +147,9 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
     setVerificando(true);
 
     try {
-      console.log('🔐 Verificando código SMS...');
       
       await confirmationResult.confirm(codigo);
       
-      console.log('✅ Código SMS verificado com sucesso!');
       
       setEtapa('sucesso');
       
@@ -170,7 +163,6 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
       onVerificado(telefoneE164);
       
     } catch (error) {
-      console.error('❌ Erro ao verificar código:', error);
       
       if (error.code === 'auth/invalid-verification-code') {
         toast.error('❌ Código inválido', {
@@ -198,7 +190,6 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
     }
 
     if (enviandoRef.current) {
-      console.warn('⚠️ Já está enviando');
       return;
     }
 
@@ -227,8 +218,6 @@ export default function VerificacaoSMS({ telefone, onVerificado, onCancelar }) {
         description: 'Verifique suas mensagens de texto.',
       });
     } catch (error) {
-      console.error('❌ Erro ao reenviar código:', error);
-
       limparRecaptcha();
 
       if (error.code === 'auth/too-many-requests') {

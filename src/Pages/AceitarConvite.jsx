@@ -69,7 +69,6 @@ export default function AceitarConvite() {
       }, 2000);
 
     } catch (error) {
-      console.error('Erro ao aceitar convite:', error);
       
       if (error.message?.includes('expired')) {
         setErro('Este convite expirou. Peça ao administrador para enviar um novo.');

@@ -64,7 +64,6 @@ export default function Login() {
         navigate('/');
       }
     } catch (error) {
-      console.error('Erro ao fazer login:', error);
       
       // Mensagens de erro específicas baseadas no tipo de erro
       if (error.message?.includes('Invalid credentials') || error.message?.includes('invalid-email-password')) {

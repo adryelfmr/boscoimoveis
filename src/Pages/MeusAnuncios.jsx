@@ -45,7 +45,6 @@ export default function MeusAnuncios() {
       setDeletandoId(null);
     },
     onError: (error) => {
-      console.error('Erro ao deletar anúncio:', error);
       toast.error('Erro ao excluir anúncio');
       setDeletandoId(null);
     },

@@ -22,8 +22,6 @@ export const appwrite = {
           return null;
         }
         
-        // Logar apenas erros reais (diferente de 401)
-        console.error('Erro ao buscar usuário:', error);
         throw error;
       }
     },
@@ -32,7 +30,6 @@ export const appwrite = {
       try {
         return await account.createEmailPasswordSession(email, password);
       } catch (error) {
-        console.error('Erro ao fazer login:', error);
         
         // Tratar erros específicos do Appwrite
         if (error.code === 401) {
@@ -51,7 +48,6 @@ export const appwrite = {
       try {
         return await account.create(ID.unique(), email, password, name);
       } catch (error) {
-        console.error('Erro ao registrar:', error);
         
         // Tratar erros específicos
         if (error.code === 409 || error.message?.includes('already exists')) {
@@ -70,7 +66,6 @@ export const appwrite = {
       try {
         return await account.deleteSession('current');
       } catch (error) {
-        console.error('Erro ao fazer logout:', error);
         throw error;
       }
     },
@@ -86,7 +81,6 @@ export const appwrite = {
       try {
         return await storage.createFile(bucketId, fileId, file);
       } catch (error) {
-        console.error('Erro ao fazer upload:', error);
         throw error;
       }
     },
@@ -99,7 +93,6 @@ export const appwrite = {
       try {
         return await storage.deleteFile(bucketId, fileId);
       } catch (error) {
-        console.error('Erro ao deletar arquivo:', error);
         throw error;
       }
     },
@@ -148,7 +141,6 @@ export const appwrite = {
           
           return response.documents;
         } catch (error) {
-          console.error('Erro ao buscar imóveis:', error);
           return [];
         }
       },
@@ -157,7 +149,6 @@ export const appwrite = {
         try {
           return await databases.getDocument(DATABASE_ID, COLLECTIONS.IMOVEIS, id);
         } catch (error) {
-          console.error('Erro ao buscar imóvel:', error);
           return null;
         }
       },
@@ -199,7 +190,6 @@ export const appwrite = {
           
           return response.documents;
         } catch (error) {
-          console.error('Erro ao buscar imóveis:', error);
           return [];
         }
       },
@@ -243,7 +233,6 @@ export const appwrite = {
           
           return response.documents;
         } catch (error) {
-          console.error('Erro ao buscar favoritos:', error);
           return [];
         }
       },
@@ -284,7 +273,6 @@ export const appwrite = {
           
           return response.documents;
         } catch (error) {
-          console.error('Erro ao buscar visualizações:', error);
           return [];
         }
       },
@@ -322,7 +310,6 @@ export const appwrite = {
           
           return response.documents;
         } catch (error) {
-          console.error('Erro ao buscar alertas:', error);
           return [];
         }
       },
@@ -384,7 +371,6 @@ export const appwrite = {
           );
           return response.documents;
         } catch (error) {
-          console.error('Erro ao buscar contatos:', error);
           return [];
         }
       },
@@ -425,7 +411,6 @@ export const appwrite = {
 
           return await response.json();
         } catch (error) {
-          console.error('Erro ao enviar email:', error);
           throw error;
         }
       },

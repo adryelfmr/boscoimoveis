@@ -88,13 +88,11 @@ export default function Contato() {
         
 
         if (execution.status === 'failed') {
-          console.error('❌ Erro ao enviar email:', execution);
           throw new Error(execution.responseBody || 'Falha ao enviar email');
         }
 
         
       } catch (emailError) {
-        console.error('❌ Erro ao executar função de email:', emailError);
       }
 
       // ✅ NOVO: Rastrear envio do formulário
@@ -108,7 +106,6 @@ export default function Contato() {
       setFormData({ nome: '', email: '', telefone: '', mensagem: '' });
       setTentativasRestantes(limitCheck.remainingAttempts - 1);
     } catch (error) {
-      console.error('❌ Erro ao enviar mensagem:', error);
       toast.error('Erro ao enviar mensagem', {
         description: 'Por favor, tente novamente ou entre em contato via WhatsApp.',
       });

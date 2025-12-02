@@ -23,7 +23,6 @@ async function gerarSitemap() {
     const baseUrl = 'https://boscoimoveis.app';
     const hoje = new Date().toISOString().split('T')[0];
     
-    console.error('🔄 Buscando imóveis...');
     
     // Páginas estáticas
     const paginasEstaticas = [
@@ -51,7 +50,6 @@ async function gerarSitemap() {
     
     const imoveis = response.documents;
     
-    console.error(`✅ ${imoveis.length} imóveis encontrados`);
     
     // Gerar XML
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -98,13 +96,10 @@ async function gerarSitemap() {
     xml += `
 </urlset>`;
     
-    console.error('✅ Sitemap gerado com sucesso!');
-    console.error(`📊 Total de URLs: ${paginasEstaticas.length + imoveis.length}`);
     
     
     
   } catch (error) {
-    console.error('❌ Erro ao gerar sitemap:', error);
     process.exit(1);
   }
 }
