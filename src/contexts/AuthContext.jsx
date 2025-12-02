@@ -33,12 +33,26 @@ export function AuthProvider({ children }) {
       }
       
       let isAdmin = false;
+      let userRole = null;
       
       if (ADMIN_TEAM_ID) {
         try {
-          const userTeams = await teams.list();
-          isAdmin = userTeams.teams.some(team => team.$id === ADMIN_TEAM_ID);
+          // ✅ CORREÇÃO: Verificar se o usuário é membro OU owner do time
+          const memberships = await teams.listMemberships(ADMIN_TEAM_ID);
+          const myMembership = memberships.memberships.find(m => m.userId === userData.$id);
+          
+          if (myMembership) {
+            isAdmin = true;
+            if (myMembership.roles?.includes('owner')) {
+              userRole = 'owner';
+            } else if (myMembership.confirm) {
+              userRole = 'member';
+            } else {
+              userRole = 'pending';
+            }
+          }
         } catch (error) {
+          
           isAdmin = false;
         }
       }
@@ -46,6 +60,7 @@ export function AuthProvider({ children }) {
       setUser({
         ...userData,
         isAdmin,
+        adminRole: userRole, // 'owner', 'member' ou 'pending'
       });
     } catch (error) {
       if (error.message !== 'Not authenticated') {
@@ -70,24 +85,21 @@ export function AuthProvider({ children }) {
       try {
         await account.deleteSession('current');
       } catch (error) {
+        // Ignorar erro se não houver sessão
       }
       
       // ✅ 2. Criar conta no Appwrite
       const newUser = await appwrite.auth.register(email, password, name);
       
-      
       // ✅ 3. Fazer login automático
       await login(email, password);
-      
       
       // ✅ 4. Atualizar telefone (se fornecido)
       if (telefone) {
         try {
           await account.updatePhone(telefone, password);
-          
         } catch (phoneError) {
           console.warn('⚠️ Erro ao atualizar telefone (não crítico):', phoneError);
-          // Não falhar o registro por causa do telefone
         }
       }
       
@@ -116,6 +128,7 @@ export function AuthProvider({ children }) {
     checkUser,
     isAuthenticated: !!user,
     isAdmin: user?.isAdmin || false,
+    isOwner: user?.adminRole === 'owner', // ✅ NOVO: Flag específica para owner
   };
 
   if (loading) {
