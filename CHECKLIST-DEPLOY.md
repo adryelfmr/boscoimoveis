@@ -75,11 +75,14 @@ Quando alterar:
 - ❏ Nome do app
 - ❏ Ícones
 - ❏ Cores do tema
+- ❏ Screenshots (opcional)
 
 **Arquivo a atualizar:**
 ```
 public/site.webmanifest
 ```
+
+**⚠️ Nota:** Screenshots são OPCIONAIS. Apenas necessárias se for publicar na Play Store.
 
 **Testar em:** https://www.pwabuilder.com/
 
@@ -146,17 +149,20 @@ Quando alterar:
 - ❏ Logo da empresa
 - ❏ Cores principais
 
-**Arquivos a gerar:**
+**Arquivos necessários em `public/`:**
 ```
 public/
   ├── favicon.ico (16x16, 32x32)
   ├── favicon-96x96.png
   ├── apple-touch-icon.png (180x180)
   ├── web-app-manifest-192x192.png
-  └── web-app-manifest-512x512.png
+  ├── web-app-manifest-512x512.png
+  └── boscoimoveis.svg
 ```
 
-**Ferramenta:** https://realfavicongenerator.net/
+**⚠️ IMPORTANTE:** Todos esses arquivos são obrigatórios para SEO e PWA.
+
+**Ferramenta para gerar:** https://realfavicongenerator.net/
 
 ---
 
@@ -182,9 +188,9 @@ src/Pages/[Pagina].jsx
 # 1. Testar localmente
 npm run dev
 
-# 2. Verificar erros no console
-# 3. Testar em modo incógnito
-# 4. Testar responsividade (mobile)
+# 2. Verificar erros no console (F12)
+# 3. Testar em modo incógnito (Ctrl+Shift+N)
+# 4. Testar responsividade mobile (F12 → Toggle Device)
 ```
 
 ---
@@ -194,22 +200,29 @@ npm run dev
 ❏ **SEO:** https://pagespeed.web.dev/
 ❏ **Schema.org:** https://validator.schema.org/
 ❏ **Open Graph:** https://www.opengraph.xyz/
-❏ **Manifest:** https://www.pwabuilder.com/
+❏ **Manifest PWA:** https://www.pwabuilder.com/
 ❏ **Acessibilidade:** https://wave.webaim.org/
+❏ **Mobile Friendly:** https://search.google.com/test/mobile-friendly
 
 ---
 
 ### **Passo 3: Deploy**
 
 ```bash
-# 1. Commit das mudanças
-git add .
-git commit -m "feat: [descrição clara]"
+# 1. Verificar se está na branch correta
+git branch
 
-# 2. Push para produção
+# 2. Adicionar mudanças
+git add .
+
+# 3. Commit com mensagem clara
+git commit -m "feat: adiciona novas funcionalidades de SEO"
+
+# 4. Push para produção
 git push origin main
 
-# 3. Aguardar deploy (Vercel notifica)
+# 5. Aguardar notificação do Vercel
+# Você receberá um email quando o deploy for concluído
 ```
 
 ---
@@ -218,22 +231,25 @@ git push origin main
 
 ❏ Testar site em produção: https://boscoimoveis.app
 ❏ Verificar Google Search Console (indexação)
-❏ Limpar cache CDN (se necessário)
-❏ Solicitar reindexação no Google (se mudou SEO)
+❏ Solicitar reindexação no Google (se mudou SEO crítico)
+❏ Testar compartilhamento em WhatsApp/Facebook
+❏ Verificar se ícones aparecem corretamente
+❏ Testar PWA em mobile (Add to Home Screen)
 
 ---
 
 ## 🔄 **Frequência de Atualizações**
 
-| Item | Frequência |
-|------|------------|
-| SEO meta tags | A cada nova página |
-| Schema.org | A cada mudança de estrutura |
-| Sitemap | Semanal (automático no build) |
-| Analytics | A cada novo evento/conversão |
-| Versão (cache) | Apenas mudanças críticas |
-| Ícones | Apenas rebrand |
-| Open Graph | Mudança de imagens principais |
+| Item | Frequência | Obrigatório? |
+|------|------------|-------------|
+| SEO meta tags | A cada nova página | ✅ Sim |
+| Schema.org | A cada mudança de estrutura | ✅ Sim |
+| Sitemap | Automático no build | ✅ Sim |
+| Analytics | A cada novo evento | ⚠️ Recomendado |
+| Versão (cache) | Apenas mudanças críticas | ⚠️ Se necessário |
+| Ícones | Apenas rebrand | ✅ Sim |
+| Open Graph | Mudança de imagens principais | ✅ Sim |
+| Screenshots PWA | Opcional (Play Store) | ❌ Não |
 
 ---
 
@@ -246,6 +262,8 @@ git push origin main
 5. ❌ Não incrementar versão após mudanças críticas
 6. ❌ Esquecer de adicionar analytics em novos CTAs
 7. ❌ Não regenerar sitemap após adicionar páginas
+8. ❌ **NOVO:** Não verificar se todos os ícones existem em `public/`
+9. ❌ **NOVO:** Fazer push sem testar localmente
 
 ---
 
@@ -260,7 +278,30 @@ https://developers.facebook.com/tools/debug/
 **LinkedIn Inspector:**
 https://www.linkedin.com/post-inspector/
 
+**Twitter Card Validator:**
+https://cards-dev.twitter.com/validator
+
+---
+
+## 🎯 **Checklist Rápido (Copy-Paste)**
+
+```
+□ Testei localmente com `npm run dev`
+□ Verifiquei erros no console (F12)
+□ Testei em mobile (DevTools)
+□ Validei Schema.org
+□ Testei Open Graph
+□ Regenerei sitemap (se necessário)
+□ Incrementei versão do cache (se necessário)
+□ Fiz commit com mensagem descritiva
+□ Fiz push para main
+□ Aguardei deploy do Vercel
+□ Testei em produção
+□ Solicitei reindexação (se mudou SEO)
+```
+
 ---
 
 **Última atualização:** 28/01/2025  
-**Versão:** 2.0.0
+**Versão:** 2.1.0  
+**Autor:** Equipe Bosco Imóveis

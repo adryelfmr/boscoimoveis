@@ -37,15 +37,17 @@
   "screenshots": [
     {
       "src": "/screenshot-mobile.png",
-      "sizes": "540x720",
+      "sizes": "390x844",
       "type": "image/png",
-      "form_factor": "narrow"
+      "form_factor": "narrow",
+      "label": "Página Inicial - Mobile"
     },
     {
       "src": "/screenshot-desktop.png",
       "sizes": "1920x1080",
       "type": "image/png",
-      "form_factor": "wide"
+      "form_factor": "wide",
+      "label": "Página Inicial - Desktop"
     }
   ]
 }
