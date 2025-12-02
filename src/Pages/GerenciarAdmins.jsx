@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Shield, UserPlus, Trash2, Loader2, Crown, RefreshCw, Mail, Check, X } from 'lucide-react';
+import { Shield, UserPlus, Trash2, Loader2, Crown, RefreshCw, Mail, Check, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function GerenciarAdmins() {
@@ -115,19 +115,22 @@ export default function GerenciarAdmins() {
   // Adicionar novo admin
   const addAdminMutation = useMutation({
     mutationFn: async (email) => {
-      // ✅ MUDANÇA: URL para página de aceitar convite
       const redirectUrl = `${import.meta.env.VITE_APP_URL || window.location.origin}/aceitar-convite`;
       
+      // ✅ IMPORTANTE: Passar email como último parâmetro
+      // teams.createMembership(teamId, roles, email?, userId?, phone?, url?, name?)
       return await teams.createMembership(
         ADMIN_TEAM_ID,
-        ['admin'],
-        email,
-        undefined,
-        undefined,
-        redirectUrl
+        ['admin'],      // roles
+        email,          // ✅ email do novo admin
+        undefined,      // userId (deixar undefined para criar convite por email)
+        undefined,      // phone
+        redirectUrl,    // url de redirecionamento
+        undefined       // name
       );
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('✅ Convite criado:', data);
       toast.success('✅ Convite enviado com sucesso!', {
         description: 'O usuário receberá um email com instruções.',
       });
@@ -138,6 +141,7 @@ export default function GerenciarAdmins() {
       console.error('❌ Erro ao adicionar admin:', error);
       console.error('❌ Código do erro:', error.code);
       console.error('❌ Mensagem:', error.message);
+      console.error('❌ Type:', error.type);
       
       if (error.code === 401) {
         toast.error('❌ Sem permissão para enviar convites', {
@@ -152,7 +156,7 @@ export default function GerenciarAdmins() {
         toast.error('❌ Usuário já é membro', {
           description: 'Este email já está cadastrado como administrador.',
         });
-      } else if (error.message?.includes('User (role: guests) missing scope')) {
+      } else if (error.message?.includes('User (role: guests) missing scope') || error.message?.includes('user_target_not_found')) {
         toast.error('❌ Usuário não encontrado', {
           description: 'Este email não possui uma conta no sistema. Peça para o usuário criar uma conta primeiro em /registro.',
           duration: 10000,
@@ -202,7 +206,6 @@ export default function GerenciarAdmins() {
       return;
     }
 
-    // ✅ Validação de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(newAdminEmail)) {
       toast.error('Email inválido', {
@@ -211,7 +214,27 @@ export default function GerenciarAdmins() {
       return;
     }
 
-    // ✅ Com "Team invites" ativado, qualquer membro pode enviar convites
+    // ✅ NOVO: Verificar se não está tentando adicionar a si mesmo
+    if (newAdminEmail.toLowerCase() === user.email.toLowerCase()) {
+      toast.error('❌ Você já é administrador', {
+        description: 'Não é possível enviar convite para si mesmo.',
+      });
+      return;
+    }
+
+    // ✅ NOVO: Verificar se o email já existe na lista
+    const emailJaExiste = members.some(
+      m => m.userEmail.toLowerCase() === newAdminEmail.toLowerCase()
+    );
+    
+    if (emailJaExiste) {
+      toast.error('❌ Email já cadastrado', {
+        description: 'Este usuário já está na lista de administradores.',
+      });
+      return;
+    }
+
+    console.log('📧 Enviando convite para:', newAdminEmail);
     addAdminMutation.mutate(newAdminEmail);
   };
 
@@ -273,6 +296,17 @@ export default function GerenciarAdmins() {
             </div>
           )}
         </div>
+
+        {/* ✅ NOVO: Card de debug (remover depois) */}
+        {process.env.NODE_ENV === 'development' && (
+          <Card className="mb-4 border-amber-200 bg-amber-50">
+            <CardContent className="pt-4">
+              <p className="text-xs text-amber-900">
+                <strong>🐛 Debug:</strong> Seu email: {user?.email}
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Adicionar novo admin */}
         <Card className="mb-8 border-0 shadow-lg">
