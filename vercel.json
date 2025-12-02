@@ -1,4 +1,17 @@
 {
+  "redirects": [
+    {
+      "source": "/:path(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.boscoimoveis.app"
+        }
+      ],
+      "destination": "https://boscoimoveis.app/:path*",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/sitemap.xml",
