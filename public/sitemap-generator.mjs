@@ -2,11 +2,12 @@ import { Client, Databases, Query } from 'appwrite';
 import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
+import fs from 'fs';
 
 // Carregar .env
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-dotenv.config({ path: resolve(__dirname, '../.env') });
+dotenv.config({ path: resolve(__dirname, '../.env'), override: false }); // ✅ MUDANÇA: sem logs
 
 // Configurar Appwrite
 const client = new Client()
@@ -20,17 +21,16 @@ const COLLECTION_IMOVEIS = process.env.VITE_APPWRITE_COLLECTION_IMOVEIS;
 
 async function gerarSitemap() {
   try {
-    const baseUrl = 'https://boscoimoveis.app';
     const hoje = new Date().toISOString().split('T')[0];
-    
+    const baseUrl = 'https://boscoimoveis.app';
     
     // Páginas estáticas
     const paginasEstaticas = [
-      { url: '/', prioridade: '1.0', frequencia: 'daily' }, // ✅ MUDEI: weekly → daily
-      { url: '/catalogo', prioridade: '0.9', frequencia: 'daily' }, // ✅ MUDEI
-      { url: '/promocoes', prioridade: '0.8', frequencia: 'daily' }, // ✅ MUDEI
+      { url: '/', prioridade: '1.0', frequencia: 'daily' },
+      { url: '/catalogo', prioridade: '0.9', frequencia: 'daily' },
+      { url: '/promocoes', prioridade: '0.8', frequencia: 'daily' },
       { url: '/sobre', prioridade: '0.7', frequencia: 'monthly' },
-      { url: '/contato', prioridade: '0.7', frequencia: 'monthly' },
+      { url: '/contato', prioridade: '0.8', frequencia: 'monthly' },
       { url: '/favoritos', prioridade: '0.6', frequencia: 'monthly' },
       { url: '/comparar', prioridade: '0.6', frequencia: 'monthly' },
       { url: '/login', prioridade: '0.5', frequencia: 'yearly' },
@@ -50,8 +50,7 @@ async function gerarSitemap() {
     
     const imoveis = response.documents;
     
-    
-    // Gerar XML
+    // ✅ INÍCIO DO XML (SEM LOGS)
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
@@ -76,18 +75,17 @@ async function gerarSitemap() {
   <url>
     <loc>${baseUrl}/detalhes?id=${imovel.$id}</loc>
     <lastmod>${lastmod}</lastmod>
-    <changefreq>weekly</changefreq> 
+    <changefreq>weekly</changefreq>
     <priority>0.8</priority>`;
       
-      // ✅ ADICIONAR: Imagens TODAS (não só principal)
+      // Adicionar imagens
       if (imovel.imagens) {
         const todasImagens = imovel.imagens.split(',').map(url => url.trim());
-        todasImagens.forEach((imagemUrl, index) => {
+        todasImagens.forEach((imagemUrl) => {
           xml += `
     <image:image>
       <image:loc>${imagemUrl}</image:loc>
-      <image:title>${escapeXml(imovel.titulo)} - Foto ${index + 1}</image:title>
-      <image:caption>${escapeXml(imovel.descricao || imovel.titulo)}</image:caption>
+      <image:title>${escapeXml(imovel.titulo)}</image:title>
     </image:image>`;
         });
       }
@@ -97,12 +95,19 @@ async function gerarSitemap() {
     });
     
     xml += `
-</urlset>`;
+</urlset>
+`;
     
+    // ✅ SALVAR ARQUIVO (SEM LOGS)
+    fs.writeFileSync(resolve(__dirname, 'sitemap.xml'), xml, 'utf8');
     
-    
+    console.log(`✅ Sitemap gerado com sucesso!`);
+    console.log(`📄 ${paginasEstaticas.length} páginas estáticas`);
+    console.log(`🏠 ${imoveis.length} imóveis`);
+    console.log(`📍 Localização: public/sitemap.xml`);
     
   } catch (error) {
+    console.error('❌ Erro ao gerar sitemap:', error.message);
     process.exit(1);
   }
 }
