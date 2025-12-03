@@ -39,7 +39,7 @@ export default function SEO({
       { property: 'og:image:alt', content: title }, // ✅ ADICIONAR
       { property: 'og:locale', content: 'pt_BR' },
       { property: 'og:site_name', content: 'Bosco Imóveis' },
-      
+       
       // Twitter
       { property: 'twitter:card', content: 'summary_large_image' },
       { property: 'twitter:url', content: canonicalUrl }, // ✅ USAR URL NORMALIZADA
