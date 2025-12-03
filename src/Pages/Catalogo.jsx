@@ -5,15 +5,25 @@ import ImovelCard from '@/components/imoveis/ImovelCard';
 import FiltrosImoveis from '@/components/imoveis/FiltrosImoveis';
 import { Building2 } from 'lucide-react';
 import SEO from '@/components/SEO';
-import SchemaOrg from '@/components/SchemaOrg'; // ✅ CORRIGIDO: era SemanticSchemaOrg
-import Breadcrumbs from '@/components/Breadcrumbs'; // ✅ ADICIONAR
+import SchemaOrg from '@/components/SchemaOrg';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 export default function Catalogo() {
   const [filtros, setFiltros] = useState({
     busca: '',
-    tipo: 'todos',
     finalidade: 'todas',
+    tipo: 'todos',
+    categoria: 'todas',
+    tipoNegocio: 'todos',
+    cidade: '',
+    bairro: '',
     quartos: 'todos',
+    banheiros: 'todos',
+    vagas: 'todos',
+    precoMin: '',
+    precoMax: '',
+    areaMin: '',
+    condominio: 'todos',
   });
 
   const { data: imoveis = [], isLoading } = useQuery({
@@ -27,19 +37,68 @@ export default function Catalogo() {
 
   const imoveisFiltrados = useMemo(() => {
     return imoveis.filter((imovel) => {
+      // Busca geral
       if (filtros.busca) {
         const busca = filtros.busca.toLowerCase();
-        const textoParaBuscar = `${imovel.titulo} ${imovel.bairro} ${imovel.cidade} ${imovel.endereco}`.toLowerCase();
+        const textoParaBuscar = `${imovel.titulo} ${imovel.bairro} ${imovel.cidade} ${imovel.endereco} ${imovel.codigo || ''}`.toLowerCase();
         if (!textoParaBuscar.includes(busca)) return false;
       }
 
+      // ✅ Finalidade
+      if (filtros.finalidade !== 'todas' && imovel.finalidade !== filtros.finalidade) return false;
+
+      // ✅ Tipo de imóvel
       if (filtros.tipo !== 'todos' && imovel.tipoImovel !== filtros.tipo) return false;
       
-      if (filtros.finalidade !== 'todas' && imovel.tipoNegocio !== filtros.finalidade) return false;
+      // ✅ Categoria
+      if (filtros.categoria && filtros.categoria !== 'todas') {
+        if (imovel.categoria !== filtros.categoria) return false;
+      }
+
+      // ✅ Tipo de negócio
+      if (filtros.tipoNegocio !== 'todos' && imovel.tipoNegocio !== filtros.tipoNegocio) return false;
       
+      // Cidade
+      if (filtros.cidade && !imovel.cidade?.toLowerCase().includes(filtros.cidade.toLowerCase())) return false;
+      
+      // Bairro
+      if (filtros.bairro && !imovel.bairro?.toLowerCase().includes(filtros.bairro.toLowerCase())) return false;
+      
+      // Quartos
       if (filtros.quartos !== 'todos') {
         const minQuartos = parseInt(filtros.quartos);
         if (!imovel.numeroQuartos || imovel.numeroQuartos < minQuartos) return false;
+      }
+
+      // Banheiros
+      if (filtros.banheiros !== 'todos') {
+        const minBanheiros = parseInt(filtros.banheiros);
+        if (!imovel.numeroBanheiros || imovel.numeroBanheiros < minBanheiros) return false;
+      }
+
+      // Vagas
+      if (filtros.vagas !== 'todos') {
+        const minVagas = parseInt(filtros.vagas);
+        if (!imovel.vagas || imovel.vagas < minVagas) return false;
+      }
+
+      // Preço mínimo
+      if (filtros.precoMin && imovel.preco < parseFloat(filtros.precoMin)) return false;
+
+      // Preço máximo
+      if (filtros.precoMax && imovel.preco > parseFloat(filtros.precoMax)) return false;
+
+      // Área mínima
+      if (filtros.areaMin) {
+        const area = imovel.areaTotal || imovel.areaUtil || imovel.area;
+        if (!area || area < parseFloat(filtros.areaMin)) return false;
+      }
+
+      // Condomínio
+      if (filtros.condominio !== 'todos') {
+        const emCondominio = imovel.condominio === true;
+        if (filtros.condominio === 'sim' && !emCondominio) return false;
+        if (filtros.condominio === 'nao' && emCondominio) return false;
       }
 
       return true;
@@ -53,13 +112,22 @@ export default function Catalogo() {
   const handleLimparFiltros = () => {
     setFiltros({
       busca: '',
-      tipo: 'todos',
       finalidade: 'todas',
+      tipo: 'todos',
+      categoria: 'todas',
+      tipoNegocio: 'todos',
+      cidade: '',
+      bairro: '',
       quartos: 'todos',
+      banheiros: 'todos',
+      vagas: 'todos',
+      precoMin: '',
+      precoMax: '',
+      areaMin: '',
+      condominio: 'todos',
     });
   };
 
-  // ✅ ADICIONAR Schema.org para página de listagem
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -85,7 +153,6 @@ export default function Catalogo() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white">
-      {/* ✅ ADICIONAR: Breadcrumbs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Breadcrumbs items={[
           { name: 'Catálogo', url: '/catalogo' }
@@ -122,7 +189,13 @@ export default function Catalogo() {
           <div className="text-center py-16 bg-slate-50 rounded-2xl">
             <Building2 className="w-20 h-20 text-slate-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-slate-900 mb-2">Nenhum imóvel encontrado</h3>
-            <p className="text-slate-600">Tente ajustar os filtros para ver mais resultados</p>
+            <p className="text-slate-600 mb-4">Tente ajustar os filtros para ver mais resultados</p>
+            <button
+              onClick={handleLimparFiltros}
+              className="text-blue-700 hover:underline font-medium"
+            >
+              Limpar todos os filtros
+            </button>
           </div>
         )}
       </div>
@@ -132,7 +205,7 @@ export default function Catalogo() {
         description={`Confira ${imoveisFiltrados.length} imóveis disponíveis em Goiânia. Casas, apartamentos, terrenos e muito mais.`}
         keywords="catálogo imóveis, imóveis goiânia, comprar casa, alugar apartamento"
       />
-      <SchemaOrg data={schemaData} /> {/* ✅ ADICIONAR */}
+      <SchemaOrg data={schemaData} />
     </div>
   );
 }

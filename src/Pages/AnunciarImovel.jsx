@@ -239,12 +239,14 @@ export default function AnunciarImovel() {
         segurancaCondominio: data.condominio ? data.segurancaCondominio : [],
         imagens: imagensUrls.join(','),
         imagemPrincipal: imagemPrincipal,
-        // ✅ SALVAR COORDENADAS AUTOMATICAMENTE
         latitude: latitude,
         longitude: longitude,
-        precisaoLocalizacao: precision, // 'street', 'neighborhood', 'city'
+        precisaoLocalizacao: precision,
         criadoPor: user.$id,
         criadoPorNome: user.name,
+        // ✅ NOVO: Salvar email e telefone do anunciante
+        criadoPorEmail: user.email,
+        criadoPorTelefone: telefone,
         tipoAnuncio: 'cliente',
         statusAprovacao: 'pendente',
         disponibilidade: 'indisponivel',
