@@ -243,7 +243,7 @@ export default function Layout({ children, currentPageName }) {
 
           {/* Mobile Navigation */}
           {mobileMenuOpen && (
-            <div className="lg:hidden py-4 border-t border-slate-200">
+            <div className="lg:hidden py-4 border-t border-slate-200 max-h-[calc(100vh-80px)] overflow-y-auto">
               <div className="space-y-1">
                 {menuItems.map((item) => {
                   const Icon = item.icon;
