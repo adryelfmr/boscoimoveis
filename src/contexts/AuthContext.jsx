@@ -37,7 +37,6 @@ export function AuthProvider({ children }) {
       
       if (ADMIN_TEAM_ID) {
         try {
-          // ✅ CORREÇÃO: Verificar se o usuário é membro OU owner do time
           const memberships = await teams.listMemberships(ADMIN_TEAM_ID);
           const myMembership = memberships.memberships.find(m => m.userId === userData.$id);
           
