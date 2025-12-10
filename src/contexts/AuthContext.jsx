@@ -59,7 +59,7 @@ export function AuthProvider({ children }) {
       setUser({
         ...userData,
         isAdmin,
-        adminRole: userRole, // 'owner', 'member' ou 'pending'
+        adminRole: userRole, 
       });
     } catch (error) {
       if (error.message !== 'Not authenticated') {
