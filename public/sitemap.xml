@@ -2,106 +2,44 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://boscoimoveis.app/</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-01-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://boscoimoveis.app/catalogo</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-01-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://boscoimoveis.app/promocoes</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-01-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://boscoimoveis.app/sobre</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://boscoimoveis.app/contato</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://boscoimoveis.app/favoritos</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://boscoimoveis.app/comparar</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://boscoimoveis.app/login</loc>
-    <lastmod>2025-12-02</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://boscoimoveis.app/registro</loc>
-    <lastmod>2025-12-02</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://boscoimoveis.app/detalhes?id=692f2b46003bf1f4f6c6</loc>
-    <lastmod>2025-12-02</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nyc.cloud.appwrite.io/v1/storage/buckets/imoveis/files/692f2b01003187e85d74/view?project=6924b9be000964eea8f5</image:loc>
-      <image:title>323</image:title>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://boscoimoveis.app/detalhes?id=692f21ea003163f92a20</loc>
-    <lastmod>2025-12-02</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nyc.cloud.appwrite.io/v1/storage/buckets/imoveis/files/692f21d40013f5d3ab09/view?project=6924b9be000964eea8f5</image:loc>
-      <image:title>a</image:title>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://boscoimoveis.app/detalhes?id=692f1f5a003e0ea2f035</loc>
-    <lastmod>2025-12-02</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nyc.cloud.appwrite.io/v1/storage/buckets/imoveis/files/692f1f3d000b6c0090dd/view?project=6924b9be000964eea8f5</image:loc>
-      <image:title>a</image:title>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://boscoimoveis.app/detalhes?id=692f192100165f1fe4e0</loc>
-    <lastmod>2025-12-02</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nyc.cloud.appwrite.io/v1/storage/buckets/imoveis/files/692f17960008d8931792/view?project=6924b9be000964eea8f5</image:loc>
-      <image:title>a</image:title>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://boscoimoveis.app/detalhes?id=692efa9800306521f74f</loc>
-    <lastmod>2025-12-02</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nyc.cloud.appwrite.io/v1/storage/buckets/imoveis/files/692efa4100206ca2fbe5/view?project=6924b9be000964eea8f5</image:loc>
-      <image:title>1</image:title>
-    </image:image>
   </url>
 </urlset>

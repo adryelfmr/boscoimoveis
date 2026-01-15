@@ -16,33 +16,43 @@ export default function SEO({
 
     // ✅ CORRIGIDO: Normalizar URL canônica (sempre sem www, sempre https)
     const canonicalUrl = url
-      .replace('https://www.boscoimoveis.app', 'https://boscoimoveis.app')
-      .replace('http://www.boscoimoveis.app', 'https://boscoimoveis.app')
-      .replace('http://boscoimoveis.app', 'https://boscoimoveis.app');
+      .replace(/^https?:\/\/(www\.)?/, 'https://') // Remove protocolo e www
+      .replace(/^https:\/\//, 'https://boscoimoveis.app') // Garante domínio correto
+      .split('?')[0] // Remove query strings (exceto para /detalhes)
+      .replace(/\/$/, ''); // Remove trailing slash
+
+    // ✅ ADICIONAR: Link canônico
+    let canonicalLink = document.querySelector('link[rel="canonical"]');
+    if (!canonicalLink) {
+      canonicalLink = document.createElement('link');
+      canonicalLink.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonicalLink);
+    }
+    canonicalLink.setAttribute('href', canonicalUrl);
 
     // Meta tags básicas
     const metaTags = [
       { name: 'description', content: description },
       { name: 'keywords', content: keywords },
-      { name: 'author', content: 'Bosco Imóveis' }, // ✅ ADICIONAR
+      { name: 'author', content: 'Bosco Imóveis' },
       
       // Open Graph / Facebook
       { property: 'og:type', content: type },
-      { property: 'og:url', content: canonicalUrl }, // ✅ USAR URL NORMALIZADA
+      { property: 'og:url', content: canonicalUrl },
       { property: 'og:title', content: title },
       { property: 'og:description', content: description },
       { property: 'og:image', content: image },
-      { property: 'og:image:secure_url', content: image }, // ✅ ADICIONAR
+      { property: 'og:image:secure_url', content: image },
       { property: 'og:image:width', content: '512' },
       { property: 'og:image:height', content: '512' },
       { property: 'og:image:type', content: 'image/png' },
-      { property: 'og:image:alt', content: title }, // ✅ ADICIONAR
+      { property: 'og:image:alt', content: title },
       { property: 'og:locale', content: 'pt_BR' },
       { property: 'og:site_name', content: 'Bosco Imóveis' },
        
       // Twitter
       { property: 'twitter:card', content: 'summary_large_image' },
-      { property: 'twitter:url', content: canonicalUrl }, // ✅ USAR URL NORMALIZADA
+      { property: 'twitter:url', content: canonicalUrl },
       { property: 'twitter:title', content: title },
       { property: 'twitter:description', content: description },
       { property: 'twitter:image', content: image },

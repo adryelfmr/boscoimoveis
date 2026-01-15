@@ -155,10 +155,24 @@ export default function Detalhes() {
   }
 
   if (!imovel) {
+    // ✅ ADICIONAR: Meta tag noindex para 404
+    useEffect(() => {
+      const metaRobots = document.createElement('meta');
+      metaRobots.name = 'robots';
+      metaRobots.content = 'noindex, nofollow';
+      document.head.appendChild(metaRobots);
+
+      return () => {
+        document.head.removeChild(metaRobots);
+      };
+    }, []);
+
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center p-8">
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">404</h1>
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Imóvel não encontrado</h2>
+          <p className="text-slate-600 mb-6">Este imóvel não existe ou foi removido.</p>
           <Link to={createPageUrl('Catalogo')}>
             <Button>Voltar ao Catálogo</Button>
           </Link>

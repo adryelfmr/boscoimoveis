@@ -9,6 +9,8 @@ import { createPageUrl } from '../utils';
 import { ArrowLeft, X, MapPin, Maximize, Bed, Bath, Car, TrendingUp, ExternalLink, Award, DollarSign, Home } from 'lucide-react';
 import { motion } from 'framer-motion';
 import LazyImage from '@/components/LazyImage'; // ✅ ADICIONAR
+import { Building2 } from 'lucide-react';
+import SEO from '@/components/SEO';
 
 export default function Comparar() {
   const [comparandoIds, setComparandoIds] = useState([]);
@@ -388,6 +390,28 @@ export default function Comparar() {
           </div>
         )}
       </div>
+
+      {/* Mensagem quando não há imóveis para comparar */}
+      {!isLoading && imoveisFiltrados.length === 0 && (
+        <div className="text-center py-16">
+          <Building2 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-slate-900 mb-2">Nenhum imóvel encontrado</h3>
+          <p className="text-slate-600 mb-4">Tente ajustar os filtros para ver mais resultados</p>
+          <button
+            onClick={handleLimparFiltros}
+            className="text-blue-700 hover:underline font-medium"
+          >
+            Limpar todos os filtros
+          </button>
+        </div>
+      )}
+
+      <SEO
+        title="Catálogo de Imóveis - Bosco Imóveis | Casas e Apartamentos em Goiânia"
+        description={`Confira ${imoveisFiltrados.length} imóveis disponíveis em Goiânia. Casas, apartamentos, terrenos e muito mais.`}
+        keywords="catálogo imóveis, imóveis goiânia, comprar casa, alugar apartamento"
+        url="https://boscoimoveis.app/catalogo"
+      />
     </div>
   );
 }

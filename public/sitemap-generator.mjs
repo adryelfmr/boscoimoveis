@@ -22,7 +22,7 @@ const COLLECTION_IMOVEIS = process.env.VITE_APPWRITE_COLLECTION_IMOVEIS;
 async function gerarSitemap() {
   try {
     const hoje = new Date().toISOString().split('T')[0];
-    const baseUrl = 'https://boscoimoveis.app';
+    const baseUrl = 'https://boscoimoveis.app'; // ✅ SEM www
     
     // Páginas estáticas
     const paginasEstaticas = [
@@ -33,8 +33,6 @@ async function gerarSitemap() {
       { url: '/contato', prioridade: '0.8', frequencia: 'monthly' },
       { url: '/favoritos', prioridade: '0.6', frequencia: 'monthly' },
       { url: '/comparar', prioridade: '0.6', frequencia: 'monthly' },
-      { url: '/login', prioridade: '0.5', frequencia: 'yearly' },
-      { url: '/registro', prioridade: '0.5', frequencia: 'yearly' },
     ];
     
     // Buscar todos os imóveis disponíveis
