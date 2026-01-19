@@ -69,25 +69,6 @@ public/robots.txt
 
 ---
 
-### **5. Manifest PWA**
-
-Quando alterar:
-- ❏ Nome do app
-- ❏ Ícones
-- ❏ Cores do tema
-- ❏ Screenshots (opcional)
-
-**Arquivo a atualizar:**
-```
-public/site.webmanifest
-```
-
-**⚠️ Nota:** Screenshots são OPCIONAIS. Apenas necessárias se for publicar na Play Store.
-
-**Testar em:** https://www.pwabuilder.com/
-
----
-
 ### **6. Open Graph (Redes Sociais)**
 
 Quando alterar:

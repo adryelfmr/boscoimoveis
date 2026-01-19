@@ -150,13 +150,6 @@ export const analytics = {
     });
   },
 
-  // Instalação do PWA
-  installPWA: () => {
-    trackEvent('pwa_install', {
-      platform: 'web',
-    });
-  },
-
   // Login/Cadastro
   signup: (method) => {
     trackEvent('sign_up', {

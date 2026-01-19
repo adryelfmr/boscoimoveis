@@ -36,6 +36,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import { motion } from 'framer-motion';
 import FavoritoButton from '@/components/imoveis/FavoritoButton';
+import ComparadorButton from '@/components/imoveis/ComparadorButton';
 import { toast } from 'sonner';
 import MapaLeaflet from '@/components/imoveis/MapaLeaflet';
 import SEO from '@/components/SEO';
@@ -720,20 +721,20 @@ export default function Detalhes() {
                   </Link>
 
                   <div className="flex gap-2">
+                    {/* ❌ COMENTAR: */}
+                    {/*
                     <div className="flex-1">
                       <FavoritoButton 
                         imovelId={imovel.$id} 
                         variant="outline" 
-                        className="w-full bg-white hover:bg-white/90 text-blue-900 border-2 border-white font-semibold py-3 shadow-lg transition-all duration-300 hover:scale-105"
+                        className="w-full"
                       />
                     </div>
-                    <Button 
-                      variant="outline" 
-                      className="flex-1 bg-white hover:bg-white/90 text-blue-900 border-2 border-white font-semibold py-3 shadow-lg transition-all duration-300 hover:scale-105"
-                      onClick={compartilhar}
-                    >
-                      <Share2 className="w-5 h-5" />
-                    </Button>
+                    */}
+                    
+                    <div className="flex-1">
+                      <ComparadorButton imovelId={imovel.$id} />
+                    </div>
                   </div>
                 </div>
 

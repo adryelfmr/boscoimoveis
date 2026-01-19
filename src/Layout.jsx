@@ -26,7 +26,7 @@ import {
 export default function Layout({ children, currentPageName }) {
   const { user, isAuthenticated, logout, isAdmin } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false); // ✅ ADICIONADO
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -39,7 +39,6 @@ export default function Layout({ children, currentPageName }) {
     };
   }, [mobileMenuOpen]);
 
-  // ✅ ADICIONAR: Fechar menu ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userMenuOpen && !event.target.closest('.user-menu')) {
@@ -51,11 +50,10 @@ export default function Layout({ children, currentPageName }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [userMenuOpen]);
 
+  // ✅ CORRIGIDO: Removido "Anunciar Grátis" e "Favoritos"
   const menuItems = [
     { name: 'Catálogo', to: 'Catalogo', icon: Building2, path: 'Catalogo' },
     { name: 'Promoções', to: 'Promocoes', icon: Tag, path: 'Promocoes' },
-    { name: 'Anunciar Grátis', to: '/anunciar', icon: PlusCircle, path: '/anunciar' },
-    { name: 'Favoritos', to: 'Favoritos', icon: Heart, path: 'Favoritos' },
     { name: 'Sobre', to: 'Sobre', icon: Users, path: 'Sobre' },
     { name: 'Contato', to: 'Contato', icon: Phone, path: 'Contato' },
   ];
@@ -161,15 +159,6 @@ export default function Layout({ children, currentPageName }) {
                         <User className="w-4 h-4" />
                         Meu Perfil
                       </Link>
-
-                      <Link
-                        to="/meus-anuncios"
-                        className="flex items-center gap-2 px-4 py-2 text-slate-700 hover:bg-slate-50"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        <Home className="w-4 h-4" />
-                        Meus Anúncios
-                      </Link>
                       
                       {isAdmin && (
                         <>
@@ -218,14 +207,7 @@ export default function Layout({ children, currentPageName }) {
                     </div>
                   )}
                 </div>
-              ) : (
-                <Link to="/login">
-                  <Button className="ml-2 bg-blue-900 hover:bg-blue-800">
-                    <User className="w-4 h-4 mr-2" />
-                    Entrar
-                  </Button>
-                </Link>
-              )}
+              ) : null}
             </div>
 
             {/* Mobile menu button */}
@@ -264,15 +246,10 @@ export default function Layout({ children, currentPageName }) {
                   {isAuthenticated ? (
                     <>
                       <div className="px-4 py-2 border-b border-slate-100 mb-2">
-                        <p className="text-sm font-semibold text-slate-900">{user?.name}</p>
-                        <p className="text-xs text-slate-500">{user?.email}</p>
-                        {isAdmin && (
-                          <span className="inline-block mt-1 text-xs bg-blue-100 text-blue-900 px-2 py-1 rounded-full font-semibold">
-                            Administrador
-                          </span>
-                        )}
+                        <p className="text-xs text-slate-500 font-semibold">MINHA CONTA</p>
+                        <p className="text-sm text-slate-900 font-medium mt-1">{user?.name}</p>
                       </div>
-                      
+
                       <Link
                         to="/perfil"
                         onClick={() => setMobileMenuOpen(false)}
@@ -280,15 +257,6 @@ export default function Layout({ children, currentPageName }) {
                       >
                         <User className="w-5 h-5" />
                         <span className="font-medium">Meu Perfil</span>
-                      </Link>
-
-                      <Link
-                        to="/meus-anuncios"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-2 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-all duration-200"
-                      >
-                        <Home className="w-5 h-5" />
-                        <span className="font-medium">Meus Anúncios</span>
                       </Link>
 
                       {isAdmin && (
@@ -322,27 +290,19 @@ export default function Layout({ children, currentPageName }) {
                           </Link>
                         </>
                       )}
+
                       <button
                         onClick={() => {
                           logout();
                           setMobileMenuOpen(false);
                         }}
-                        className="flex items-center gap-2 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 text-left w-full"
+                        className="flex items-center gap-2 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 w-full"
                       >
                         <LogOut className="w-5 h-5" />
                         <span className="font-medium">Sair</span>
                       </button>
                     </>
-                  ) : (
-                    <Link
-                      to="/login"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2 px-4 py-3 rounded-lg bg-blue-900 text-white hover:bg-blue-800 transition-all duration-200"
-                    >
-                      <User className="w-5 h-5" />
-                      <span className="font-medium">Entrar</span>
-                    </Link>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>

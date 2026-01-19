@@ -3,22 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     
-    <!-- ✅ FAVICONS (CORRIGIDO) -->
-    <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="icon" type="image/svg+xml" href="/boscoimoveis.svg" />
-    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <!-- ✅ FAVICONS (SEM PWA) -->
+    <link rel="icon" type="image/x-icon" href="https://boscoimoveis.app/favicon.ico" sizes="16x16 32x32" />
+    <link rel="icon" type="image/png" sizes="48x48" href="https://boscoimoveis.app/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="https://boscoimoveis.app/favicon-96x96.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://boscoimoveis.app/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="https://boscoimoveis.app/boscoimoveis.svg" />
     
-    <!-- ✅ Manifest -->
-    <link rel="manifest" href="/site.webmanifest" crossorigin="use-credentials" />
+    <!-- ❌ REMOVIDO: Manifest PWA -->
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- ✅ PWA -->
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Bosco Imóveis" />
+    <!-- ❌ REMOVIDO: Meta tags de PWA -->
     
     <!-- ✅ Versão do app -->
     <meta name="version" content="2.0.0" />
@@ -36,6 +32,17 @@
     <meta name="keywords" content="imóveis goiânia, casas goiânia, apartamentos goiânia, terrenos goiânia, imóveis para venda, imóveis para aluguel, corretora de imóveis, Bosco Imóveis" />
     <meta name="author" content="Bosco Imóveis" />
     <meta name="robots" content="index, follow" />
+    
+    <!-- ✅ ADICIONAR: Robots específicos para rotas de autenticação -->
+    <script>
+      // Bloquear indexação de páginas de login/registro
+      if (window.location.pathname.match(/\/(login|registro|perfil|favoritos|anunciar|meus-anuncios|gerenciador|gerenciar-admins|gerenciar-contatos|redefinir-senha|nova-senha|aceitar-convite)/)) {
+        const metaRobots = document.createElement('meta');
+        metaRobots.name = 'robots';
+        metaRobots.content = 'noindex, nofollow';
+        document.head.appendChild(metaRobots);
+      }
+    </script>
     
     <!-- Open Graph -->
     <meta property="og:type" content="website" />

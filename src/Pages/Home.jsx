@@ -34,12 +34,14 @@ export default function Home() {
   });
 
   useEffect(() => {
-    // Pedir permissão após 10 segundos na página
+    // ❌ REMOVER: Pedir permissão de notificação
+    /*
     const timer = setTimeout(() => {
       notifications.requestPermission();
     }, 10000);
 
     return () => clearTimeout(timer);
+    */
   }, []);
 
   return (
