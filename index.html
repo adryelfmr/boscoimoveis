@@ -33,10 +33,10 @@
     <meta name="author" content="Bosco Imóveis" />
     <meta name="robots" content="index, follow" />
     
-    <!-- ✅ ADICIONAR: Robots específicos para rotas de autenticação -->
+    <!-- ✅ ATUALIZADO: Robots específicos para rotas de autenticação -->
     <script>
       // Bloquear indexação de páginas de login/registro
-      if (window.location.pathname.match(/\/(login|registro|perfil|favoritos|anunciar|meus-anuncios|gerenciador|gerenciar-admins|gerenciar-contatos|redefinir-senha|nova-senha|aceitar-convite)/)) {
+      if (window.location.pathname.match(/\/(login|registro|perfil|favoritos|anunciar|gerenciador|gerenciar-admins|gerenciar-contatos|redefinir-senha|nova-senha|aceitar-convite)/)) {
         const metaRobots = document.createElement('meta');
         metaRobots.name = 'robots';
         metaRobots.content = 'noindex, nofollow';

@@ -193,23 +193,6 @@ export const appwrite = {
           return [];
         }
       },
-
-      // ✅ ADICIONAR este método:
-      filterMeusAnuncios: async (userId) => {
-        try {
-          const response = await databases.listDocuments(
-            DATABASE_ID,
-            COLLECTIONS.IMOVEIS,
-            [
-              Query.equal('criadoPor', userId),
-              Query.orderDesc('$createdAt'),
-            ]
-          );
-          return response.documents;
-        } catch (error) {
-          return [];
-        }
-      },
     },
 
     Favorito: {

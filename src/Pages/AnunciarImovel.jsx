@@ -21,7 +21,7 @@ import {TIPOS_RESIDENCIAL,TIPOS_COMERCIAL,DIFERENCIAIS_IMOVEL,LAZER_CONDOMINIO,C
 
 
 export default function AnunciarImovel() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isAdmin } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
@@ -184,10 +184,6 @@ export default function AnunciarImovel() {
   // Mutation para criar/editar anúncio
   const criarAnuncioMutation = useMutation({
     mutationFn: async (data) => {
-      if (!telefone) {
-        throw new Error('Você precisa cadastrar um telefone para anunciar');
-      }
-
       const imagensUrls = data.images.map(img => img.url);
       const imagemPrincipal = imagensUrls[0] || '';
 
@@ -244,12 +240,10 @@ export default function AnunciarImovel() {
         precisaoLocalizacao: precision,
         criadoPor: user.$id,
         criadoPorNome: user.name,
-        // ✅ NOVO: Salvar email e telefone do anunciante
-        criadoPorEmail: user.email,
-        criadoPorTelefone: telefone,
-        tipoAnuncio: 'cliente',
-        statusAprovacao: 'pendente',
-        disponibilidade: 'indisponivel',
+        // ✅ SIMPLIFICADO: Admins criam sempre aprovado e disponível
+        tipoAnuncio: 'admin',
+        statusAprovacao: 'aprovado',
+        disponibilidade: 'disponivel',
         destaque: false,
         promocao: false,
         documentacaoRegular: true,
@@ -262,67 +256,27 @@ export default function AnunciarImovel() {
       }
     },
     onSuccess: () => {
-      toast.success(editId ? '✅ Anúncio atualizado!' : '🎉 Anúncio enviado!', {
+      toast.success(editId ? '✅ Anúncio atualizado!' : '🎉 Anúncio criado com sucesso!', {
         description: editId 
-          ? 'Suas alterações foram salvas com sucesso.'
-          : 'Aguarde a aprovação de um administrador.',
+          ? 'Suas alterações foram salvas.'
+          : 'O imóvel já está visível no catálogo.',
       });
-      queryClient.invalidateQueries(['meus-anuncios']);
-      navigate('/meus-anuncios');
+      queryClient.invalidateQueries(['admin-imoveis']);
+      navigate('/gerenciador'); // ✅ Sempre redireciona para gerenciador
     },
     onError: (error) => {
       toast.error(error.message || 'Erro ao salvar anúncio');
     },
   });
 
-  // ✅ NOVO: Verificar limite de anúncios
-  const { data: meusAnuncios = [] } = useQuery({
-    queryKey: ['meus-anuncios-count', user?.$id],
-    queryFn: async () => {
-      if (!user?.$id) return [];
-      return await appwrite.entities.Imovel.filterMeusAnuncios(user.$id);
-    },
-    enabled: !!user?.$id,
-  });
+  // ✅ REMOVER: Verificação de limite de anúncios (não faz sentido para admin)
+  // ✅ REMOVER: Rate limit de criação
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ VALIDAÇÃO 1: Limite de anúncios por usuário (ex: 10)
-    const LIMITE_ANUNCIOS_POR_USUARIO = 10;
-    
-    if (!editId && meusAnuncios.length >= LIMITE_ANUNCIOS_POR_USUARIO) {
-      toast.error(`Você atingiu o limite de ${LIMITE_ANUNCIOS_POR_USUARIO} anúncios`, {
-        description: 'Para anunciar mais imóveis, remova alguns anúncios antigos.',
-        duration: 10000,
-      });
-      return;
-    }
-
-    // ✅ VALIDAÇÃO 2: Rate limit de criação (3 anúncios por dia)
-    const limitCheck = rateLimits.createAd(user.$id);
-    
-    if (!limitCheck.allowed) {
-      toast.error('Limite diário atingido', {
-        description: `Você pode criar no máximo 3 anúncios por dia. Aguarde até ${limitCheck.resetTime.toLocaleString('pt-BR')}.`,
-        duration: 10000,
-      });
-      return;
-    }
-
     if (formData.images.length === 0) {
       toast.error('Adicione pelo menos uma foto do imóvel');
-      return;
-    }
-
-    if (!telefone) {
-      toast.error('Atualize seu perfil com um telefone para anunciar', {
-        action:
-        {
-          label: 'Ir para Perfil',
-          onClick: () => navigate('/perfil'),
-        },
-      });
       return;
     }
 
@@ -389,43 +343,44 @@ export default function AnunciarImovel() {
     );
   }
 
+  // ✅ Bloquear não-admins
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <Card className="max-w-md">
+          <CardContent className="pt-6 text-center">
+            <Shield className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Acesso Restrito</h2>
+            <p className="text-slate-600 mb-6">
+              Apenas administradores podem criar anúncios diretamente.
+            </p>
+            <Link to="/">
+              <Button>Voltar para Home</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white py-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <Link to="/meus-anuncios" className="inline-flex items-center gap-2 text-blue-900 hover:text-blue-700 mb-4">
+          <Link to="/gerenciador" className="inline-flex items-center gap-2 text-blue-900 hover:text-blue-700 mb-4">
             <ArrowLeft className="w-4 h-4" />
-            Voltar para Meus Anúncios
+            Voltar para Gerenciador
           </Link>
 
           <div className="flex items-center gap-3 mb-4">
             <Home className="w-8 h-8 text-blue-900" />
             <h1 className="text-3xl font-bold text-slate-900">
-              {editId ? 'Editar Anúncio' : 'Anuncie seu Imóvel Grátis'}
+              {editId ? 'Editar Imóvel' : 'Criar Novo Anúncio'}
             </h1>
           </div>
 
-          {telefoneFormatado ? (
-            <Badge className="bg-green-100 text-green-800 border-green-300">
-              <CheckCircle className="w-4 h-4 mr-1" />
-              Telefone: {telefoneFormatado}
-            </Badge>
-          ) : (
-            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
-                <div>
-                  <p className="text-sm font-semibold text-amber-800">Telefone não cadastrado</p>
-                  <p className="text-sm text-amber-700">Você precisa adicionar um telefone no seu perfil.</p>
-                  <Button size="sm" className="mt-2" onClick={() => navigate('/perfil')}>
-                    <Phone className="w-4 h-4 mr-1" />
-                    Cadastrar Telefone
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* ✅ REMOVER: Badge de telefone (não é mais necessário) */}
         </div>
 
         {/* Formulário */}
@@ -879,44 +834,31 @@ export default function AnunciarImovel() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate('/meus_anuncios')}
+              onClick={() => navigate('/gerenciador')}
               className="flex-1"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              disabled={criarAnuncioMutation.isPending || !telefone}
+              disabled={criarAnuncioMutation.isPending}
               className="flex-1 bg-blue-900 hover:bg-blue-800"
             >
               {criarAnuncioMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {editId ? 'Salvando...' : 'Enviando...'}
+                  {editId ? 'Salvando...' : 'Criando...'}
                 </>
               ) : editId ? (
                 'Salvar Alterações'
               ) : (
-                'Enviar para Aprovação'
+                'Criar Anúncio'
               )}
             </Button>
           </div>
         </form>
 
-        {/* Aviso de limite */}
-        {meusAnuncios.length >= 10 && !editId && (
-          <Card className="mt-6 border-amber-200 bg-amber-50">
-            <CardContent className="p-4 flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-semibold text-amber-900">Limite de anúncios atingido</p>
-                <p className="text-xs text-amber-700 mt-1">
-                  Você atingiu o limite de 10 anúncios ativos. Para anunciar novos imóveis, remova alguns anúncios antigos.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* ✅ REMOVER: Aviso de limite */}
       </div>
     </div>
   );

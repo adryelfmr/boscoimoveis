@@ -1,5 +1,5 @@
 import React from 'react';
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import Layout from './Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import Home from './Pages/Home';
@@ -19,10 +19,8 @@ import NovaSenha from './Pages/NovaSenha';
 import NotFound from './Pages/NotFound';
 import Sobre from './Pages/Sobre';
 import AnunciarImovel from './Pages/AnunciarImovel';
-import MeusAnuncios from './Pages/MeusAnuncios';
 import { trackPageView } from './utils/analytics';
 import AceitarConvite from '@/Pages/AceitarConvite';
-
 
 const PageWrapper = ({ Component, pageName }) => {
   React.useEffect(() => {
@@ -73,20 +71,11 @@ export const router = createBrowserRouter([
     path: '/sobre',
     element: <PageWrapper Component={Sobre} pageName="Sobre" />,
   },
-  // ✅ ADICIONAR estas rotas:
   {
     path: '/anunciar',
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute adminOnly={true}>
         <PageWrapper Component={AnunciarImovel} pageName="Anunciar" />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/meus-anuncios',
-    element: (
-      <ProtectedRoute>
-        <PageWrapper Component={MeusAnuncios} pageName="MeusAnuncios" />
       </ProtectedRoute>
     ),
   },

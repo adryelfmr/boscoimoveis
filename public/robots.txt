@@ -13,7 +13,6 @@ Disallow: /registro
 Disallow: /perfil
 Disallow: /favoritos
 Disallow: /anunciar
-Disallow: /meus-anuncios
 Disallow: /gerenciador
 Disallow: /gerenciar-admins
 Disallow: /gerenciar-contatos
