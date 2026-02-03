@@ -101,33 +101,49 @@ export const appwrite = {
   entities: {
     Imovel: {
       // Método filter otimizado:
-      filter: async (filters = {}, orderBy = '', limit = 100) => {
-        const cacheKey = `imoveis_${JSON.stringify(filters)}_${orderBy}_${limit}`;
-        
-        // Tentar buscar do cache
-        const cached = cache.get(cacheKey);
-        if (cached) {
-          
-          return cached;
+      filter: async (filters = {}, orderBy = '-$createdAt', limit = 100) => {
+        const queries = [Query.limit(limit)];
+
+        if (orderBy) {
+          queries.push(Query.orderDesc('$createdAt'));
         }
 
-        const queries = [Query.limit(limit)];
-        
-        // Ordenação
-        if (orderBy) {
-          if (orderBy.startsWith('-')) {
-            queries.push(Query.orderDesc(orderBy.substring(1)));
-          } else {
-            queries.push(Query.orderAsc(orderBy));
-          }
+        // ✅ CORRIGIDO: Sempre filtrar por ativos EXCETO no gerenciador admin
+        if (filters.incluirInativos !== true) {
+          queries.push(Query.equal('ativo', true));
         }
-        
-        // Filtros
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined && value !== null && value !== '' && value !== 'todos' && value !== 'todas') {
-            queries.push(Query.equal(key, value));
-          }
-        });
+
+        if (filters.destaque !== undefined) {
+          queries.push(Query.equal('destaque', filters.destaque));
+        }
+
+        if (filters.promocao !== undefined) {
+          queries.push(Query.equal('promocao', filters.promocao));
+        }
+
+        if (filters.disponibilidade) {
+          queries.push(Query.equal('disponibilidade', filters.disponibilidade));
+        }
+
+        if (filters.finalidade) {
+          queries.push(Query.equal('finalidade', filters.finalidade));
+        }
+
+        if (filters.tipoImovel) {
+          queries.push(Query.equal('tipoImovel', filters.tipoImovel));
+        }
+
+        if (filters.cidade) {
+          queries.push(Query.search('cidade', filters.cidade));
+        }
+
+        if (filters.precoMin !== undefined) {
+          queries.push(Query.greaterThanEqual('preco', filters.precoMin));
+        }
+
+        if (filters.precoMax !== undefined) {
+          queries.push(Query.lessThanEqual('preco', filters.precoMax));
+        }
 
         try {
           const response = await databases.listDocuments(
@@ -136,11 +152,9 @@ export const appwrite = {
             queries
           );
           
-          // Salvar no cache
-          cache.set(cacheKey, response.documents);
-          
           return response.documents;
         } catch (error) {
+          console.error('Erro ao filtrar imóveis:', error);
           return [];
         }
       },

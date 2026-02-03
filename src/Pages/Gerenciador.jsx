@@ -23,7 +23,6 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import { motion } from 'framer-motion';
 import FavoritoButton from '@/components/imoveis/FavoritoButton'; // ✅ CORRIGIDO
-import ComparadorButton from '@/components/imoveis/ComparadorButton'; // ✅ CORRIGIDO
 import CalculadoraFinanciamento from '@/components/imoveis/CalculadoraFinanciamento'; // ✅ CORRIGIDO
 import { toast } from 'sonner';
 
@@ -407,9 +406,6 @@ export default function Detalhes() {
 
             {/* Calculadora de Financiamento */}
             <CalculadoraFinanciamento precoImovel={imovel.preco} />
-
-            {/* Botão Comparar */}
-            <ComparadorButton imovelId={imovel.$id} /> {/* ✅ CORRIGIDO */}
           </div>
         </div>
       </div>

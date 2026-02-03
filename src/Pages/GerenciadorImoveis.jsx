@@ -96,7 +96,8 @@ export default function GerenciadorImoveis() {
   const { data: imoveis = [], isLoading } = useQuery({
     queryKey: ['admin-imoveis'],
     queryFn: async () => {
-      return await appwrite.entities.Imovel.filter({}, '-$createdAt');
+      // ✅ CORRIGIDO: Incluir inativos no gerenciador
+      return await appwrite.entities.Imovel.filter({ incluirInativos: true }, '-$createdAt');
     },
     enabled: isAdmin,
   });
@@ -123,6 +124,7 @@ export default function GerenciadorImoveis() {
     cidade: '',
     destaque: false,
     promocao: false,
+    ativo: 'todos', // ✅ NOVO: Filtro de ativo/inativo
   });
   
   const [paginaAtual, setPaginaAtual] = useState(1);
@@ -140,6 +142,13 @@ export default function GerenciadorImoveis() {
           imovel.bairro?.toLowerCase().includes(busca) ||
           imovel.cidade?.toLowerCase().includes(busca);
         if (!match) return false;
+      }
+
+      // ✅ NOVO: Filtrar por ativo/inativo
+      if (filtros.ativo !== 'todos') {
+        const isAtivo = imovel.ativo !== false;
+        if (filtros.ativo === 'ativo' && !isAtivo) return false;
+        if (filtros.ativo === 'inativo' && isAtivo) return false;
       }
 
       // Disponibilidade
@@ -518,7 +527,8 @@ export default function GerenciadorImoveis() {
       codigoPersonalizado: !!imovel.codigo,
       titulo: imovel.titulo || '',
       descricao: imovel.descricao || '',
-      tipoImovel: TIPO_IMOVEL_REVERSE_MAP[imovel.tipoImovel] || 'Casa',
+      // ✅ CORRIGIDO: Usar TIPO_IMOVEL_ADMIN_REVERSE_MAP (está importado)
+      tipoImovel: TIPO_IMOVEL_ADMIN_REVERSE_MAP[imovel.tipoImovel] || 'Casa',
       finalidade: imovel.finalidade || 'Residencial',
       tipoNegocio: imovel.tipoNegocio || 'Venda',
       preco: imovel.preco?.toString() || '',
@@ -746,6 +756,20 @@ export default function GerenciadorImoveis() {
               />
             </div>
 
+            {/* ✅ NOVO: Filtro Status */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Status</label>
+              <select
+                className="w-full border rounded-lg px-3 py-2"
+                value={filtros.ativo}
+                onChange={(e) => setFiltros({...filtros, ativo: e.target.value})}
+              >
+                <option value="todos">Todos</option>
+                <option value="ativo">Ativos</option>
+                <option value="inativo">Inativos</option>
+              </select>
+            </div>
+
             {/* Disponibilidade */}
             <div>
               <label className="block text-sm font-medium mb-2">Disponibilidade</label>
@@ -863,7 +887,19 @@ export default function GerenciadorImoveis() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        {/* ✅ REMOVER: Badges de status de aprovação */}
+                        {/* ✅ NOVO: Badge Ativo/Inativo */}
+                        {imovel.ativo === false ? (
+                          <Badge className="bg-slate-500 text-white">
+                            <XCircle className="w-3 h-3 mr-1" />
+                            Inativo
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-green-600 text-white">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Ativo
+                          </Badge>
+                        )}
+
                         {imovel.codigo && (
                           <Badge variant="outline" className="font-mono text-xs">
                             {imovel.codigo}
@@ -931,11 +967,42 @@ export default function GerenciadorImoveis() {
                     Editar
                   </Button>
 
-                  {/* ✅ NOVO: Toggle Destaque */}
+                  {/* ✅ NOVO: Toggle Ativo/Inativo */}
+                  <Button
+                    size="sm"
+                    variant={imovel.ativo !== false ? "default" : "outline"}
+                    className={imovel.ativo !== false ? "bg-green-600 hover:bg-green-700" : "bg-slate-200 text-slate-700"}
+                    onClick={async () => {
+                      try {
+                        await appwrite.entities.Imovel.update(imovel.$id, {
+                          ativo: imovel.ativo === false ? true : false
+                        });
+                        toast.success(imovel.ativo === false ? '✓ Anúncio ativado!' : '✕ Anúncio desativado!');
+                        queryClient.invalidateQueries(['admin-imoveis']);
+                      } catch (error) {
+                        toast.error('Erro ao atualizar');
+                      }
+                    }}
+                  >
+                    {imovel.ativo !== false ? (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Ativo
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-4 h-4 mr-1" />
+                        Inativo
+                      </>
+                    )}
+                  </Button>
+
+                  {/* ✅ NOVO: Toggle Destaque (só se estiver ativo) */}
                   <Button
                     size="sm"
                     variant={imovel.destaque ? "default" : "outline"}
                     className={imovel.destaque ? "bg-amber-500 hover:bg-amber-600" : ""}
+                    disabled={imovel.ativo === false}
                     onClick={async () => {
                       try {
                         await appwrite.entities.Imovel.update(imovel.$id, {
@@ -952,11 +1019,12 @@ export default function GerenciadorImoveis() {
                     {imovel.destaque ? 'Em Destaque' : 'Marcar Destaque'}
                   </Button>
 
-                  {/* ✅ NOVO: Toggle Promoção */}
+                  {/* ✅ NOVO: Toggle Promoção (só se estiver ativo) */}
                   <Button
                     size="sm"
                     variant={imovel.promocao ? "default" : "outline"}
                     className={imovel.promocao ? "bg-red-500 hover:bg-red-600" : ""}
+                    disabled={imovel.ativo === false}
                     onClick={async () => {
                       try {
                         await appwrite.entities.Imovel.update(imovel.$id, {

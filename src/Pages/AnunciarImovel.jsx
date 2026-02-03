@@ -56,6 +56,9 @@ export default function AnunciarImovel() {
     comodidadesCondominio: [],
     segurancaCondominio: [],
     images: [],
+    destaque: false, // ✅ JÁ EXISTE
+    promocao: false, // ✅ JÁ EXISTE
+    ativo: true, // ✅ NOVO: Controle de visibilidade
   });
 
   const [buscandoCep, setBuscandoCep] = useState(false);
@@ -117,6 +120,9 @@ export default function AnunciarImovel() {
         comodidadesCondominio: anuncioParaEditar.comodidadesCondominio || [],
         segurancaCondominio: anuncioParaEditar.segurancaCondominio || [],
         images: imagensArray,
+        destaque: anuncioParaEditar.destaque || false,
+        promocao: anuncioParaEditar.promocao || false,
+        ativo: anuncioParaEditar.ativo !== false, // ✅ NOVO: Default true
       });
     }
   }, [anuncioParaEditar]);
@@ -244,8 +250,9 @@ export default function AnunciarImovel() {
         tipoAnuncio: 'admin',
         statusAprovacao: 'aprovado',
         disponibilidade: 'disponivel',
-        destaque: false,
-        promocao: false,
+        destaque: data.destaque || false,
+        promocao: data.promocao || false,
+        ativo: data.ativo !== false, // ✅ NOVO
         documentacaoRegular: true,
       };
 
@@ -285,6 +292,63 @@ export default function AnunciarImovel() {
       return;
     }
 
+    // ✅ VALIDAÇÕES EM PORTUGUÊS (ANTES DE ENVIAR)
+    
+    // Validar quartos
+    const quartos = parseInt(formData.numeroQuartos) || 0;
+    if (quartos < 0 || quartos > 20) {
+      toast.error('Número de quartos inválido', {
+        description: 'Deve estar entre 0 e 20',
+      });
+      return;
+    }
+
+    // Validar suítes
+    const suites = parseInt(formData.numeroSuites) || 0;
+    if (suites < 0 || suites > 10) {
+      toast.error('Número de suítes inválido', {
+        description: 'Deve estar entre 0 e 10',
+      });
+      return;
+    }
+
+    // Validar banheiros
+    const banheiros = parseInt(formData.numeroBanheiros) || 0;
+    if (banheiros < 0 || banheiros > 10) {
+      toast.error('Número de banheiros inválido', {
+        description: 'Deve estar entre 0 e 10',
+      });
+      return;
+    }
+
+    // Validar vagas
+    const vagas = parseInt(formData.vagas) || 0;
+    if (vagas < 0 || vagas > 20) {
+      toast.error('Número de vagas inválido', {
+        description: 'Deve estar entre 0 e 20',
+      });
+      return;
+    }
+
+    // Validar área total
+    if (formData.areaTotal && parseFloat(formData.areaTotal) <= 0) {
+      toast.error('Área total deve ser maior que 0');
+      return;
+    }
+
+    // Validar área útil
+    if (formData.areaUtil && parseFloat(formData.areaUtil) <= 0) {
+      toast.error('Área útil deve ser maior que 0');
+      return;
+    }
+
+    // Validar preço
+    if (parseFloat(formData.preco) <= 0) {
+      toast.error('Preço deve ser maior que 0');
+      return;
+    }
+
+    // ✅ Se passou em todas as validações, enviar
     await criarAnuncioMutation.mutateAsync(formData);
   };
 
@@ -418,54 +482,6 @@ export default function AnunciarImovel() {
                 <p className="text-xs text-slate-500 mt-1">{formData.titulo.length}/100 caracteres</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Finalidade */}
-                <div>
-                  <Label>Finalidade *</Label>
-                  <select
-                    className="w-full border rounded-lg px-3 py-2"
-                    value={formData.finalidade}
-                    onChange={(e) => setFormData({...formData, finalidade: e.target.value})}
-                    required
-                  >
-                    <option value="Residencial">Residencial</option>
-                    <option value="Comercial">Comercial</option>
-                  </select>
-                </div>
-
-                {/* Tipo de Imóvel */}
-                <div>
-                  <Label>Tipo de Imóvel *</Label>
-                  <select
-                    className="w-full border rounded-lg px-3 py-2"
-                    value={formData.tipoImovel}
-                    onChange={(e) => setFormData({...formData, tipoImovel: e.target.value})}
-                    required
-                  >
-                    {tiposDisponiveis.map(tipo => (
-                      <option key={tipo.value} value={tipo.value}>{tipo.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Categoria (se houver) */}
-                {categoriasDisponiveis.length > 0 && (
-                  <div>
-                    <Label>Categoria *</Label>
-                    <select
-                      className="w-full border rounded-lg px-3 py-2"
-                      value={formData.categoria}
-                      onChange={(e) => setFormData({...formData, categoria: e.target.value})}
-                      required
-                    >
-                      {categoriasDisponiveis.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Tipo de Negócio */}
                 <div>
@@ -490,7 +506,7 @@ export default function AnunciarImovel() {
                     type="number"
                     value={formData.preco}
                     onChange={(e) => setFormData({...formData, preco: e.target.value})}
-                    placeholder="450000"
+                    placeholder="" // ✅ REMOVIDO
                     required
                     min="0"
                     step="1"
@@ -571,7 +587,7 @@ export default function AnunciarImovel() {
                   <Input
                     value={formData.numero}
                     onChange={(e) => setFormData({...formData, numero: e.target.value})}
-                    placeholder="123"
+                    placeholder="" // ✅ REMOVIDO
                   />
                 </div>
               </div>
@@ -601,7 +617,7 @@ export default function AnunciarImovel() {
                     type="number"
                     value={formData.areaTotal}
                     onChange={(e) => setFormData({...formData, areaTotal: e.target.value})}
-                    placeholder="150"
+                    placeholder="" // ✅ REMOVIDO
                     min="0"
                     step="0.01"
                   />
@@ -613,7 +629,7 @@ export default function AnunciarImovel() {
                     type="number"
                     value={formData.areaUtil}
                     onChange={(e) => setFormData({...formData, areaUtil: e.target.value})}
-                    placeholder="120"
+                    placeholder="" // ✅ REMOVIDO
                     min="0"
                     step="0.01"
                   />
@@ -625,7 +641,7 @@ export default function AnunciarImovel() {
                     type="number"
                     value={formData.numeroQuartos}
                     onChange={(e) => setFormData({...formData, numeroQuartos: e.target.value})}
-                    placeholder="3"
+                    placeholder="" // ✅ REMOVIDO
                     min="0"
                   />
                 </div>
@@ -636,7 +652,7 @@ export default function AnunciarImovel() {
                     type="number"
                     value={formData.numeroSuites}
                     onChange={(e) => setFormData({...formData, numeroSuites: e.target.value})}
-                    placeholder="1"
+                    placeholder="" // ✅ REMOVIDO
                     min="0"
                   />
                 </div>
@@ -647,7 +663,7 @@ export default function AnunciarImovel() {
                     type="number"
                     value={formData.numeroBanheiros}
                     onChange={(e) => setFormData({...formData, numeroBanheiros: e.target.value})}
-                    placeholder="2"
+                    placeholder="" // ✅ REMOVIDO
                     min="0"
                   />
                 </div>
@@ -658,7 +674,7 @@ export default function AnunciarImovel() {
                     type="number"
                     value={formData.vagas}
                     onChange={(e) => setFormData({...formData, vagas: e.target.value})}
-                    placeholder="2"
+                    placeholder="" // ✅ REMOVIDO
                     min="0"
                   />
                 </div>
@@ -710,7 +726,7 @@ export default function AnunciarImovel() {
                       type="number"
                       value={formData.valorCondominio}
                       onChange={(e) => setFormData({...formData, valorCondominio: e.target.value})}
-                      placeholder="350"
+                      placeholder="" // ✅ REMOVIDO
                       min="0"
                       step="1"
                     />
@@ -723,7 +739,7 @@ export default function AnunciarImovel() {
                     type="number"
                     value={formData.valorIptu}
                     onChange={(e) => setFormData({...formData, valorIptu: e.target.value})}
-                    placeholder="1200"
+                    placeholder="" // ✅ REMOVIDO
                     min="0"
                     step="1"
                   />
@@ -829,37 +845,73 @@ export default function AnunciarImovel() {
             </CardContent>
           </Card>
 
-          {/* ✅ NOVO: Opções de Exibição */}
+          {/* ✅ ATUALIZADO: Opções de Exibição */}
           <Card>
             <CardHeader>
               <CardTitle>Opções de Exibição</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2">
+              {/* ✅ NOVO: Checkbox Ativo/Inativo */}
+              <div className="flex items-center space-x-2 p-3 bg-slate-50 rounded-lg border-2 border-slate-200">
                 <Checkbox
-                  id="destaque"
-                  checked={formData.destaque}
-                  onCheckedChange={(checked) => setFormData({...formData, destaque: checked})}
+                  id="ativo"
+                  checked={formData.ativo}
+                  onCheckedChange={(checked) => setFormData({...formData, ativo: checked})}
                 />
-                <label htmlFor="destaque" className="text-sm font-medium cursor-pointer flex items-center gap-2">
-                  <span className="text-amber-600">⭐</span>
-                  Marcar como Destaque
-                  <span className="text-xs text-slate-500">(aparecerá na Home)</span>
+                <label htmlFor="ativo" className="text-sm font-medium cursor-pointer flex items-center gap-2">
+                  {formData.ativo ? (
+                    <>
+                      <span className="text-green-600">✓</span>
+                      Anúncio Ativo
+                      <span className="text-xs text-slate-500">(visível no site)</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-red-600">✕</span>
+                      Anúncio Inativo
+                      <span className="text-xs text-slate-500">(oculto do site)</span>
+                    </>
+                  )}
                 </label>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="promocao"
-                  checked={formData.promocao}
-                  onCheckedChange={(checked) => setFormData({...formData, promocao: checked})}
-                />
-                <label htmlFor="promocao" className="text-sm font-medium cursor-pointer flex items-center gap-2">
-                  <span className="text-red-600">🏷️</span>
-                  Marcar como Promoção
-                  <span className="text-xs text-slate-500">(aparecerá em Promoções)</span>
-                </label>
-              </div>
+              {formData.ativo && (
+                <>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="destaque"
+                      checked={formData.destaque}
+                      onCheckedChange={(checked) => setFormData({...formData, destaque: checked})}
+                    />
+                    <label htmlFor="destaque" className="text-sm font-medium cursor-pointer flex items-center gap-2">
+                      <span className="text-amber-600">⭐</span>
+                      Marcar como Destaque
+                      <span className="text-xs text-slate-500">(aparecerá na Home)</span>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="promocao"
+                      checked={formData.promocao}
+                      onCheckedChange={(checked) => setFormData({...formData, promocao: checked})}
+                    />
+                    <label htmlFor="promocao" className="text-sm font-medium cursor-pointer flex items-center gap-2">
+                      <span className="text-red-600">🏷️</span>
+                      Marcar como Promoção
+                      <span className="text-xs text-slate-500">(aparecerá em Promoções)</span>
+                    </label>
+                  </div>
+                </>
+              )}
+
+              {!formData.ativo && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <p className="text-xs text-amber-800">
+                    ⚠️ Este anúncio não aparecerá no catálogo, destaques ou promoções enquanto estiver inativo.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 

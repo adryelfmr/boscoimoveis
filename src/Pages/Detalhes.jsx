@@ -36,7 +36,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import { motion } from 'framer-motion';
 import FavoritoButton from '@/components/imoveis/FavoritoButton';
-import ComparadorButton from '@/components/imoveis/ComparadorButton';
 import { toast } from 'sonner';
 import MapaLeaflet from '@/components/imoveis/MapaLeaflet';
 import SEO from '@/components/SEO';
@@ -325,7 +324,7 @@ export default function Detalhes() {
 
             {isAdmin && (
               <Button
-                onClick={() => navigate(`/gerenciador?edit=${imovelId}`)}
+                onClick={() => navigate(`/anunciar?edit=${imovelId}`)} // ✅ CORRIGIDO: /anunciar ao invés de /gerenciador
                 className="bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow-lg"
               >
                 <Edit className="w-5 h-5 mr-2" />
@@ -731,10 +730,6 @@ export default function Detalhes() {
                       />
                     </div>
                     */}
-                    
-                    <div className="flex-1">
-                      <ComparadorButton imovelId={imovel.$id} />
-                    </div>
                   </div>
                 </div>
 
