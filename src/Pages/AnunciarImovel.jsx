@@ -829,6 +829,40 @@ export default function AnunciarImovel() {
             </CardContent>
           </Card>
 
+          {/* ✅ NOVO: Opções de Exibição */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Opções de Exibição</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="destaque"
+                  checked={formData.destaque}
+                  onCheckedChange={(checked) => setFormData({...formData, destaque: checked})}
+                />
+                <label htmlFor="destaque" className="text-sm font-medium cursor-pointer flex items-center gap-2">
+                  <span className="text-amber-600">⭐</span>
+                  Marcar como Destaque
+                  <span className="text-xs text-slate-500">(aparecerá na Home)</span>
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="promocao"
+                  checked={formData.promocao}
+                  onCheckedChange={(checked) => setFormData({...formData, promocao: checked})}
+                />
+                <label htmlFor="promocao" className="text-sm font-medium cursor-pointer flex items-center gap-2">
+                  <span className="text-red-600">🏷️</span>
+                  Marcar como Promoção
+                  <span className="text-xs text-slate-500">(aparecerá em Promoções)</span>
+                </label>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Botões */}
           <div className="flex gap-3">
             <Button

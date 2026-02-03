@@ -925,13 +925,53 @@ export default function GerenciadorImoveis() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => abrirModalEdicao(imovel)}
+                    onClick={() => navigate(`/anunciar?edit=${imovel.$id}`)}
                   >
                     <Edit className="w-4 h-4 mr-1" />
                     Editar
                   </Button>
 
-                  {/* ✅ REMOVER: Botões de aprovar/reprovar */}
+                  {/* ✅ NOVO: Toggle Destaque */}
+                  <Button
+                    size="sm"
+                    variant={imovel.destaque ? "default" : "outline"}
+                    className={imovel.destaque ? "bg-amber-500 hover:bg-amber-600" : ""}
+                    onClick={async () => {
+                      try {
+                        await appwrite.entities.Imovel.update(imovel.$id, {
+                          destaque: !imovel.destaque
+                        });
+                        toast.success(imovel.destaque ? 'Removido dos destaques' : '⭐ Marcado como destaque!');
+                        queryClient.invalidateQueries(['admin-imoveis']);
+                      } catch (error) {
+                        toast.error('Erro ao atualizar');
+                      }
+                    }}
+                  >
+                    <span className="mr-1">{imovel.destaque ? '⭐' : '☆'}</span>
+                    {imovel.destaque ? 'Em Destaque' : 'Marcar Destaque'}
+                  </Button>
+
+                  {/* ✅ NOVO: Toggle Promoção */}
+                  <Button
+                    size="sm"
+                    variant={imovel.promocao ? "default" : "outline"}
+                    className={imovel.promocao ? "bg-red-500 hover:bg-red-600" : ""}
+                    onClick={async () => {
+                      try {
+                        await appwrite.entities.Imovel.update(imovel.$id, {
+                          promocao: !imovel.promocao
+                        });
+                        toast.success(imovel.promocao ? 'Removido das promoções' : '🏷️ Marcado como promoção!');
+                        queryClient.invalidateQueries(['admin-imoveis']);
+                      } catch (error) {
+                        toast.error('Erro ao atualizar');
+                      }
+                    }}
+                  >
+                    <span className="mr-1">{imovel.promocao ? '🏷️' : '🔖'}</span>
+                    {imovel.promocao ? 'Em Promoção' : 'Marcar Promoção'}
+                  </Button>
 
                   <Button
                     size="sm"
@@ -941,8 +981,6 @@ export default function GerenciadorImoveis() {
                     <Trash2 className="w-4 h-4 mr-1" />
                     Excluir
                   </Button>
-                  
-                  {/* ✅ REMOVER: Botão de WhatsApp para cliente */}
                 </div>
               </div>
             </Card>
