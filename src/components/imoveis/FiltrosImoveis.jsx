@@ -86,6 +86,23 @@ export default function FiltrosImoveis({ filtros, onFiltroChange, onLimparFiltro
           </select>
         </div>
 
+        {/* Tipo de Negócio */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            <DollarSign className="inline w-4 h-4 mr-1" />
+            Negócio
+          </label>
+          <select
+            className="w-full border rounded-lg px-3 py-2 bg-white"
+            value={filtros.tipoNegocio}
+            onChange={(e) => onFiltroChange('tipoNegocio', e.target.value)}
+          >
+            <option value="todos">Todos</option>
+            <option value="Venda">Venda</option>
+            <option value="Aluguel">Aluguel</option>
+          </select>
+        </div>
+
         {/* Categoria (apenas se houver categorias disponíveis) */}
         {categoriasDisponiveis.length > 0 && (
           <div>
@@ -106,23 +123,6 @@ export default function FiltrosImoveis({ filtros, onFiltroChange, onLimparFiltro
             </select>
           </div>
         )}
-
-        {/* Tipo de Negócio */}
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            <DollarSign className="inline w-4 h-4 mr-1" />
-            Negócio
-          </label>
-          <select
-            className="w-full border rounded-lg px-3 py-2 bg-white"
-            value={filtros.tipoNegocio}
-            onChange={(e) => onFiltroChange('tipoNegocio', e.target.value)}
-          >
-            <option value="todos">Todos</option>
-            <option value="Venda">Venda</option>
-            <option value="Aluguel">Aluguel</option>
-          </select>
-        </div>
 
         {/* Cidade */}
         <div>

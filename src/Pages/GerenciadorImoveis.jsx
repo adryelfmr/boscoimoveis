@@ -115,22 +115,22 @@ export default function GerenciadorImoveis() {
     }
   }, [location.search, imoveis]);
 
-  // ✅ ATUALIZADO: Estados para filtros
+  // ✅ ATUALIZADO: Estados para filtros (SEM disponibilidade)
   const [filtros, setFiltros] = useState({
     busca: '',
-    disponibilidade: 'todos',
+    // ❌ REMOVIDO: disponibilidade: 'todos',
     finalidade: 'todas',
     tipoImovel: 'todos',
     cidade: '',
     destaque: false,
     promocao: false,
-    ativo: 'todos', // ✅ NOVO: Filtro de ativo/inativo
+    ativo: 'todos', // ✅ MANTIDO: Filtro de ativo/inativo
   });
   
   const [paginaAtual, setPaginaAtual] = useState(1);
   const itensPorPagina = 12;
 
-  // ✅ NOVO: Aplicar filtros avançados
+  // ✅ NOVO: Aplicar filtros avançados (SEM disponibilidade)
   const imoveisFiltrados = useMemo(() => {
     return imoveis.filter(imovel => {
       // Busca por texto
@@ -144,17 +144,17 @@ export default function GerenciadorImoveis() {
         if (!match) return false;
       }
 
-      // ✅ NOVO: Filtrar por ativo/inativo
+      // ✅ Filtrar por ativo/inativo
       if (filtros.ativo !== 'todos') {
         const isAtivo = imovel.ativo !== false;
         if (filtros.ativo === 'ativo' && !isAtivo) return false;
         if (filtros.ativo === 'inativo' && isAtivo) return false;
       }
 
-      // Disponibilidade
-      if (filtros.disponibilidade !== 'todos') {
-        if (imovel.disponibilidade !== filtros.disponibilidade) return false;
-      }
+      // ❌ REMOVIDO: Filtro por disponibilidade
+      // if (filtros.disponibilidade !== 'todos') {
+      //   if (imovel.disponibilidade !== filtros.disponibilidade) return false;
+      // }
 
       // Finalidade
       if (filtros.finalidade !== 'todas') {
@@ -743,7 +743,7 @@ export default function GerenciadorImoveis() {
           </div>
         </div>
         
-        {/* ✅ SIMPLIFICAR: Filtros */}
+        {/* ✅ SIMPLIFICAR: Filtros (SEM Disponibilidade) */}
         <Card className="mb-6 p-6 shadow-lg">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             {/* Busca */}
@@ -756,7 +756,7 @@ export default function GerenciadorImoveis() {
               />
             </div>
 
-            {/* ✅ NOVO: Filtro Status */}
+            {/* ✅ Status (Ativo/Inativo) */}
             <div>
               <label className="block text-sm font-medium mb-2">Status</label>
               <select
@@ -767,21 +767,6 @@ export default function GerenciadorImoveis() {
                 <option value="todos">Todos</option>
                 <option value="ativo">Ativos</option>
                 <option value="inativo">Inativos</option>
-              </select>
-            </div>
-
-            {/* Disponibilidade */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Disponibilidade</label>
-              <select
-                className="w-full border rounded-lg px-3 py-2"
-                value={filtros.disponibilidade}
-                onChange={(e) => setFiltros({...filtros, disponibilidade: e.target.value})}
-              >
-                <option value="todos">Todos</option>
-                <option value="disponivel">Disponível</option>
-                <option value="reservado">Reservado</option>
-                <option value="indisponivel">Indisponível</option>
               </select>
             </div>
 
@@ -812,7 +797,6 @@ export default function GerenciadorImoveis() {
                 <option value="Apartamento">Apartamento</option>
                 <option value="Terreno">Terreno</option>
                 <option value="Comercial">Comercial</option>
-                <option value="Rural">Rural</option>
               </select>
             </div>
 

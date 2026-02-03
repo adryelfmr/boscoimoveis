@@ -28,8 +28,8 @@ export default function AnunciarImovel() {
   const editId = searchParams.get('edit');
 
   const [formData, setFormData] = useState({
-    codigo: '', // ✅ ADICIONAR
-    codigoPersonalizado: false, // ✅ ADICIONAR
+    codigo: '',
+    codigoPersonalizado: false,
     titulo: '',
     descricao: '',
     finalidade: 'Residencial',
@@ -61,6 +61,7 @@ export default function AnunciarImovel() {
     destaque: false,
     promocao: false,
     ativo: true,
+    // ❌ REMOVIDO: disponibilidade (sempre será 'disponivel' ao criar)
   });
 
   const [buscandoCep, setBuscandoCep] = useState(false);
@@ -292,7 +293,7 @@ export default function AnunciarImovel() {
       const { formatarCodigo } = await import('@/utils/gerarCodigo');
 
       const imovelData = {
-        codigo: data.codigo ? formatarCodigo(data.codigo) : null, // ✅ ADICIONAR
+        codigo: data.codigo ? formatarCodigo(data.codigo) : null,
         titulo: data.titulo,
         descricao: data.descricao,
         finalidade: data.finalidade,
@@ -329,10 +330,10 @@ export default function AnunciarImovel() {
         criadoPorNome: user.name,
         tipoAnuncio: 'admin',
         statusAprovacao: 'aprovado',
-        disponibilidade: 'disponivel',
+        disponibilidade: 'disponivel', // ✅ SEMPRE "disponivel" ao criar
         destaque: data.destaque || false,
         promocao: data.promocao || false,
-        ativo: data.ativo !== false, // ✅ NOVO
+        ativo: data.ativo !== false,
         documentacaoRegular: true,
       };
 
