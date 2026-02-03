@@ -18,7 +18,7 @@ import { Link } from 'react-router-dom';
 import { converterParaBrasileiro } from '@/utils/telefone';
 import { rateLimits } from '@/utils/rateLimit';
 import {TIPOS_RESIDENCIAL,TIPOS_COMERCIAL,DIFERENCIAIS_IMOVEL,LAZER_CONDOMINIO,COMODIDADES_CONDOMINIO,SEGURANCA_CONDOMINIO,} from '@/config/imovelConfig';
-
+import { gerarCodigoAutomatico } from '@/utils/gerarCodigo';
 
 export default function AnunciarImovel() {
   const { user, isAuthenticated, isAdmin } = useAuth();
@@ -28,6 +28,8 @@ export default function AnunciarImovel() {
   const editId = searchParams.get('edit');
 
   const [formData, setFormData] = useState({
+    codigo: '', // ✅ ADICIONAR
+    codigoPersonalizado: false, // ✅ ADICIONAR
     titulo: '',
     descricao: '',
     finalidade: 'Residencial',
@@ -56,12 +58,13 @@ export default function AnunciarImovel() {
     comodidadesCondominio: [],
     segurancaCondominio: [],
     images: [],
-    destaque: false, // ✅ JÁ EXISTE
-    promocao: false, // ✅ JÁ EXISTE
-    ativo: true, // ✅ NOVO: Controle de visibilidade
+    destaque: false,
+    promocao: false,
+    ativo: true,
   });
 
   const [buscandoCep, setBuscandoCep] = useState(false);
+  const [gerandoCodigo, setGerandoCodigo] = useState(false); // ✅ ADICIONAR
   const telefone = user?.phone;
   const telefoneFormatado = telefone ? converterParaBrasileiro(telefone) : null;
 
@@ -92,6 +95,8 @@ export default function AnunciarImovel() {
         : [];
 
       setFormData({
+        codigo: anuncioParaEditar.codigo || '', // ✅ ADICIONAR
+        codigoPersonalizado: !!anuncioParaEditar.codigo, // ✅ ADICIONAR
         titulo: anuncioParaEditar.titulo || '',
         descricao: anuncioParaEditar.descricao || '',
         finalidade: anuncioParaEditar.finalidade || 'Residencial',
@@ -187,11 +192,84 @@ export default function AnunciarImovel() {
     }
   };
 
+  // ✅ ADICIONAR: Função para gerar código automático
+  const handleGerarCodigoAutomatico = async () => {
+    if (!formData.tipoImovel || !formData.cidade) {
+      toast.error('Preencha o tipo de imóvel e a cidade primeiro');
+      return;
+    }
+
+    setGerandoCodigo(true);
+    
+    try {
+      const todosImoveis = await appwrite.entities.Imovel.filter({ incluirInativos: true }, '-$createdAt', 1000);
+      
+      // Filtrar apenas códigos automáticos (formato: XXX-XXX-0000)
+      const imoveisComCodigo = todosImoveis.filter(i => 
+        i.codigo && i.codigo.match(/^[A-Z]{3}-[A-Z]{3}-\d{4}$/)
+      );
+      
+      let maiorNumero = 0;
+      imoveisComCodigo.forEach(imovel => {
+        const match = imovel.codigo.match(/-(\d{4})$/);
+        if (match) {
+          const numero = parseInt(match[1]);
+          if (numero > maiorNumero) {
+            maiorNumero = numero;
+          }
+        }
+      });
+      
+      const proximoNumero = maiorNumero + 1;
+      
+      // Importar função de geração de código
+      const { gerarCodigoAutomatico } = await import('@/utils/gerarCodigo');
+      const codigoGerado = gerarCodigoAutomatico(
+        formData.tipoImovel, 
+        formData.cidade, 
+        proximoNumero
+      );
+      
+      setFormData(prev => ({
+        ...prev,
+        codigo: codigoGerado,
+        codigoPersonalizado: false,
+      }));
+      
+      toast.success(`Código gerado: ${codigoGerado}`);
+    } catch (error) {
+      toast.error('Erro ao gerar código automático');
+    } finally {
+      setGerandoCodigo(false);
+    }
+  };
+
   // Mutation para criar/editar anúncio
   const criarAnuncioMutation = useMutation({
     mutationFn: async (data) => {
       const imagensUrls = data.images.map(img => img.url);
       const imagemPrincipal = imagensUrls[0] || '';
+
+      // ✅ VALIDAR CÓDIGO PERSONALIZADO (se existir)
+      if (data.codigo && data.codigoPersonalizado) {
+        const { validarCodigoPersonalizado, formatarCodigo } = await import('@/utils/gerarCodigo');
+        
+        if (!validarCodigoPersonalizado(data.codigo)) {
+          throw new Error('Código inválido. Use apenas letras, números e hífens (3-20 caracteres)');
+        }
+        
+        // Verificar se o código já existe (exceto no próprio imóvel sendo editado)
+        const imoveisExistentes = await appwrite.entities.Imovel.filter({ incluirInativos: true }, '-$createdAt', 1000);
+        const codigoExiste = imoveisExistentes.some(i => 
+          i.$id !== editId && 
+          i.codigo && 
+          i.codigo.toLowerCase() === formatarCodigo(data.codigo).toLowerCase()
+        );
+        
+        if (codigoExiste) {
+          throw new Error('Este código já está em uso. Escolha outro.');
+        }
+      }
 
       // ✅ BUSCAR COORDENADAS AUTOMATICAMENTE (se tiver CEP)
       let latitude = null;
@@ -211,7 +289,10 @@ export default function AnunciarImovel() {
         }
       }
 
+      const { formatarCodigo } = await import('@/utils/gerarCodigo');
+
       const imovelData = {
+        codigo: data.codigo ? formatarCodigo(data.codigo) : null, // ✅ ADICIONAR
         titulo: data.titulo,
         descricao: data.descricao,
         finalidade: data.finalidade,
@@ -246,7 +327,6 @@ export default function AnunciarImovel() {
         precisaoLocalizacao: precision,
         criadoPor: user.$id,
         criadoPorNome: user.name,
-        // ✅ SIMPLIFICADO: Admins criam sempre aprovado e disponível
         tipoAnuncio: 'admin',
         statusAprovacao: 'aprovado',
         disponibilidade: 'disponivel',
@@ -469,6 +549,65 @@ export default function AnunciarImovel() {
               <CardTitle>Informações Básicas</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* ✅ NOVO: Código do Imóvel */}
+              <div>
+                <Label>Código do Imóvel</Label>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="codigoPersonalizado"
+                      checked={formData.codigoPersonalizado}
+                      onCheckedChange={(checked) => {
+                        setFormData({
+                          ...formData, 
+                          codigoPersonalizado: checked,
+                          codigo: checked ? formData.codigo : ''
+                        });
+                      }}
+                    />
+                    <label htmlFor="codigoPersonalizado" className="text-sm cursor-pointer">
+                      Usar código personalizado
+                    </label>
+                  </div>
+
+                  {formData.codigoPersonalizado ? (
+                    <div className="flex gap-2">
+                      <Input
+                        value={formData.codigo}
+                        onChange={(e) => setFormData({...formData, codigo: e.target.value.toUpperCase()})}
+                        placeholder="Ex: CAS-001, APT-BUENO-123"
+                        maxLength={20}
+                        className="flex-1"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Input
+                        value={formData.codigo}
+                        placeholder="Código será gerado automaticamente"
+                        disabled
+                        className="flex-1 bg-slate-50"
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleGerarCodigoAutomatico}
+                        disabled={gerandoCodigo || !formData.tipoImovel || !formData.cidade}
+                        variant="outline"
+                      >
+                        {gerandoCodigo ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Gerar'}
+                      </Button>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-slate-500">
+                    {formData.codigoPersonalizado 
+                      ? 'Use apenas letras, números e hífens (ex: CAS-001, APT-BUENO-123)'
+                      : 'O código será gerado automaticamente no formato TIPO-CIDADE-0000'
+                    }
+                  </p>
+                </div>
+              </div>
+
               {/* Título */}
               <div>
                 <Label>Título do Anúncio *</Label>
@@ -482,7 +621,7 @@ export default function AnunciarImovel() {
                 <p className="text-xs text-slate-500 mt-1">{formData.titulo.length}/100 caracteres</p>
               </div>
 
-              {/* ✅ NOVO: Finalidade e Tipo de Imóvel */}
+              {/* Finalidade e Tipo de Imóvel */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Finalidade */}
                 <div>
