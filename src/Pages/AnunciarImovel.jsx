@@ -482,6 +482,59 @@ export default function AnunciarImovel() {
                 <p className="text-xs text-slate-500 mt-1">{formData.titulo.length}/100 caracteres</p>
               </div>
 
+              {/* ✅ NOVO: Finalidade e Tipo de Imóvel */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Finalidade */}
+                <div>
+                  <Label>Finalidade *</Label>
+                  <select
+                    className="w-full border rounded-lg px-3 py-2"
+                    value={formData.finalidade}
+                    onChange={(e) => setFormData({...formData, finalidade: e.target.value})}
+                    required
+                  >
+                    <option value="Residencial">Residencial</option>
+                    <option value="Comercial">Comercial</option>
+                  </select>
+                </div>
+
+                {/* Tipo de Imóvel */}
+                <div>
+                  <Label>Tipo de Imóvel *</Label>
+                  <select
+                    className="w-full border rounded-lg px-3 py-2"
+                    value={formData.tipoImovel}
+                    onChange={(e) => setFormData({...formData, tipoImovel: e.target.value})}
+                    required
+                  >
+                    {tiposDisponiveis.map(tipo => (
+                      <option key={tipo.value} value={tipo.value}>
+                        {tipo.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Categoria (se existir) */}
+                {categoriasDisponiveis.length > 0 && (
+                  <div>
+                    <Label>Categoria</Label>
+                    <select
+                      className="w-full border rounded-lg px-3 py-2"
+                      value={formData.categoria}
+                      onChange={(e) => setFormData({...formData, categoria: e.target.value})}
+                    >
+                      <option value="">Selecione...</option>
+                      {categoriasDisponiveis.map(cat => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Tipo de Negócio */}
                 <div>
@@ -506,7 +559,7 @@ export default function AnunciarImovel() {
                     type="number"
                     value={formData.preco}
                     onChange={(e) => setFormData({...formData, preco: e.target.value})}
-                    placeholder="" // ✅ REMOVIDO
+                    placeholder=""
                     required
                     min="0"
                     step="1"
