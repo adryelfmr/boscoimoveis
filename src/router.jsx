@@ -1,26 +1,34 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import Layout from './Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import Home from './Pages/Home';
-import Catalogo from './Pages/Catalogo';
-import Promocoes from './Pages/Promocoes';
-import Contato from './Pages/Contato';
-import Favoritos from './Pages/Favoritos';
-import Detalhes from './Pages/Detalhes';
-import GerenciadorImoveis from './Pages/GerenciadorImoveis';
-import GerenciarAdmins from './Pages/GerenciarAdmins';
-import GerenciarContatos from './Pages/GerenciarContatos';
-import Login from './Pages/Login';
-import Registro from './Pages/Registro';
-import Perfil from './Pages/Perfil';
-import RedefinirSenha from './Pages/RedefinirSenha';
-import NovaSenha from './Pages/NovaSenha';
-import NotFound from './Pages/NotFound';
-import Sobre from './Pages/Sobre';
-import AnunciarImovel from './Pages/AnunciarImovel';
+import { Loader2 } from 'lucide-react';
 import { trackPageView } from './utils/analytics';
-import AceitarConvite from '@/Pages/AceitarConvite';
+
+const Home = React.lazy(() => import('./Pages/Home'));
+const Catalogo = React.lazy(() => import('./Pages/Catalogo'));
+const Promocoes = React.lazy(() => import('./Pages/Promocoes'));
+const Contato = React.lazy(() => import('./Pages/Contato'));
+const Favoritos = React.lazy(() => import('./Pages/Favoritos'));
+const Detalhes = React.lazy(() => import('./Pages/Detalhes'));
+const GerenciadorImoveis = React.lazy(() => import('./Pages/GerenciadorImoveis'));
+const GerenciarAdmins = React.lazy(() => import('./Pages/GerenciarAdmins'));
+const GerenciarContatos = React.lazy(() => import('./Pages/GerenciarContatos'));
+const Login = React.lazy(() => import('./Pages/Login'));
+const Registro = React.lazy(() => import('./Pages/Registro'));
+const Perfil = React.lazy(() => import('./Pages/Perfil'));
+const RedefinirSenha = React.lazy(() => import('./Pages/RedefinirSenha'));
+const NovaSenha = React.lazy(() => import('./Pages/NovaSenha'));
+const NotFound = React.lazy(() => import('./Pages/NotFound'));
+const Sobre = React.lazy(() => import('./Pages/Sobre'));
+const AnunciarImovel = React.lazy(() => import('./Pages/AnunciarImovel'));
+const AceitarConvite = React.lazy(() => import('./Pages/AceitarConvite'));
+
+const PageFallback = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <Loader2 className="w-10 h-10 text-blue-900 animate-spin" />
+  </div>
+);
 
 const PageWrapper = ({ Component, pageName }) => {
   React.useEffect(() => {
@@ -29,7 +37,9 @@ const PageWrapper = ({ Component, pageName }) => {
 
   return (
     <Layout currentPageName={pageName}>
-      <Component />
+      <Suspense fallback={<PageFallback />}>
+        <Component />
+      </Suspense>
     </Layout>
   );
 };
@@ -74,7 +84,7 @@ export const router = createBrowserRouter([
   {
     path: '/anunciar',
     element: (
-      <ProtectedRoute adminOnly={true}>
+      <ProtectedRoute requireAdmin>
         <PageWrapper Component={AnunciarImovel} pageName="Anunciar" />
       </ProtectedRoute>
     ),
@@ -105,11 +115,19 @@ export const router = createBrowserRouter([
   },
   {
     path: '/login',
-    element: <Login />,
+    element: (
+      <Suspense fallback={<PageFallback />}>
+        <Login />
+      </Suspense>
+    ),
   },
   {
     path: '/registro',
-    element: <Registro />,
+    element: (
+      <Suspense fallback={<PageFallback />}>
+        <Registro />
+      </Suspense>
+    ),
   },
   {
     path: '/perfil',
@@ -121,18 +139,34 @@ export const router = createBrowserRouter([
   },
   {
     path: '/redefinir-senha',
-    element: <RedefinirSenha />,
+    element: (
+      <Suspense fallback={<PageFallback />}>
+        <RedefinirSenha />
+      </Suspense>
+    ),
   },
   {
     path: '/nova-senha',
-    element: <NovaSenha />,
+    element: (
+      <Suspense fallback={<PageFallback />}>
+        <NovaSenha />
+      </Suspense>
+    ),
   },
   {
     path: '/aceitar-convite',
-    element: <AceitarConvite />,
+    element: (
+      <Suspense fallback={<PageFallback />}>
+        <AceitarConvite />
+      </Suspense>
+    ),
   },
   {
     path: '*',
-    element: <NotFound />,
+    element: (
+      <Suspense fallback={<PageFallback />}>
+        <NotFound />
+      </Suspense>
+    ),
   },
 ]);

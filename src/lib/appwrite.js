@@ -7,18 +7,10 @@ const client = new Client()
 export const account = new Account(client);
 export const databases = new Databases(client);
 export const storage = new Storage(client);
-export const teams = new Teams(client); // ADICIONE ESTA LINHA
+export const teams = new Teams(client);
 
 export const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-export const ADMIN_TEAM_ID = import.meta.env.VITE_APPWRITE_ADMIN_TEAM_ID; // ADICIONE ESTA LINHA
-
-export const COLLECTIONS = {
-  IMOVEIS: import.meta.env.VITE_APPWRITE_COLLECTION_IMOVEIS,
-  FAVORITOS: import.meta.env.VITE_APPWRITE_COLLECTION_FAVORITOS,
-  VISUALIZACOES: import.meta.env.VITE_APPWRITE_COLLECTION_VISUALIZACOES,
-  COMPARACOES: import.meta.env.VITE_APPWRITE_COLLECTION_COMPARACOES,
-  ALERTAS: import.meta.env.VITE_APPWRITE_COLLECTION_ALERTAS,
-};
+export const ADMIN_TEAM_ID = import.meta.env.VITE_APPWRITE_ADMIN_TEAM_ID;
 
 export const BUCKET_ID = import.meta.env.VITE_APPWRITE_BUCKET_ID;
 
