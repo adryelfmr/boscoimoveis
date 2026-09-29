@@ -10,6 +10,55 @@ export const COLLECTIONS = {
   CONTATOS: import.meta.env.VITE_APPWRITE_COLLECTION_CONTATOS,
 };
 
+const PAGE_SIZE = 100;
+
+function buildImovelQueries(filters = {}, orderBy = '-$createdAt') {
+  const queries = [];
+
+  if (orderBy) {
+    queries.push(Query.orderDesc('$createdAt'));
+  }
+
+  // Sempre filtrar por ativos EXCETO no gerenciador admin
+  if (filters.incluirInativos !== true) {
+    queries.push(Query.equal('ativo', true));
+  }
+
+  if (filters.destaque !== undefined) {
+    queries.push(Query.equal('destaque', filters.destaque));
+  }
+
+  if (filters.promocao !== undefined) {
+    queries.push(Query.equal('promocao', filters.promocao));
+  }
+
+  if (filters.disponibilidade) {
+    queries.push(Query.equal('disponibilidade', filters.disponibilidade));
+  }
+
+  if (filters.finalidade) {
+    queries.push(Query.equal('finalidade', filters.finalidade));
+  }
+
+  if (filters.tipoImovel) {
+    queries.push(Query.equal('tipoImovel', filters.tipoImovel));
+  }
+
+  if (filters.cidade) {
+    queries.push(Query.search('cidade', filters.cidade));
+  }
+
+  if (filters.precoMin !== undefined) {
+    queries.push(Query.greaterThanEqual('preco', filters.precoMin));
+  }
+
+  if (filters.precoMax !== undefined) {
+    queries.push(Query.lessThanEqual('preco', filters.precoMax));
+  }
+
+  return queries;
+}
+
 export const appwrite = {
   auth: {
     me: async () => {
@@ -102,48 +151,7 @@ export const appwrite = {
     Imovel: {
       // Método filter otimizado:
       filter: async (filters = {}, orderBy = '-$createdAt', limit = 100) => {
-        const queries = [Query.limit(limit)];
-
-        if (orderBy) {
-          queries.push(Query.orderDesc('$createdAt'));
-        }
-
-        // ✅ CORRIGIDO: Sempre filtrar por ativos EXCETO no gerenciador admin
-        if (filters.incluirInativos !== true) {
-          queries.push(Query.equal('ativo', true));
-        }
-
-        if (filters.destaque !== undefined) {
-          queries.push(Query.equal('destaque', filters.destaque));
-        }
-
-        if (filters.promocao !== undefined) {
-          queries.push(Query.equal('promocao', filters.promocao));
-        }
-
-        if (filters.disponibilidade) {
-          queries.push(Query.equal('disponibilidade', filters.disponibilidade));
-        }
-
-        if (filters.finalidade) {
-          queries.push(Query.equal('finalidade', filters.finalidade));
-        }
-
-        if (filters.tipoImovel) {
-          queries.push(Query.equal('tipoImovel', filters.tipoImovel));
-        }
-
-        if (filters.cidade) {
-          queries.push(Query.search('cidade', filters.cidade));
-        }
-
-        if (filters.precoMin !== undefined) {
-          queries.push(Query.greaterThanEqual('preco', filters.precoMin));
-        }
-
-        if (filters.precoMax !== undefined) {
-          queries.push(Query.lessThanEqual('preco', filters.precoMax));
-        }
+        const queries = [Query.limit(limit), ...buildImovelQueries(filters, orderBy)];
 
         try {
           const response = await databases.listDocuments(
@@ -157,6 +165,38 @@ export const appwrite = {
           console.error('Erro ao filtrar imóveis:', error);
           return [];
         }
+      },
+
+      // Busca TODOS os imóveis que atendem aos filtros, paginando por cursor
+      // (o Appwrite limita cada requisição; sem isso a lista é cortada em silêncio).
+      filterAll: async (filters = {}, orderBy = '-$createdAt') => {
+        const documents = [];
+        let cursor = null;
+
+        try {
+          while (true) {
+            const queries = [
+              Query.limit(PAGE_SIZE),
+              ...buildImovelQueries(filters, orderBy),
+            ];
+            if (cursor) queries.push(Query.cursorAfter(cursor));
+
+            const response = await databases.listDocuments(
+              DATABASE_ID,
+              COLLECTIONS.IMOVEIS,
+              queries
+            );
+
+            documents.push(...response.documents);
+
+            if (response.documents.length < PAGE_SIZE) break;
+            cursor = response.documents[response.documents.length - 1].$id;
+          }
+        } catch (error) {
+          console.error('Erro ao listar imóveis:', error);
+        }
+
+        return documents;
       },
 
       get: async (id) => {

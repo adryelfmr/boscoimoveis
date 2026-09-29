@@ -97,7 +97,7 @@ export default function GerenciadorImoveis() {
     queryKey: ['admin-imoveis'],
     queryFn: async () => {
       // ✅ CORRIGIDO: Incluir inativos no gerenciador
-      return await appwrite.entities.Imovel.filter({ incluirInativos: true }, '-$createdAt');
+      return await appwrite.entities.Imovel.filterAll({ incluirInativos: true }, '-$createdAt');
     },
     enabled: isAdmin,
   });
@@ -199,7 +199,7 @@ export default function GerenciadorImoveis() {
     setGerandoCodigo(true);
     
     try {
-      const todosImoveis = await appwrite.entities.Imovel.filter({}, '-$createdAt', 1000);
+      const todosImoveis = await appwrite.entities.Imovel.filterAll({ incluirInativos: true }, '-$createdAt');
       
       const imoveisComCodigo = todosImoveis.filter(i => 
         i.codigo && i.codigo.match(/^[A-Z]{3}-[A-Z]{3}-\d{4}$/)
@@ -316,7 +316,7 @@ export default function GerenciadorImoveis() {
           throw new Error('Código inválido. Use apenas letras, números e hífens (ex: CAS-001)');
         }
         
-        const imoveisExistentes = await appwrite.entities.Imovel.filter({}, '-$createdAt', 1000);
+        const imoveisExistentes = await appwrite.entities.Imovel.filterAll({ incluirInativos: true }, '-$createdAt');
         const codigoExiste = imoveisExistentes.some(i => 
           i.$id !== id && 
           i.codigo && 
@@ -610,7 +610,7 @@ export default function GerenciadorImoveis() {
       toast.loading('🔢 Gerando código...', { id: 'gerar-codigo' });
       
       try {
-        const todosImoveis = await appwrite.entities.Imovel.filter({}, '-$createdAt', 1000);
+        const todosImoveis = await appwrite.entities.Imovel.filterAll({ incluirInativos: true }, '-$createdAt');
         
         const imoveisComCodigo = todosImoveis.filter(i => 
           i.codigo && i.codigo.match(/^[A-Z]{3}-[A-Z]{3}-\d{4}$/)

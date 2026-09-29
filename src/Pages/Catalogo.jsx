@@ -29,7 +29,7 @@ export default function Catalogo() {
   const { data: imoveis = [], isLoading } = useQuery({
     queryKey: ['imoveis-todos'],
     queryFn: async () => {
-      return await appwrite.entities.Imovel.filter({ 
+      return await appwrite.entities.Imovel.filterAll({ 
         disponibilidade: 'disponivel' 
       }, '-$createdAt');
     },

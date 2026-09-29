@@ -203,7 +203,7 @@ export default function AnunciarImovel() {
     setGerandoCodigo(true);
     
     try {
-      const todosImoveis = await appwrite.entities.Imovel.filter({ incluirInativos: true }, '-$createdAt', 1000);
+      const todosImoveis = await appwrite.entities.Imovel.filterAll({ incluirInativos: true }, '-$createdAt');
       
       // Filtrar apenas códigos automáticos (formato: XXX-XXX-0000)
       const imoveisComCodigo = todosImoveis.filter(i => 
@@ -260,7 +260,7 @@ export default function AnunciarImovel() {
         }
         
         // Verificar se o código já existe (exceto no próprio imóvel sendo editado)
-        const imoveisExistentes = await appwrite.entities.Imovel.filter({ incluirInativos: true }, '-$createdAt', 1000);
+        const imoveisExistentes = await appwrite.entities.Imovel.filterAll({ incluirInativos: true }, '-$createdAt');
         const codigoExiste = imoveisExistentes.some(i => 
           i.$id !== editId && 
           i.codigo && 
